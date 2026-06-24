@@ -20,7 +20,7 @@ const thresholdRows = [
   ['Data Quality', '>= 90%', '70–89%', '< 70%']
 ];
 
-type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> };
+type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function CaiDatBotPage({ searchParams }: PageProps) {
   const rbac = await getRoleFromServerCookies();

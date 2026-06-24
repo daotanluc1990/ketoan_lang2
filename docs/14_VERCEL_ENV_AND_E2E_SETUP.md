@@ -66,7 +66,7 @@ Nếu dùng Gemini thay OpenAI, cấu hình Vercel Environment Variables như sa
 
 ```env
 AI_PROVIDER=gemini
-GEMINI_API_KEY=<nhập trên Vercel, không commit vào repo>
+GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
 ```
 

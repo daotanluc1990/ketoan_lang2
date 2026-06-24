@@ -11,9 +11,7 @@ import { parsePageReportFilters } from "@/lib/reports/report-filters";
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  searchParams?:
-    | Promise<Record<string, string | string[] | undefined>>
-    | Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function TongQuanPage({ searchParams }: PageProps) {

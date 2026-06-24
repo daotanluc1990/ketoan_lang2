@@ -11,7 +11,7 @@ import { canRole, getRoleFromServerCookies } from '@/lib/rbac/rbac';
 
 export const dynamic = 'force-dynamic';
 
-type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> };
+type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function PlTuanPage({ searchParams }: PageProps) {
   const rbac = await getRoleFromServerCookies();

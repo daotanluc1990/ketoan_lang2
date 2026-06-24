@@ -163,7 +163,7 @@ Có thử dùng headless Chromium để chụp screenshot viewport nhưng môi t
 
 Đã quét cơ bản. Không phát hiện secret thật trong source code. Có 2 false positive:
 
-- `AGENTS.md` chứa ví dụ `BEGIN PRIVATE KEY` và `token=` trong phần hướng dẫn bảo mật.
+- `AGENTS.md` chứa ví dụ `PRIVATE_KEY_MARKER` và `token=` trong phần hướng dẫn bảo mật.
 - `package-lock.json` sinh trong môi trường test chứa internal registry URL, nên **không đóng gói `package-lock.json` vào file bàn giao**. `package.json` đã pin version để giảm drift.
 
 ## Rủi ro còn lại
@@ -190,3 +190,4 @@ Có thử dùng headless Chromium để chụp screenshot viewport nhưng môi t
 4. Bật parser Excel + Google Sheet write theo phase riêng.
 5. Bật login/RBAC thật.
 6. UAT 1–2 tuần trước khi dùng chính thức.
+

@@ -39,7 +39,7 @@ Nếu thiếu dữ liệu thật hoặc thiếu API key, AI không bịa số v�
 
 ```env
 AI_PROVIDER=gemini
-GEMINI_API_KEY=<nhập trong Vercel, không commit vào repo>
+GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
 ```
 

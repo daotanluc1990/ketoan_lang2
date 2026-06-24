@@ -17,7 +17,7 @@ function parsePercentText(text: string) {
   return Number(text.replace(',', '.').replace('%', '')) || 0;
 }
 
-type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> };
+type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function ThatThoatChiTietPage({ searchParams }: PageProps) {
   const filters = await parsePageReportFilters(searchParams);

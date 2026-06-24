@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
@@ -13,7 +13,7 @@
     "tao-sheet-mau": "tsx scripts/tao-google-sheet-mau.ts",
     "kiem-tra-schema": "tsx scripts/kiem-tra-schema.ts",
     "static-ui-qa": "node scripts/static-ui-qa.mjs",
-    "vercel-build": "next build",
+    "vercel-build": "next build --webpack",
     "agent-check": "node scripts/check-agent-structure.mjs",
     "synthetic-data-qa": "tsx scripts/synthetic-data-qa.ts"
   },

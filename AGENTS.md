@@ -1607,7 +1607,7 @@ Secret scan should look for risky patterns without printing values:
 
 ```text
 TELEGRAM_BOT_TOKEN=
-BEGIN PRIVATE KEY
+PRIVATE_KEY_MARKER
 GOOGLE_PRIVATE_KEY
 private_key
 service-account
@@ -2524,3 +2524,4 @@ For production-ready:
 ### v1.0.0
 
 - Initial root agent instruction concept for production app builder workflows.
+
