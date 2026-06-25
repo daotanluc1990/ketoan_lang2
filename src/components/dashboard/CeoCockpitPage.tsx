@@ -38,7 +38,7 @@ function decisionRows(report: DashboardReport) {
   ];
 }
 
-export function CeoCockpitPage({ report, status }: { report: DashboardReport; status: string }) {
+export function CeoCockpitPage({ report }: { report: DashboardReport }) {
   const primaryKpis = report.executiveKpis.slice(0, 8);
   return (
     <div className="space-y-3">
