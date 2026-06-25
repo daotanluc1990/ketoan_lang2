@@ -48,15 +48,35 @@ function statusFromFile(file: BatchPreviewFile) {
   return 'Đạt';
 }
 
+function nextActionFromFile(file: BatchPreviewFile) {
+  const status = statusFromFile(file);
+  if (status === 'Có lỗi') return 'Sửa dòng lỗi trước khi import';
+  if (status === 'Cần đối chiếu') return 'Đối chiếu dữ liệu lệch';
+  if (status === 'Cảnh báo') return 'Kiểm tra loại file/chi nhánh';
+  return 'Có thể import';
+}
+
+async function readImportResponse(response: Response) {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) return response.json();
+  const text = await response.text().catch(() => '');
+  return {
+    ok: false,
+    message: text.trim()
+      ? `Server trả phản hồi không đúng dạng JSON: ${text.trim().slice(0, 160)}`
+      : 'Server không trả dữ liệu preview. Hãy kiểm tra đăng nhập và cấu hình API.'
+  };
+}
+
 export function BatchUploadMock() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [preview, setPreview] = useState<BatchPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [message, setMessage] = useState('Chọn file rồi bấm Kiểm tra batch. Preview không ghi vào Google Sheet.');
+  const [message, setMessage] = useState('Bước 1: chọn file Excel. Bước 2: bấm Kiểm tra batch. Preview không ghi vào Google Sheet.');
 
   const rows = useMemo(() => {
-    if (!preview) return selectedFiles.map((file: File) => [file.name, 'Chưa kiểm tra', '—', '—', '—', '—', '—', '—', 'Chưa đủ dữ liệu']);
+    if (!preview) return selectedFiles.map((file: File) => [file.name, 'Chưa kiểm tra', '—', '—', '—', '—', '—', '—', 'Chưa đủ dữ liệu', 'Bấm Kiểm tra batch']);
     return preview.files.map((file: BatchPreviewFile) => [
       file.tenFile,
       file.loaiDuLieu,
@@ -66,11 +86,23 @@ export function BatchUploadMock() {
       String(file.preview.summary.duLieuTrung),
       String(file.preview.summary.duLieuLech),
       String(file.preview.summary.dongLoi),
-      statusFromFile(file)
+      statusFromFile(file),
+      nextActionFromFile(file)
     ]);
   }, [preview, selectedFiles]);
 
   const canConfirm = Boolean(preview && preview.summary.dongLoi === 0 && preview.summary.duLieuLech === 0 && preview.summary.soFileKhongNhanDien === 0);
+  const summaryRows = preview
+    ? [
+        ['Số file', String(preview.summary.soFile)],
+        ['Dòng mới', String(preview.summary.dongMoi)],
+        ['Dòng trùng', String(preview.summary.duLieuTrung)],
+        ['Dữ liệu lệch', String(preview.summary.duLieuLech)],
+        ['Dòng lỗi', String(preview.summary.dongLoi)],
+        ['File không nhận diện', String(preview.summary.soFileKhongNhanDien)],
+        ['Kết luận', canConfirm ? 'Đạt' : 'Chưa thể import']
+      ]
+    : [['Trạng thái', selectedFiles.length ? 'Đã chọn file, chưa preview' : 'Chưa chọn file']];
 
   async function checkBatch() {
     if (!selectedFiles.length) {
@@ -85,10 +117,11 @@ export function BatchUploadMock() {
       for (const file of selectedFiles) formData.append('files', file);
       formData.append('actor', 'web-ketoan');
       const response = await fetch('/api/import/preview', { method: 'POST', body: formData });
-      const payload = await response.json();
+      const payload = await readImportResponse(response);
       if (!response.ok || !payload.ok) throw new Error(payload.message ?? 'Không preview được batch.');
+      if (!payload.data?.files || !Array.isArray(payload.data.files)) throw new Error('API preview trả dữ liệu không đúng dạng batch. Hãy deploy lại bản mới nhất.');
       setPreview(payload.data);
-      setMessage('Đã kiểm tra batch. Chỉ bấm Import file đạt khi Lỗi = 0, Lệch = 0 và Trạng thái = Đạt. Dòng trùng/lệch/lỗi sẽ được ghi vào tab kiểm soát khi confirm.');
+      setMessage('Đã kiểm tra batch. Chỉ bấm Import file đạt khi Lỗi = 0, Lệch = 0 và file được nhận diện đúng.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Không kiểm tra được batch.');
     } finally {
@@ -106,7 +139,7 @@ export function BatchUploadMock() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ batch: preview, actor: 'web-ketoan' })
       });
-      const payload = await response.json();
+      const payload = await readImportResponse(response);
       if (!response.ok || !payload.ok) throw new Error(payload.message ?? 'Không import được batch.');
       const writtenRows = Array.isArray(payload.results) ? payload.results.reduce((total: number, item: { writtenRows?: number }) => total + (item.writtenRows ?? 0), 0) : 0;
       setMessage(`Đã ghi Google Sheet: ${writtenRows} dòng mới. Hãy mở các sheet DL_* và IMPORT_* để kiểm tra dữ liệu, lỗi/trùng/lệch.`);
@@ -136,21 +169,29 @@ export function BatchUploadMock() {
 
   return (
     <div className="space-y-4">
-      <label className="block rounded-2xl border-2 border-dashed border-lang-red/30 bg-lang-cream/70 p-4 text-center transition hover:border-lang-red">
-        <input
-          className="sr-only"
-          type="file"
-          multiple
-          accept=".xlsx,.xls,.csv"
-          onChange={(event: ChangeEvent<HTMLInputElement>) => {
-            setSelectedFiles(Array.from(event.target.files ?? []));
-            setPreview(null);
-            setMessage('Đã chọn file. Bấm Kiểm tra batch để preview thật.');
-          }}
-        />
-        <span className="text-base font-bold text-lang-brown">Kéo thả hoặc bấm để chọn nhiều file</span>
-        <span className="mt-2 block text-sm text-black/60">Hỗ trợ upload 7 nguồn: doanh thu app, doanh thu cửa hàng, sổ quỹ, tồn kho, thất thoát, công nợ, thu mua.</span>
-      </label>
+      <div className="grid gap-3 xl:grid-cols-[1.2fr_0.8fr]">
+        <label className="block rounded-2xl border-2 border-dashed border-lang-red/30 bg-lang-cream/70 p-4 text-center transition hover:border-lang-red">
+          <input
+            className="sr-only"
+            type="file"
+            multiple
+            accept=".xlsx,.xls,.csv"
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+              setSelectedFiles(Array.from(event.target.files ?? []));
+              setPreview(null);
+              setMessage('Đã chọn file. Bấm Kiểm tra batch để preview thật.');
+            }}
+          />
+          <span className="text-base font-bold text-lang-brown">Kéo thả hoặc bấm để chọn nhiều file</span>
+          <span className="mt-2 block text-sm text-black/60">Hỗ trợ 7 nguồn: doanh thu app, doanh thu cửa hàng, sổ quỹ, tồn kho, thất thoát, công nợ, thu mua.</span>
+          <span className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-lang-brown shadow-sm">Preview trước, confirm sau</span>
+        </label>
+
+        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+          <p className="text-xs font-bold uppercase tracking-wide text-black/45">Tóm tắt batch</p>
+          <div className="mt-3"><ReportTable headers={['Chỉ số', 'Giá trị']} rows={summaryRows} maxHeight="max-h-[240px]" /></div>
+        </div>
+      </div>
 
       {selectedFiles.length > 0 ? (
         <div className="rounded-xl bg-white p-4 text-sm shadow-sm ring-1 ring-black/5">
@@ -161,7 +202,7 @@ export function BatchUploadMock() {
         </div>
       ) : null}
 
-      <div className="rounded-xl bg-white p-3 text-sm text-black/65 shadow-sm ring-1 ring-black/5">{message}</div>
+      <div className="rounded-xl bg-white p-3 text-sm font-semibold text-black/65 shadow-sm ring-1 ring-black/5">{message}</div>
 
       <div className="flex flex-wrap gap-3">
         <Button onClick={checkBatch} disabled={loading}>{loading ? 'Đang kiểm tra...' : 'Kiểm tra batch'}</Button>
@@ -171,8 +212,9 @@ export function BatchUploadMock() {
       </div>
 
       <ReportTable
-        headers={['File', 'Loại dữ liệu', 'Kỳ', 'Chi nhánh', 'Dòng mới', 'Trùng', 'Lệch', 'Lỗi', 'Trạng thái']}
+        headers={['File', 'Loại dữ liệu', 'Kỳ', 'Chi nhánh', 'Dòng mới', 'Trùng', 'Lệch', 'Lỗi', 'Trạng thái', 'Việc cần làm']}
         rows={rows}
+        maxHeight="max-h-[420px]"
       />
     </div>
   );
