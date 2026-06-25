@@ -1,10 +1,10 @@
 import { NoPermission } from '@/components/rbac/NoPermission';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { ChartCard } from '@/components/report/ChartCard';
 import { MetricCard } from '@/components/report/MetricCard';
 import { ReportTable } from '@/components/report/ReportTable';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { InsightListCard } from '@/components/report/InsightListCard';
 import { buildDashboardReport } from '@/lib/reports/report-aggregator';
 import { parsePageReportFilters } from '@/lib/reports/report-filters';
 import { canRole, getRoleFromServerCookies } from '@/lib/rbac/rbac';
@@ -19,34 +19,38 @@ export default async function CanDoiPage({ searchParams }: PageProps) {
   const filters = await parsePageReportFilters(searchParams);
   const report = await buildDashboardReport(filters);
   const hasBalanceData = report.sourceCounts.cashbook > 0 || report.sourceCounts.inventory > 0 || report.sourceCounts.lossRows > 0;
+  const moneyKpis = [
+    { label: 'Dòng tiền tạm', value: report.executiveKpis.find((kpi) => kpi.label === 'Dòng tiền tạm')?.value ?? '—', note: 'Từ sổ quỹ' },
+    { label: 'Tồn kho', value: report.executiveKpis.find((kpi) => kpi.label === 'Tồn kho')?.value ?? '—', note: `${report.totals.negativeStockCount} tồn âm` },
+    { label: 'Thất thoát', value: report.executiveKpis.find((kpi) => kpi.label === 'Thất thoát quy tiền')?.value ?? '—', note: `${report.sourceCounts.lossRows} dòng NVL` },
+    { label: 'Nguồn thiếu', value: `${report.missingSources.length}`, note: report.missingSources.length ? report.missingSources.join(', ') : 'Đủ nguồn chính' }
+  ];
+  const alertRows = [
+    ['Dữ liệu', hasBalanceData ? 'Có dữ liệu' : 'Chưa đủ dữ liệu', report.message],
+    ['Tồn âm', report.totals.negativeStockCount ? 'Cảnh báo' : 'Tốt', `${report.totals.negativeStockCount} mặt hàng`],
+    ['Công nợ/TSCĐ', 'Cần đối chiếu', 'Chưa kết luận nếu chưa có nguồn import riêng']
+  ];
   return (
-    <div className="space-y-4">
-      <PageHeader title="Cân đối rút gọn" description="CEO biết tiền đang nằm ở đâu dựa trên Google Sheet thật. Không dùng số mẫu khi sheet trống." status={hasBalanceData ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu'} />
+    <div className="space-y-3">
+      <PageHeader title="Cân đối rút gọn" description="Tiền, tồn kho, thất thoát và nguồn dữ liệu cần đối chiếu." status={hasBalanceData ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu'} />
       {!hasBalanceData ? <EmptyState title="Chưa đủ dữ liệu cân đối" description="Cần import sổ quỹ, tồn kho và thất thoát trước khi xem cân đối rút gọn." /> : null}
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Dòng tiền tạm" value={report.executiveKpis.find((kpi) => kpi.label === 'Dòng tiền tạm')?.value ?? '—'} status={report.totals.cashEnding < 0 ? 'danger' : hasBalanceData ? 'good' : 'neutral'} trend="Từ sổ quỹ" />
-        <MetricCard label="Giá trị tồn kho" value={report.executiveKpis.find((kpi) => kpi.label === 'Tồn kho')?.value ?? '—'} status={report.totals.negativeStockCount ? 'warning' : hasBalanceData ? 'good' : 'neutral'} trend={`${report.totals.negativeStockCount} tồn âm`} />
-        <MetricCard label="Thất thoát quy tiền" value={report.executiveKpis.find((kpi) => kpi.label === 'Thất thoát quy tiền')?.value ?? '—'} status={report.totals.lossValue ? 'warning' : 'neutral'} trend={`${report.sourceCounts.lossRows} dòng NVL`} />
-        <MetricCard label="Nguồn còn thiếu" value={`${report.missingSources.length}`} status={report.missingSources.length ? 'warning' : 'good'} trend={report.missingSources.length ? report.missingSources.join(', ') : 'Đủ nguồn chính'} />
+      <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Dòng tiền tạm" value={moneyKpis[0].value} status={report.totals.cashEnding < 0 ? 'danger' : hasBalanceData ? 'good' : 'neutral'} trend="Từ sổ quỹ" compact />
+        <MetricCard label="Giá trị tồn kho" value={moneyKpis[1].value} status={report.totals.negativeStockCount ? 'warning' : hasBalanceData ? 'good' : 'neutral'} trend={moneyKpis[1].note} compact />
+        <MetricCard label="Thất thoát quy tiền" value={moneyKpis[2].value} status={report.totals.lossValue ? 'warning' : 'neutral'} trend={moneyKpis[2].note} compact />
+        <MetricCard label="Nguồn còn thiếu" value={moneyKpis[3].value} status={report.missingSources.length ? 'warning' : 'good'} trend={moneyKpis[3].note} compact />
       </section>
-      <section className="grid gap-3 xl:grid-cols-[2fr_1fr]">
+      <section className="grid gap-3 xl:grid-cols-[1.25fr_0.75fr]">
         <Card>
           <CardTitle>Bảng cân đối rút gọn</CardTitle>
-          <div className="mt-3"><ReportTable headers={['Nhóm', 'Chỉ số', 'Số tiền', 'Tuần trước', 'Chênh lệch', 'Trạng thái', 'Ghi chú']} rows={report.balanceRows} /></div>
+          <div className="mt-2"><ReportTable headers={['Nhóm', 'Chỉ số', 'Số tiền', 'Tuần trước', 'Chênh lệch', 'Trạng thái', 'Ghi chú']} rows={report.balanceRows} maxHeight="max-h-[360px]" /></div>
         </Card>
         <Card>
           <CardTitle>Cảnh báo mất cân đối</CardTitle>
-          <div className="mt-3 space-y-3 text-sm text-black/70">
-            <p><strong>Dữ liệu:</strong> {report.message}</p>
-            <p><strong>Tồn âm:</strong> {report.totals.negativeStockCount} mặt hàng.</p>
-            <p><strong>Lưu ý:</strong> Công nợ và tài sản cố định chưa kết luận nếu chưa có dữ liệu import riêng.</p>
-          </div>
+          <div className="mt-2"><ReportTable headers={['Mảng', 'Trạng thái', 'Ghi chú']} rows={alertRows} maxHeight="max-h-[240px]" /></div>
         </Card>
       </section>
-      <section className="grid gap-3 xl:grid-cols-2">
-        <ChartCard title="Tiền và tồn kho" items={[{ label: 'Dòng tiền tạm', value: Math.abs(report.totals.cashEnding), caption: report.executiveKpis.find((kpi) => kpi.label === 'Dòng tiền tạm')?.value }, { label: 'Tồn kho', value: report.totals.inventoryValue, caption: report.executiveKpis.find((kpi) => kpi.label === 'Tồn kho')?.value }]} />
-        <ChartCard title="Nguồn dữ liệu cân đối" items={[{ label: 'Sổ quỹ', value: report.sourceCounts.cashbook, caption: `${report.sourceCounts.cashbook} dòng` }, { label: 'Tồn kho', value: report.sourceCounts.inventory, caption: `${report.sourceCounts.inventory} dòng` }, { label: 'Thất thoát', value: report.sourceCounts.lossRows, caption: `${report.sourceCounts.lossRows} dòng` }]} />
-      </section>
+      <InsightListCard title="Tóm tắt tiền và tồn kho" items={moneyKpis} />
     </div>
   );
 }
