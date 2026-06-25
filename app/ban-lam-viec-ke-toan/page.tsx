@@ -71,7 +71,7 @@ export default async function BanLamViecKeToanPage({ searchParams }: PageProps) 
         </Card>
 
         <Card>
-          <CardTitle>Checklist nguồn dữ liệu bắt buộc</CardTitle>
+          <CardTitle>Checklist báo cáo thứ 2 · nguồn dữ liệu bắt buộc</CardTitle>
           <p className="mt-2 text-sm text-black/60">Nguồn thiếu sẽ khóa bước chốt và gửi báo cáo để tránh CEO nhận số chưa đủ bằng chứng.</p>
           <div className="mt-3">
             <ReportTable headers={['Thứ tự', 'Nguồn dữ liệu', 'Trạng thái', 'Bằng chứng', 'Hành động']} rows={checklistRows} maxHeight="max-h-[360px]" />
