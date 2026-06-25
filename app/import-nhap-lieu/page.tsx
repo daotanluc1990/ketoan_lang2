@@ -11,57 +11,48 @@ import { canRole, getRoleFromServerCookies } from '@/lib/rbac/rbac';
 export const dynamic = 'force-dynamic';
 
 async function readImportHistory() {
-  try {
-    return await getDataStore().read(SHEET_NAMES.IMPORT_LICH_SU);
-  } catch {
-    return [];
-  }
+  try { return await getDataStore().read(SHEET_NAMES.IMPORT_LICH_SU); } catch { return []; }
 }
 
 export default async function ImportNhapLieuPage() {
   const rbac = await getRoleFromServerCookies();
   if (!canRole(rbac.role, 'view_import')) return <NoPermission role={rbac.role} permission="view_import" />;
-
   const history = await readImportHistory();
-  const historyRows = history.slice(-20).reverse().map((row) => [
+  const historyRows = history.slice(-12).reverse().map((row) => [
     String(row['Ngày import'] ?? ''),
     String(row['Người import'] ?? ''),
     String(row['Trạng thái'] ?? ''),
-    String(row['Ghi chú'] ?? ''),
     String(row['Tổng dòng mới'] ?? ''),
-    String(row['Tổng dòng lỗi'] ?? '')
+    String(row['Tổng dòng lỗi'] ?? ''),
+    String(row['Ghi chú'] ?? '')
   ]);
-
+  const ruleRows = [
+    ['Preview trước', 'Upload chỉ đọc, chưa ghi Google Sheet', 'Đạt'],
+    ['Chặn lỗi', 'Có lỗi/lệch thì không import', 'Cảnh báo'],
+    ['Ghi log', 'Ghi IMPORT_LICH_SU và AUDIT_LOG', 'Đạt'],
+    ['Rollback mềm', 'Hoàn tác theo mã lần import, không xóa cứng', 'Cần kiểm']
+  ];
   return (
-    <div className="space-y-4">
-      <PageHeader title="Nhập liệu & Import" description="Luồng import an toàn: chọn kỳ, upload nhiều file, dry-run preview, kiểm lỗi/trùng/lệch, xác nhận trước khi ghi Google Sheet." status="Cần đối chiếu" />
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Lịch sử import" value={`${history.length}`} status={history.length ? 'good' : 'neutral'} trend="Dòng IMPORT_LICH_SU" />
-        <MetricCard label="Quy tắc ghi" value="Confirm" status="good" trend="Preview không ghi" />
-        <MetricCard label="Dòng lỗi" value="Chặn" status="warning" trend="Có lỗi/lệch thì không import" />
-        <MetricCard label="Nguồn dữ liệu" value="Google Sheet" status="good" trend="Nếu DATA_STORE=google_sheets" />
+    <div className="space-y-3">
+      <PageHeader title="Nhập liệu & Import" description="Upload nhiều file, preview lỗi/trùng/lệch, rồi mới xác nhận ghi dữ liệu." status="Cần đối chiếu" />
+      <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Lịch sử import" value={`${history.length}`} status={history.length ? 'good' : 'neutral'} trend="IMPORT_LICH_SU" compact />
+        <MetricCard label="Quy tắc ghi" value="Confirm" status="good" trend="Preview không ghi" compact />
+        <MetricCard label="Dòng lỗi" value="Chặn" status="warning" trend="Lỗi/lệch không import" compact />
+        <MetricCard label="Nguồn dữ liệu" value="Google Sheet" status="good" trend="Data store thật" compact />
       </section>
       <Card>
         <CardTitle>Batch upload nhiều file</CardTitle>
-        <p className="mt-2 text-sm text-black/60">Kế toán có thể nhập cùng lúc doanh thu app, doanh thu cửa hàng, sổ quỹ, tồn kho và thất thoát. Nút Kiểm tra batch chỉ preview; nút Import file đạt mới ghi Google Sheet.</p>
-        <div className="mt-3"><BatchUploadMock /></div>
+        <div className="mt-2"><BatchUploadMock /></div>
       </Card>
-      <section className="grid gap-3 xl:grid-cols-2">
+      <section className="grid gap-3 xl:grid-cols-[0.7fr_1.3fr]">
         <Card>
-          <CardTitle>Quy tắc import production</CardTitle>
-          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-black/70">
-            <li>Upload chỉ đọc, không ghi ngay. V4.8 hỗ trợ thêm công nợ, thu mua và rollback mềm.</li>
-            <li>Dry-run preview trước khi xác nhận.</li>
-            <li>File lỗi hoặc dữ liệu lệch không được ghi nếu chưa cho phép import một phần.</li>
-            <li>Dòng lỗi, trùng, lệch phải ghi vào IMPORT_DONG_LOI / IMPORT_DU_LIEU_TRUNG / IMPORT_DU_LIEU_LECH.</li>
-            <li>Mọi lần import phải ghi IMPORT_LICH_SU và AUDIT_LOG.</li>
-            <li>Rollback theo Mã lần import: preview trước, CEO/Admin duyệt, chỉ đổi trạng thái Đã hoàn tác, không xóa cứng.</li>
-            <li>Google Sheet trống thì báo Chưa đủ dữ liệu để kết luận, không dùng số mẫu.</li>
-          </ul>
+          <CardTitle>Quy tắc import</CardTitle>
+          <div className="mt-2"><ReportTable headers={['Quy tắc', 'Ý nghĩa', 'Trạng thái']} rows={ruleRows} maxHeight="max-h-[260px]" /></div>
         </Card>
         <Card>
           <CardTitle>Lịch sử import gần nhất</CardTitle>
-          <div className="mt-3"><ReportTable headers={['Ngày import', 'Người import', 'Trạng thái', 'Ghi chú', 'Dòng mới', 'Dòng lỗi']} rows={historyRows.length ? historyRows : [['—', '—', 'Chưa đủ dữ liệu', 'Chưa có lần import thật', '0', '0']]} /></div>
+          <div className="mt-2"><ReportTable headers={['Ngày import', 'Người import', 'Trạng thái', 'Dòng mới', 'Dòng lỗi', 'Ghi chú']} rows={historyRows.length ? historyRows : [['—', '—', 'Chưa đủ dữ liệu', '0', '0', 'Chưa có lần import thật']]} maxHeight="max-h-[320px]" /></div>
         </Card>
       </section>
     </div>
