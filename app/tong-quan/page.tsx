@@ -14,6 +14,39 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+function createCeoDecisionRows(report: Awaited<ReturnType<typeof buildDashboardReport>>) {
+  return [
+    [
+      "1",
+      "Có thể chốt báo cáo tuần?",
+      report.missingSources.length ? "Chưa" : "Có thể chốt sau kiểm tra cuối",
+      report.missingSources.length ? `Còn thiếu ${report.missingSources.length} nguồn dữ liệu` : "Đủ nguồn chính trong phạm vi lọc",
+      report.missingSources.length ? "Yêu cầu kế toán bổ sung dữ liệu" : "CEO xem cảnh báo cuối rồi duyệt",
+    ],
+    [
+      "2",
+      "Dữ liệu có đủ tin cậy không?",
+      report.hasRealData ? (report.missingSources.length ? "Cần đối chiếu" : "Tốt") : "Chưa đủ dữ liệu",
+      report.hasRealData ? report.message : "Chưa có dữ liệu import thật",
+      report.hasRealData ? "Xem bảng độ sẵn sàng dữ liệu" : "Vào Nhập liệu & Import",
+    ],
+    [
+      "3",
+      "Có khoản chi lớn cần hỏi ngay không?",
+      report.cashbookWarningRows.length ? "Có" : "Chưa phát hiện",
+      report.cashbookWarningRows.length ? `${report.cashbookWarningRows.length} khoản cần kiểm tra` : "Không có khoản vượt ngưỡng trong dữ liệu hiện tại",
+      report.cashbookWarningRows.length ? "Mở Bàn làm việc kế toán để giao xử lý" : "Theo dõi tiếp",
+    ],
+    [
+      "4",
+      "Có thất thoát NVL nổi bật không?",
+      report.lossTop5Rows.length ? "Có dữ liệu" : "Chưa đủ dữ liệu",
+      report.lossTop5Rows[0]?.[0] ?? "Chưa có bảng thất thoát hợp lệ",
+      report.lossTop5Rows.length ? "Xem Top 5 NVL bên dưới" : "Import dữ liệu thất thoát",
+    ],
+  ];
+}
+
 export default async function TongQuanPage({ searchParams }: PageProps) {
   const filters = await parsePageReportFilters(searchParams);
   const report = await buildDashboardReport(filters);
@@ -22,36 +55,68 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
       ? "Cần đối chiếu"
       : "Tốt"
     : "Chưa đủ dữ liệu";
+  const primaryKpis = report.executiveKpis.slice(0, 8);
+  const ceoDecisionRows = createCeoDecisionRows(report);
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="CEO Dashboard"
-        description="Màn hình CEO xem nhanh dữ liệu thật từ Google Sheet: tuần này tốt/xấu, tiền về chưa, lời/lỗ tạm tính, thất thoát và hành động tiếp theo."
+        title="CEO Cockpit"
+        description="Màn hình 10 giây cho CEO: tuần này tốt/xấu, dữ liệu đã đủ chưa, khoản nào cần hỏi kế toán và việc nào cần duyệt ngay."
         status={status}
       />
 
       {!report.hasRealData ? (
         <EmptyState
           title="Chưa đủ dữ liệu để kết luận"
-          description="Google Sheet chưa có dữ liệu import thật. Hãy vào Nhập liệu & Import, kiểm tra batch, sau đó xác nhận Import file đạt."
+          description="Google Sheet chưa có dữ liệu import thật. Hãy vào Bàn làm việc kế toán hoặc Nhập liệu & Import để kiểm tra batch trước khi chốt báo cáo."
         />
       ) : null}
 
-      <section className="rounded-2xl border-l-8 border-amber-500 bg-white p-4 shadow-soft">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
-          Executive Status · {report.dataMode}
-        </p>
-        <h3 className="mt-2 text-2xl font-bold text-lang-brown">
-          {report.hasRealData
-            ? "Đã có dữ liệu import thật"
-            : "Chưa đủ dữ liệu để kết luận."}
-        </h3>
-        <p className="mt-2 text-sm text-black/60">{report.message}</p>
+      <section className="grid gap-3 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="rounded-2xl border-l-8 border-amber-500 bg-white p-4 shadow-soft">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
+            CEO Cockpit · {report.dataMode}
+          </p>
+          <h3 className="mt-2 text-2xl font-bold text-lang-brown">
+            {report.hasRealData
+              ? report.missingSources.length
+                ? "Có dữ liệu nhưng chưa nên chốt ngay"
+                : "Dữ liệu chính đã sẵn sàng để CEO xem xét"
+              : "Chưa đủ dữ liệu để kết luận."}
+          </h3>
+          <p className="mt-2 text-sm text-black/60">{report.message}</p>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+            <span className="rounded-full bg-lang-cream px-3 py-1 text-lang-brown">
+              Nguồn thiếu: {report.missingSources.length}
+            </span>
+            <span className="rounded-full bg-lang-cream px-3 py-1 text-lang-brown">
+              Cảnh báo sổ quỹ: {report.cashbookWarningRows.length}
+            </span>
+            <span className="rounded-full bg-lang-cream px-3 py-1 text-lang-brown">
+              Top thất thoát: {report.lossTop5Rows.length}
+            </span>
+          </div>
+        </div>
+
+        <Card>
+          <CardTitle>Kết luận CEO cần nhớ</CardTitle>
+          <div className="mt-3 space-y-2 text-sm text-black/70">
+            <p>
+              <strong>Trạng thái:</strong> {status}
+            </p>
+            <p>
+              <strong>Việc tiếp theo:</strong> {report.missingSources.length ? "Giao kế toán bổ sung/đối chiếu dữ liệu còn thiếu." : "Xem cảnh báo cuối và duyệt chốt báo cáo."}
+            </p>
+            <p>
+              <strong>Nguyên tắc:</strong> Không dùng dữ liệu mẫu để kết luận tài chính.
+            </p>
+          </div>
+        </Card>
       </section>
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {report.executiveKpis.map((kpi) => (
+        {primaryKpis.map((kpi) => (
           <MetricCard
             key={kpi.label}
             label={kpi.label}
@@ -61,6 +126,36 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
             status={kpi.status}
           />
         ))}
+      </section>
+
+      <section className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card>
+          <CardTitle>Việc CEO cần quyết định ngay</CardTitle>
+          <p className="mt-2 text-sm text-black/60">
+            Bảng này gom lại câu hỏi điều hành quan trọng, tránh CEO phải mở nhiều tab để biết có nên chốt báo cáo hay không.
+          </p>
+          <div className="mt-3">
+            <ReportTable
+              headers={["Ưu tiên", "Câu hỏi", "Kết luận tạm", "Bằng chứng", "Hành động"]}
+              rows={ceoDecisionRows}
+              maxHeight="max-h-[360px]"
+            />
+          </div>
+        </Card>
+
+        <Card>
+          <CardTitle>Độ sẵn sàng dữ liệu</CardTitle>
+          <p className="mt-2 text-sm text-black/60">
+            Nguồn nào thiếu thì CEO không nên chốt số cuối cùng.
+          </p>
+          <div className="mt-3">
+            <ReportTable
+              headers={["Mảng", "Trạng thái", "Bằng chứng", "Cách dùng"]}
+              rows={report.dataReadinessRows}
+              maxHeight="max-h-[360px]"
+            />
+          </div>
+        </Card>
       </section>
 
       <section className="grid gap-3 xl:grid-cols-2">
@@ -88,7 +183,7 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
         />
         <ChartCard
           title="Chất lượng dữ liệu"
-          description="Số dòng đã ghi vào các sheet dữ liệu gốc."
+          description="Số dòng đã ghi vào các sheet dữ liệu gốc. Dữ liệu trống thì không kết luận."
           items={[
             {
               label: "Doanh thu app",
@@ -121,19 +216,9 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
 
       <section className="grid gap-3 xl:grid-cols-2">
         <Card>
-          <CardTitle>Độ sẵn sàng dữ liệu theo mảng</CardTitle>
-          <div className="mt-3">
-            <ReportTable
-              headers={["Mảng", "Trạng thái", "Bằng chứng", "Cách dùng"]}
-              rows={report.dataReadinessRows}
-            />
-          </div>
-        </Card>
-        <Card>
           <CardTitle>Cảnh báo Sổ quỹ — khoản chi lớn</CardTitle>
           <p className="mt-2 text-sm text-black/60">
-            Lấy trực tiếp từ DL_SO_QUY. Dùng để yêu cầu kế toán giải trình,
-            không tự động kết luận thất thoát.
+            Lấy trực tiếp từ DL_SO_QUY. Dùng để yêu cầu kế toán giải trình, không tự động kết luận thất thoát.
           </p>
           <div className="mt-3">
             <ReportTable
@@ -165,11 +250,12 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
             />
           </div>
         </Card>
-      </section>
 
-      <section className="grid gap-3 xl:grid-cols-2">
         <Card>
           <CardTitle>Top vấn đề cần CEO chú ý</CardTitle>
+          <p className="mt-2 text-sm text-black/60">
+            Chỉ hiển thị vấn đề có bằng chứng từ dữ liệu đã import.
+          </p>
           <div className="mt-3">
             <ReportTable
               headers={[
@@ -180,9 +266,13 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
                 "Đề xuất xử lý",
               ]}
               rows={report.issueRows}
+              maxHeight="max-h-[320px]"
             />
           </div>
         </Card>
+      </section>
+
+      <section className="grid gap-3 xl:grid-cols-2">
         <Card>
           <CardTitle>Thất thoát NVL — Top 5 cần xử lý</CardTitle>
           <p className="mt-2 text-sm text-black/60">
@@ -206,9 +296,9 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
             />
           </div>
         </Card>
-      </section>
 
-      <AiAgentPanel report={report} />
+        <AiAgentPanel report={report} />
+      </section>
     </div>
   );
 }
