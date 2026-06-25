@@ -1,6 +1,6 @@
 import { StatusBadge } from './StatusBadge';
 
-const statusWords = new Set(['Tốt', 'Đạt', 'Đã xong', 'Ổn', 'Cảnh báo', 'Cần kiểm', 'Cần đối chiếu', 'Đang làm', 'Chưa đủ dữ liệu', 'Có lỗi', 'Nguy hiểm', 'Chưa thể chốt', 'Không import', 'Cần CEO duyệt']);
+const statusWords = new Set(['Tốt', 'Đạt', 'Có thể chốt', 'Có thể gửi', 'Đã xong', 'Ổn', 'Cảnh báo', 'Cần kiểm', 'Cần đối chiếu', 'Đang làm', 'Chưa đủ dữ liệu', 'Chưa', 'Có lỗi', 'Nguy hiểm', 'Chưa thể chốt', 'Không import', 'Không', 'Cần CEO duyệt']);
 
 export function ReportTable({ headers, rows, maxHeight = 'max-h-[360px]' }: { headers: string[]; rows: string[][]; maxHeight?: string }) {
   return (
