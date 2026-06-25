@@ -1,5 +1,5 @@
 import { PageHeader } from '@/components/layout/PageHeader';
-import { CeoCockpitPage } from '@/components/dashboard/CeoCockpitPage';
+import { AccountingOverviewPage } from '@/components/dashboard/AccountingOverviewPage';
 import { buildDashboardReport } from '@/lib/reports/report-aggregator';
 import { parsePageReportFilters } from '@/lib/reports/report-filters';
 
@@ -21,11 +21,11 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-3">
       <PageHeader
-        title="CEO Cockpit"
-        description="Màn hình điều hành gọn: trạng thái chốt báo cáo, KPI chính, cảnh báo sổ quỹ, dữ liệu thiếu và việc CEO cần xử lý."
+        title="Tổng quan kế toán ERP"
+        description="Theo dõi dữ liệu nhập - xuất - tồn - bán - hủy - đối chiếu trước khi chốt báo cáo."
         status={status}
       />
-      <CeoCockpitPage report={report} />
+      <AccountingOverviewPage report={report} />
     </div>
   );
 }
