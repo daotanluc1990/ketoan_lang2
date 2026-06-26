@@ -10,19 +10,23 @@ export async function writeAuditLog(event: {
   after?: unknown;
   note?: string;
 }) {
-  const store = getDataStore();
-  await store.append(SHEET_NAMES.AUDIT_LOG, [
-    {
-      'ID': `AUDIT-${Date.now()}`,
-      'Thời gian': new Date().toISOString(),
-      'Người dùng': event.actor,
-      'Vai trò': 'system',
-      'Hành động': event.eventType,
-      'Đối tượng': event.target,
-      'Trước': event.before ? JSON.stringify(event.before) : '',
-      'Sau': event.after ? JSON.stringify(event.after) : '',
-      'Ghi chú': event.note ?? '',
-      'IP/Thiết bị': 'server'
-    }
-  ]);
+  try {
+    const store = getDataStore();
+    await store.append(SHEET_NAMES.AUDIT_LOG, [
+      {
+        'ID': `AUDIT-${Date.now()}`,
+        'Thời gian': new Date().toISOString(),
+        'Người dùng': event.actor,
+        'Vai trò': 'system',
+        'Hành động': event.eventType,
+        'Đối tượng': event.target,
+        'Trước': event.before ? JSON.stringify(event.before) : '',
+        'Sau': event.after ? JSON.stringify(event.after) : '',
+        'Ghi chú': event.note ?? '',
+        'IP/Thiết bị': 'server'
+      }
+    ]);
+  } catch (error) {
+    console.warn('[AUDIT_LOG_SKIPPED]', event.eventType, event.target, error instanceof Error ? error.message : error);
+  }
 }
