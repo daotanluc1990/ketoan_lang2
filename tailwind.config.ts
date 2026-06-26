@@ -6,31 +6,25 @@ const config: Config = {
     extend: {
       colors: {
         lang: {
-          red: '#8B1E1E',
-          redDark: '#641515',
-          redDeep: '#4B1010',
+          red: '#C90013',
+          redDark: '#A50010',
+          redDeep: '#7F000C',
+          redSoft: '#FFF1F2',
           yellow: '#F6C453',
-          yellowSoft: '#FFE7A3',
-          cream: '#F8F3E7',
-          cream2: '#FFF9EA',
-          paper: '#FFFCF4',
-          brown: '#2B1C16',
-          ink: '#1F1B16',
-          muted: '#7A675C',
-          line: '#E9DDC9'
+          yellowSoft: '#FFF7D6',
+          cream: '#F7F8FA',
+          cream2: '#FAFAFA',
+          paper: '#FFFFFF',
+          brown: '#161B2A',
+          ink: '#111827',
+          muted: '#6B7280',
+          line: '#E5E7EB'
         }
       },
-      borderRadius: {
-        '2xl': '1.25rem',
-        '3xl': '1.75rem'
-      },
       boxShadow: {
-        soft: '0 18px 40px rgba(45, 28, 22, 0.08)',
-        card: '0 16px 42px rgba(75, 16, 16, 0.08)',
-        glow: '0 18px 50px rgba(139, 30, 30, 0.16)'
-      },
-      backgroundImage: {
-        'brand-radial': 'radial-gradient(circle at top left, rgba(246,196,83,0.32), transparent 34%), radial-gradient(circle at top right, rgba(139,30,30,0.10), transparent 28%)'
+        soft: '0 8px 24px rgba(17, 24, 39, 0.06)',
+        card: '0 10px 28px rgba(17, 24, 39, 0.07)',
+        glow: '0 16px 32px rgba(201, 0, 19, 0.12)'
       }
     }
   },
