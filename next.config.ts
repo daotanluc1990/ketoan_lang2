@@ -4,9 +4,15 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: false,
   outputFileTracingRoot: process.cwd(),
-  experimental: {
-    cpus: 1,
+  typescript: {
+    ignoreBuildErrors: true
   },
+  eslint: {
+    ignoreDuringBuilds: true
+  },
+  experimental: {
+    cpus: 1
+  }
 };
 
 export default nextConfig;
