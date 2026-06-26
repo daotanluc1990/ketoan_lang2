@@ -26,8 +26,8 @@ const TARGETS: V7Target[] = [
   { sheetName: SHEET_NAMES.DM_HAO_HUT_HOP_LE, loaiDuLieu: 'Hao hụt hợp lệ', keywords: ['hao hut hop le', 'dinh muc hao hut'], requiredHeaders: ['Mã NVL', 'Hao hụt hợp lệ'], identityHeaders: ['Mã NVL', 'Tên NVL', 'Nhóm NVL'], numericHeaders: ['Hao hụt hợp lệ', 'Tỷ lệ hao hụt'] },
   { sheetName: SHEET_NAMES.DM_DON_GIA_NVL, loaiDuLieu: 'Đơn giá NVL', keywords: ['don gia nvl', 'gia von nvl', 'don gia nguyen vat lieu'], requiredHeaders: ['Mã NVL', 'Đơn giá'], identityHeaders: ['Mã NVL', 'Tên NVL', 'Đơn giá'], dateHeaders: ['Ngày hiệu lực', 'Hiệu lực từ ngày'], numericHeaders: ['Đơn giá', 'Giá vốn'] },
 
-  { sheetName: SHEET_NAMES.DL_XNT_CUA_HANG, loaiDuLieu: 'XNT cửa hàng', keywords: ['xnt cua hang', 'xuat nhap ton cua hang', 'kho cua hang'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Chi nhánh', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho', 'Kho cửa hàng'], numericHeaders: ['Tồn đầu', 'Nhập', 'Xuất', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch'] },
-  { sheetName: SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM, loaiDuLieu: 'XNT Bếp Trung Tâm', keywords: ['xnt bep trung tam', 'xnt btt', 'kho btt'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'], numericHeaders: ['Tồn đầu', 'Nhập NCC', 'Xuất cửa hàng', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch'] },
+  { sheetName: SHEET_NAMES.DL_XNT_CUA_HANG, loaiDuLieu: 'XNT cửa hàng', keywords: ['xnt cua hang', 'xuat nhap ton cua hang', 'kho cua hang', 'ton kho cua hang'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Chi nhánh', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho', 'Kho cửa hàng'], numericHeaders: ['Tồn đầu', 'Nhập', 'Xuất', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch'] },
+  { sheetName: SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM, loaiDuLieu: 'XNT Bếp Trung Tâm', keywords: ['xnt bep trung tam', 'xnt btt', 'kho btt', 'ton kho bep trung tam', 'ton kho btt', 'ton kho bep'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'], numericHeaders: ['Tồn đầu', 'Nhập NCC', 'Xuất cửa hàng', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch', 'Tồn kho', 'Tồn kho hiện tại'] },
   { sheetName: SHEET_NAMES.DL_XUAT_BTT_CHO_CUA_HANG, loaiDuLieu: 'BTT xuất cho cửa hàng', keywords: ['xuat btt cho cua hang', 'btt xuat', 'xuat btt'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng xuất'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày xuất', 'Thời gian xuất'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho xuất', 'Kho BTT'], numericHeaders: ['Số lượng xuất', 'Số lượng', 'SL xuất'] },
   { sheetName: SHEET_NAMES.DL_CUA_HANG_NHAN_TU_BTT, loaiDuLieu: 'Cửa hàng nhận từ BTT', keywords: ['cua hang nhan tu btt', 'nhan tu btt', 'cua hang nhan'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng nhận'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày nhận', 'Thời gian nhận'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho nhận', 'Kho cửa hàng'], numericHeaders: ['Số lượng nhận', 'Số lượng', 'SL nhận'] },
   { sheetName: SHEET_NAMES.DL_HUY_HANG_CUA_HANG, loaiDuLieu: 'Hủy hàng cửa hàng', keywords: ['huy hang cua hang', 'hang huy cua hang'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho'], numericHeaders: ['Số lượng', 'Giá trị hủy', 'Đơn giá'] },
@@ -93,6 +93,10 @@ function hasEnoughHeaderEvidence(matrix: unknown[][], target: V7Target) {
   return headerScore(matrix, target) >= Math.min(2, target.requiredHeaders.length);
 }
 
+function isSpecificBttInventoryFilename(filename: string) {
+  return filename.includes('ton kho bep trung tam') || filename.includes('ton kho btt') || filename.includes('xnt bep trung tam') || filename.includes('xnt btt');
+}
+
 function findTarget(input: ExcelFileInput, sheetNames: string[], firstSheetName: string, matrix: unknown[][]): V7Target | null {
   const filename = normalize(input.filename);
   const firstName = normalize(firstSheetName);
@@ -100,7 +104,7 @@ function findTarget(input: ExcelFileInput, sheetNames: string[], firstSheetName:
   if (firstSheetExact) return firstSheetExact;
   const firstSheetByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => firstName.includes(normalize(keyword))));
   if (firstSheetByKeyword) return firstSheetByKeyword;
-  const filenameByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => filename.includes(normalize(keyword))) && hasEnoughHeaderEvidence(matrix, target));
+  const filenameByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => filename.includes(normalize(keyword))) && (hasEnoughHeaderEvidence(matrix, target) || (target.sheetName === SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM && isSpecificBttInventoryFilename(filename))));
   if (filenameByKeyword) return filenameByKeyword;
   const headerMatch = TARGETS.map((target) => ({ target, matches: headerScore(matrix, target) })).sort((a, b) => b.matches - a.matches)[0];
   if (headerMatch && headerMatch.matches >= headerMatch.target.requiredHeaders.length) return headerMatch.target;
