@@ -1,6 +1,7 @@
 import { NoPermission } from '@/components/rbac/NoPermission';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BatchUploadMock } from '@/components/forms/BatchUploadMock';
+import { ImportRollbackPanel } from '@/components/forms/ImportRollbackPanel';
 import { MetricCard } from '@/components/report/MetricCard';
 import { ReportTable } from '@/components/report/ReportTable';
 import { Card, CardTitle } from '@/components/ui/Card';
@@ -29,8 +30,9 @@ export default async function ImportNhapLieuPage() {
   const ruleRows = [
     ['Preview trước', 'Upload chỉ đọc, chưa ghi Google Sheet', 'Đạt'],
     ['Chặn lỗi', 'Có lỗi/lệch thì không import', 'Cảnh báo'],
+    ['Khóa kỳ', 'Kỳ đã chốt thì cần quyền đặc biệt', 'Đạt'],
     ['Ghi log', 'Ghi IMPORT_LICH_SU và AUDIT_LOG', 'Đạt'],
-    ['Rollback mềm', 'Hoàn tác theo mã lần import, không xóa cứng', 'Cần kiểm']
+    ['Hoàn tác mềm', 'Đổi trạng thái theo mã lần import', 'Đạt']
   ];
   return (
     <div className="space-y-3">
@@ -44,6 +46,10 @@ export default async function ImportNhapLieuPage() {
       <Card>
         <CardTitle>Batch upload nhiều file</CardTitle>
         <div className="mt-2"><BatchUploadMock /></div>
+      </Card>
+      <Card>
+        <CardTitle>Hoàn tác import theo batch</CardTitle>
+        <div className="mt-2"><ImportRollbackPanel /></div>
       </Card>
       <section className="grid gap-3 xl:grid-cols-[0.7fr_1.3fr]">
         <Card>
