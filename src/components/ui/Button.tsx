@@ -4,10 +4,10 @@ export function Button({ children, variant = 'primary', onClick, disabled = fals
   return (
     <button
       className={clsx(
-        'inline-flex h-10 items-center justify-center rounded-2xl px-4 text-xs font-black shadow-sm ring-offset-2 transition focus:outline-none focus:ring-2 focus:ring-lang-red/20 disabled:cursor-not-allowed disabled:opacity-60',
-        variant === 'primary' && 'bg-lang-red text-white shadow-card hover:bg-lang-redDark',
-        variant === 'secondary' && 'bg-white text-lang-brown ring-1 ring-lang-line hover:bg-lang-cream2',
-        variant === 'danger' && 'bg-red-600 text-white shadow-card hover:bg-red-700'
+        'inline-flex h-9 items-center justify-center rounded-lg px-3 text-[13px] font-bold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-lang-red/20 disabled:cursor-not-allowed disabled:opacity-60',
+        variant === 'primary' && 'bg-lang-red text-white hover:bg-lang-redDark',
+        variant === 'secondary' && 'border border-lang-line bg-white text-lang-ink hover:bg-gray-50',
+        variant === 'danger' && 'bg-red-600 text-white hover:bg-red-700'
       )}
       type="button"
       onClick={onClick}
