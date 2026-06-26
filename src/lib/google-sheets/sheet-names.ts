@@ -1,4 +1,5 @@
 export const SHEET_NAMES = {
+  // Legacy V4/V5 import sources kept for backward compatibility.
   DL_DOANH_THU_APP: 'DL_DOANH_THU_APP',
   DL_DOANH_THU_CUA_HANG: 'DL_DOANH_THU_CUA_HANG',
   DL_SO_QUY: 'DL_SO_QUY',
@@ -6,6 +7,28 @@ export const SHEET_NAMES = {
   DL_THAT_THOAT_NVL: 'DL_THAT_THOAT_NVL',
   DL_CONG_NO: 'DL_CONG_NO',
   DL_THU_MUA: 'DL_THU_MUA',
+
+  // Data Master V7 — ERP Mini foundations.
+  DM_CHI_NHANH: 'DM_CHI_NHANH',
+  DM_KHO_CHI_NHANH: 'DM_KHO_CHI_NHANH',
+  DM_MON_BAN: 'DM_MON_BAN',
+  DM_NGUYEN_VAT_LIEU: 'DM_NGUYEN_VAT_LIEU',
+  DM_CONG_THUC_CHE_BIEN: 'DM_CONG_THUC_CHE_BIEN',
+  DM_HAO_HUT_HOP_LE: 'DM_HAO_HUT_HOP_LE',
+  DM_DON_GIA_NVL: 'DM_DON_GIA_NVL',
+
+  DL_XNT_CUA_HANG: 'DL_XNT_CUA_HANG',
+  DL_XNT_BEP_TRUNG_TAM: 'DL_XNT_BEP_TRUNG_TAM',
+  DL_XUAT_BTT_CHO_CUA_HANG: 'DL_XUAT_BTT_CHO_CUA_HANG',
+  DL_CUA_HANG_NHAN_TU_BTT: 'DL_CUA_HANG_NHAN_TU_BTT',
+  DL_HUY_HANG_CUA_HANG: 'DL_HUY_HANG_CUA_HANG',
+  DL_HUY_HANG_BTT: 'DL_HUY_HANG_BTT',
+  DL_CHE_BIEN_THUC_TE: 'DL_CHE_BIEN_THUC_TE',
+
+  KQ_HAO_HUT_CHE_BIEN: 'KQ_HAO_HUT_CHE_BIEN',
+  KQ_THAT_THOAT_TON_KHO: 'KQ_THAT_THOAT_TON_KHO',
+  TONG_QUAN_KE_TOAN: 'TONG_QUAN_KE_TOAN',
+  LICH_SU_CHOT_BAO_CAO: 'LICH_SU_CHOT_BAO_CAO',
 
   CEO_DASHBOARD: 'CEO_DASHBOARD',
   PL_TUAN: 'P&L_TUAN',
@@ -24,7 +47,7 @@ export const SHEET_NAMES = {
   CAI_DAT_NGUONG: 'CAI_DAT_NGUONG',
 
   // Backward-compatible aliases for older code paths. They intentionally map to
-  // the V5 Data Master sheet names so production does not write to missing tabs.
+  // the V7 Data Master sheet names so production does not write to missing tabs.
   IMPORT_NHAT_KY_XU_LY: 'AUDIT_LOG',
   CAI_DAT_NGUONG_CANH_BAO: 'CAI_DAT_NGUONG',
   CAI_DAT_BOT_BAO_CAO: 'CAI_DAT_BOT'
