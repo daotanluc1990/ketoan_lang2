@@ -23,6 +23,8 @@ npm run build
 
 ## 2. Cấu hình Vercel production
 
+Vercel project mới cần kiểm tra: `https://vercel.com/com-tam-lang/ketoan-lang2`.
+
 Vào Vercel project `ketoan-lang2`, kiểm tra Environment Variables.
 
 Bắt buộc cho dữ liệu thật:
@@ -54,7 +56,7 @@ Làm theo thứ tự:
 
 1. Vào GitHub PR.
 2. Merge bằng squash merge.
-3. Vào Vercel.
+3. Vào Vercel project mới.
 4. Chờ deployment production chạy xong.
 5. Nếu deployment lỗi, không test tiếp; đọc lỗi trước.
 6. Nếu deployment ready, mở app production.
