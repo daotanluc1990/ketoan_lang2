@@ -5,6 +5,8 @@ import type { ChangeEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { ReportTable } from '@/components/report/ReportTable';
 
+const IMPORT_UI_VERSION = 'IMPORT_UI_V8_2_20260626';
+
 type ImportPreviewSummary = {
   dongMoi: number;
   duLieuTrung: number;
@@ -68,7 +70,7 @@ async function readImportResponse(response: Response) {
     ok: false,
     message: text.trim()
       ? `Server trả phản hồi không đúng dạng JSON: ${text.trim().slice(0, 160)}`
-      : 'Server không trả dữ liệu preview. Hãy kiểm tra đăng nhập và cấu hình API.'
+      : 'Server không trả dữ liệu preview. Hãy kiểm tra đăng nhập, cache trình duyệt và cấu hình API.'
   };
 }
 
@@ -77,7 +79,7 @@ export function BatchUploadMock() {
   const [preview, setPreview] = useState<BatchPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [message, setMessage] = useState('Bước 1: chọn file Excel. Bước 2: bấm Kiểm tra batch. Preview không ghi vào Google Sheet.');
+  const [message, setMessage] = useState(`Bản ${IMPORT_UI_VERSION}: chọn file Excel rồi bấm Kiểm tra batch. Preview không ghi vào Google Sheet.`);
 
   const rows = useMemo(() => {
     if (!preview) return selectedFiles.map((file: File) => [file.name, 'Chưa kiểm tra', '—', '—', '—', '—', '—', '—', 'Chưa đủ dữ liệu', 'Bấm Kiểm tra batch']);
@@ -106,7 +108,7 @@ export function BatchUploadMock() {
         ['File không nhận diện', String(preview.summary.soFileKhongNhanDien)],
         ['Kết luận', canConfirm ? 'Đạt' : 'Chưa thể import']
       ]
-    : [['Trạng thái', selectedFiles.length ? 'Đã chọn file, chưa preview' : 'Chưa chọn file']];
+    : [['Trạng thái', selectedFiles.length ? 'Đã chọn file, chưa preview' : 'Chưa chọn file'], ['Bản import', IMPORT_UI_VERSION]];
 
   async function checkBatch() {
     if (!selectedFiles.length) {
@@ -120,10 +122,10 @@ export function BatchUploadMock() {
       const formData = new FormData();
       for (const file of selectedFiles) formData.append('files', file);
       formData.append('actor', 'web-ketoan');
-      const response = await fetch('/api/import/preview', { method: 'POST', body: formData });
+      const response = await fetch('/api/import/preview', { method: 'POST', body: formData, cache: 'no-store' });
       const payload = await readImportResponse(response);
       if (!response.ok || !payload.ok) throw new Error(payloadErrorMessage(payload, 'Không preview được batch.'));
-      if (!payload.data?.files || !Array.isArray(payload.data.files)) throw new Error('API preview trả dữ liệu không đúng dạng batch. Hãy deploy lại bản mới nhất.');
+      if (!payload.data?.files || !Array.isArray(payload.data.files)) throw new Error('API preview trả dữ liệu không đúng dạng batch. Hãy deploy lại bản mới nhất và hard refresh trình duyệt.');
       setPreview(payload.data);
       setMessage('Đã kiểm tra batch. Chỉ bấm Import file đạt khi Lỗi = 0, Lệch = 0 và file được nhận diện đúng.');
     } catch (error) {
@@ -141,7 +143,8 @@ export function BatchUploadMock() {
       const response = await fetch('/api/import/confirm', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ batch: preview, actor: 'web-ketoan' })
+        body: JSON.stringify({ batch: preview, actor: 'web-ketoan' }),
+        cache: 'no-store'
       });
       const payload = await readImportResponse(response);
       if (!response.ok || !payload.ok) throw new Error(payloadErrorMessage(payload, 'Không import được batch.'));
@@ -157,7 +160,7 @@ export function BatchUploadMock() {
   function cancelBatch() {
     setSelectedFiles([]);
     setPreview(null);
-    setMessage('Đã hủy batch trên màn hình. Chưa thay đổi Google Sheet.');
+    setMessage(`Đã hủy batch trên màn hình. Chưa thay đổi Google Sheet. Bản ${IMPORT_UI_VERSION}.`);
   }
 
   function downloadErrorFile() {
@@ -183,12 +186,12 @@ export function BatchUploadMock() {
             onChange={(event: ChangeEvent<HTMLInputElement>) => {
               setSelectedFiles(Array.from(event.target.files ?? []));
               setPreview(null);
-              setMessage('Đã chọn file. Bấm Kiểm tra batch để preview thật.');
+              setMessage(`Đã chọn file. Bấm Kiểm tra batch để preview thật. Bản ${IMPORT_UI_VERSION}.`);
             }}
           />
           <span className="text-base font-bold text-lang-brown">Kéo thả hoặc bấm để chọn nhiều file</span>
           <span className="mt-2 block text-sm text-black/60">Hỗ trợ nguồn cũ và Data Master V7: doanh thu, sổ quỹ, XNT cửa hàng, XNT BTT, tồn kho Bếp Trung Tâm, xuất/nhận BTT, hàng hủy, chế biến thực tế, định mức, công nợ.</span>
-          <span className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-lang-brown shadow-sm">Preview trước, confirm sau</span>
+          <span className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-lang-brown shadow-sm">Preview trước, confirm sau · {IMPORT_UI_VERSION}</span>
         </label>
 
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
