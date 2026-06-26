@@ -50,10 +50,14 @@ function statusFromFile(file: BatchPreviewFile) {
 
 function nextActionFromFile(file: BatchPreviewFile) {
   const status = statusFromFile(file);
-  if (status === 'Có lỗi') return 'Sửa dòng lỗi trước khi import';
+  if (status === 'Có lỗi') return file.warnings[0] || 'Sửa dòng lỗi trước khi import';
   if (status === 'Cần đối chiếu') return 'Đối chiếu dữ liệu lệch';
-  if (status === 'Cảnh báo') return 'Kiểm tra loại file/chi nhánh';
+  if (status === 'Cảnh báo') return file.warnings[0] || 'Kiểm tra loại file/chi nhánh';
   return 'Có thể import';
+}
+
+function payloadErrorMessage(payload: { message?: string; error?: { message?: string } }, fallback: string) {
+  return payload.error?.message ?? payload.message ?? fallback;
 }
 
 async function readImportResponse(response: Response) {
@@ -118,7 +122,7 @@ export function BatchUploadMock() {
       formData.append('actor', 'web-ketoan');
       const response = await fetch('/api/import/preview', { method: 'POST', body: formData });
       const payload = await readImportResponse(response);
-      if (!response.ok || !payload.ok) throw new Error(payload.message ?? 'Không preview được batch.');
+      if (!response.ok || !payload.ok) throw new Error(payloadErrorMessage(payload, 'Không preview được batch.'));
       if (!payload.data?.files || !Array.isArray(payload.data.files)) throw new Error('API preview trả dữ liệu không đúng dạng batch. Hãy deploy lại bản mới nhất.');
       setPreview(payload.data);
       setMessage('Đã kiểm tra batch. Chỉ bấm Import file đạt khi Lỗi = 0, Lệch = 0 và file được nhận diện đúng.');
@@ -140,7 +144,7 @@ export function BatchUploadMock() {
         body: JSON.stringify({ batch: preview, actor: 'web-ketoan' })
       });
       const payload = await readImportResponse(response);
-      if (!response.ok || !payload.ok) throw new Error(payload.message ?? 'Không import được batch.');
+      if (!response.ok || !payload.ok) throw new Error(payloadErrorMessage(payload, 'Không import được batch.'));
       const writtenRows = Array.isArray(payload.results) ? payload.results.reduce((total: number, item: { writtenRows?: number }) => total + (item.writtenRows ?? 0), 0) : 0;
       setMessage(`Đã ghi Google Sheet: ${writtenRows} dòng mới. Hãy mở các sheet DL_*, DM_*, KQ_* và IMPORT_* để kiểm tra dữ liệu, lỗi/trùng/lệch.`);
     } catch (error) {
@@ -183,7 +187,7 @@ export function BatchUploadMock() {
             }}
           />
           <span className="text-base font-bold text-lang-brown">Kéo thả hoặc bấm để chọn nhiều file</span>
-          <span className="mt-2 block text-sm text-black/60">Hỗ trợ nguồn cũ và Data Master V7: doanh thu, sổ quỹ, XNT cửa hàng, XNT BTT, xuất/nhận BTT, hàng hủy, chế biến thực tế, định mức, công nợ.</span>
+          <span className="mt-2 block text-sm text-black/60">Hỗ trợ nguồn cũ và Data Master V7: doanh thu, sổ quỹ, XNT cửa hàng, XNT BTT, tồn kho Bếp Trung Tâm, xuất/nhận BTT, hàng hủy, chế biến thực tế, định mức, công nợ.</span>
           <span className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-lang-brown shadow-sm">Preview trước, confirm sau</span>
         </label>
 
