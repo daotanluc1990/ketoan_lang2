@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { getServerEnv } from '@/lib/env/server-env';
 import type { Role } from '@/lib/report-types';
 import type { DashboardReport } from '@/lib/reports/report-aggregator';
@@ -97,7 +97,7 @@ export type RbacContext = {
   role: AppRole | null;
   actor: string;
   rbacEnabled: boolean;
-  source: 'header' | 'query' | 'cookie' | 'default' | 'disabled' | 'missing';
+  source: 'auth' | 'header' | 'query' | 'cookie' | 'default' | 'disabled' | 'missing';
 };
 
 function normalizeKey(value: string) {
@@ -123,6 +123,12 @@ export function getRolePermissionLabels(role: AppRole) {
   return Object.entries(PERMISSION_MATRIX).filter(([, roles]) => roles.includes(role)).map(([permission]) => permission);
 }
 
+function authContextFromHeaders(getHeader: (name: string) => string | null, rbacEnabled: boolean): RbacContext | null {
+  const role = normalizeRole(getHeader('x-ctl-auth-role'));
+  if (!role) return null;
+  return { role, actor: getHeader('x-ctl-auth-actor') ?? role, rbacEnabled, source: 'auth' };
+}
+
 function requestOverrideContext(request: NextRequest, rbacEnabled: boolean): RbacContext | null {
   if (!allowClientRoleSource()) return null;
   const url = new URL(request.url);
@@ -146,11 +152,14 @@ function fallbackContext(rbacEnabled: boolean, defaultRole: AppRole | null): Rba
 
 export function getRoleFromRequest(request: NextRequest): RbacContext {
   const env = getServerEnv();
-  return requestOverrideContext(request, env.rbacEnabled) ?? fallbackContext(env.rbacEnabled, normalizeRole(env.appDefaultRole));
+  return authContextFromHeaders((name) => request.headers.get(name), env.rbacEnabled) ?? requestOverrideContext(request, env.rbacEnabled) ?? fallbackContext(env.rbacEnabled, normalizeRole(env.appDefaultRole));
 }
 
 export async function getRoleFromServerCookies(): Promise<RbacContext> {
   const env = getServerEnv();
+  const headerStore = await headers();
+  const authContext = authContextFromHeaders((name) => headerStore.get(name), env.rbacEnabled);
+  if (authContext) return authContext;
   if (allowClientRoleSource()) {
     const cookieStore = await cookies();
     const role = normalizeRole(cookieStore.get('ctl_role')?.value);
