@@ -56,7 +56,7 @@ export function WeeklyClosePanel() {
 
   async function confirmClose(force = false) {
     setLoading(true);
-    setMessage(force ? 'Đang chốt cưỡng bức...' : 'Đang chốt báo cáo...');
+    setMessage(force ? 'Đang chốt đặc biệt...' : 'Đang chốt báo cáo...');
     try {
       const response = await fetch('/api/weekly-close/confirm', {
         method: 'POST',
@@ -96,7 +96,7 @@ export function WeeklyClosePanel() {
       <div className="mt-3 flex flex-wrap gap-2">
         <Button onClick={previewClose} disabled={loading}>{loading ? 'Đang xử lý...' : 'Preview chốt'}</Button>
         <Button variant="secondary" onClick={() => confirmClose(false)} disabled={loading || !canClose}>Xác nhận chốt</Button>
-        <Button variant="danger" onClick={() => confirmClose(true)} disabled={loading}>Chốt cưỡng bức</Button>
+        <Button variant="danger" onClick={() => confirmClose(true)} disabled={loading}>Chốt đặc biệt</Button>
       </div>
       <div className="mt-3 rounded-lg bg-lang-cream px-3 py-2 text-sm font-semibold text-lang-brown">{message}</div>
       <div className="mt-3">
