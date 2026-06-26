@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { AppShell } from '@/components/layout/AppShell';
 
 export const metadata: Metadata = {
-  title: 'Cơm Tấm Làng — CEO Report Dashboard',
-  description: 'Dashboard báo cáo CEO cho Cơm Tấm Làng'
+  title: 'Cơm Tấm Làng — ERP Mini Kế Toán',
+  description: 'ERP mini báo cáo kế toán quản trị cho Cơm Tấm Làng'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
