@@ -3,6 +3,7 @@ import { SHEET_NAMES } from '@/lib/google-sheets/sheet-names';
 import { writeAuditLog } from '@/lib/audit/audit-log';
 import { AUDIT_EVENTS } from '@/lib/audit/audit-events';
 import { buildDashboardReport } from '@/lib/reports/report-aggregator';
+import { sendCeoWeeklyCloseMessage } from '@/lib/bot/ceo-telegram';
 import { buildBttInventoryReport, buildBttTransferReport, buildStandardLossReport, buildStockLossReport, buildStoreInventoryReport, buildWasteReport } from './report-engines';
 
 type CloseStatus = 'Đủ điều kiện chốt' | 'Chưa đủ điều kiện chốt';
@@ -101,6 +102,7 @@ export async function confirmWeeklyClose(input: CloseInput) {
   const store = getDataStore();
   const id = closeId(input.periodCode, preview.branch);
   const closedAt = nowIso();
+  const botResult = await sendCeoWeeklyCloseMessage(preview.snapshot, id).catch((error) => ({ ok: false, skipped: false, message: error instanceof Error ? error.message : 'Không gửi được bot.' }));
   const row = {
     'Mã chốt': id,
     'Kỳ báo cáo': input.periodCode,
@@ -110,19 +112,20 @@ export async function confirmWeeklyClose(input: CloseInput) {
     'Trạng thái dữ liệu': preview.status,
     'Chốt cưỡng bức': !preview.canClose && input.force ? 'Có' : 'Không',
     'Số lỗi chặn': preview.blockingChecks.length,
-    'Gửi CEO/Bot': 'Chưa gửi',
+    'Gửi CEO/Bot': botResult.ok ? 'Đã gửi' : botResult.skipped ? 'Chưa cấu hình' : 'Gửi lỗi',
     'Snapshot JSON': JSON.stringify(preview.snapshot),
-    'Ghi chú': input.note ?? ''
+    'Ghi chú': `${input.note ?? ''}${input.note ? ' · ' : ''}${botResult.message}`
   };
 
   await store.append(SHEET_NAMES.LICH_SU_CHOT_BAO_CAO, [row]);
-  await writeAuditLog({ eventType: AUDIT_EVENTS.WEEKLY_CLOSE_CONFIRMED, actor: input.actor, target: id, after: row, note: input.note });
+  await writeAuditLog({ eventType: AUDIT_EVENTS.WEEKLY_CLOSE_CONFIRMED, actor: input.actor, target: id, after: { row, botResult }, note: input.note });
 
   return {
     ok: true,
     closeId: id,
     closedAt,
     row,
+    botResult,
     preview
   };
 }
