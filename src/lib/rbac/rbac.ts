@@ -110,6 +110,11 @@ function normalizeKey(value: string) {
     .replace(/[^a-z0-9]+/g, '-');
 }
 
+function allowRequestRoleOverride() {
+  if (process.env.APP_ALLOW_ROLE_OVERRIDE === 'true') return true;
+  return process.env.NODE_ENV !== 'production';
+}
+
 export function normalizeRole(value: unknown): AppRole | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
@@ -132,10 +137,11 @@ export function getRolePermissionLabels(role: AppRole) {
 export function getRoleFromRequest(request: NextRequest): RbacContext {
   const env = getServerEnv();
   const url = new URL(request.url);
-  const headerRole = normalizeRole(request.headers.get('x-ctl-role') ?? request.headers.get('x-user-role'));
+  const allowOverride = allowRequestRoleOverride();
+  const headerRole = allowOverride ? normalizeRole(request.headers.get('x-ctl-role') ?? request.headers.get('x-user-role')) : null;
   if (headerRole) return { role: headerRole, actor: request.headers.get('x-ctl-actor') ?? headerRole, rbacEnabled: env.rbacEnabled, source: 'header' };
 
-  const queryRole = normalizeRole(url.searchParams.get('role'));
+  const queryRole = allowOverride ? normalizeRole(url.searchParams.get('role')) : null;
   if (queryRole) return { role: queryRole, actor: url.searchParams.get('actor') ?? queryRole, rbacEnabled: env.rbacEnabled, source: 'query' };
 
   const cookieRole = normalizeRole(request.cookies.get('ctl_role')?.value);
