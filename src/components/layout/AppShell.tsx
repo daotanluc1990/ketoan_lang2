@@ -41,9 +41,7 @@ function readStoredRole(): Role {
     if (cookieRole) return cookieRole;
     const value = window.localStorage.getItem(ROLE_KEY) as Role | null;
     if (value === 'CEO' || value === 'Kế toán' || value === 'Admin' || value === 'Quản lý cửa hàng') return value;
-  } catch {
-    // ignore storage errors in restricted preview environments
-  }
+  } catch {}
   return 'Kế toán';
 }
 
@@ -65,16 +63,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     writeRoleCookie(nextRole);
   };
 
-  const contentPadding = useMemo(() => (collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'), [collapsed]);
+  const contentPadding = useMemo(() => (collapsed ? 'lg:pl-[86px]' : 'lg:pl-[280px]'), [collapsed]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-lang-cream text-lang-ink">
+    <div className="app-bg min-h-screen overflow-x-hidden text-lang-ink">
       <Sidebar collapsed={collapsed} onToggle={toggleCollapsed} role={role} />
       <div className={clsx('min-h-screen transition-[padding] duration-200', contentPadding)}>
         <TopBar role={role} onRoleChange={setSelectedRole} />
         <GlobalFilterBar />
-        <main className="w-full px-3 py-3 sm:px-4 lg:px-5">
-          {children}
+        <main className="w-full px-3 py-4 sm:px-5 lg:px-6 xl:px-7">
+          <div className="mx-auto w-full max-w-[1640px] space-y-4">
+            {children}
+          </div>
         </main>
       </div>
     </div>
