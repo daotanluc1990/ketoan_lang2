@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { FilterOption, ReportFilterOptions } from '@/lib/reports/report-filters';
+import { Filter, RotateCcw, SlidersHorizontal } from 'lucide-react';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="min-w-0"><span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-black/45">{label}</span>{children}</label>;
+  return <label className="min-w-0"><span className="mb-1 block text-[10px] font-black uppercase tracking-[0.16em] text-lang-muted">{label}</span>{children}</label>;
 }
 
-const inputClass = 'h-9 w-full min-w-0 rounded-xl border border-black/10 bg-white px-3 text-xs font-bold text-lang-brown shadow-sm outline-none focus:border-lang-red/60 focus:ring-2 focus:ring-lang-red/10';
+const inputClass = 'h-10 w-full min-w-0 rounded-2xl border border-lang-line bg-white px-3 text-xs font-black text-lang-brown shadow-sm outline-none transition focus:border-lang-red/60 focus:ring-2 focus:ring-lang-red/10';
 const emptyOptions: ReportFilterOptions = { branches: [], weeks: [], channels: [], sources: [], dataStatuses: [], alertStatuses: [], costGroups: [], importedBy: [] };
 
 type FilterState = {
@@ -73,11 +74,11 @@ function SelectField({ name, label, value, options, onChange, fallback = [] }: {
 }
 
 function FilterTile({ label, value, tone = 'neutral' }: { label: string; value: string; tone?: 'neutral' | 'warning' | 'danger' | 'good' }) {
-  const toneClass = tone === 'danger' ? 'border-red-200 bg-red-50 text-red-800' : tone === 'warning' ? 'border-amber-200 bg-amber-50 text-amber-800' : tone === 'good' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-black/10 bg-white text-lang-brown';
+  const toneClass = tone === 'danger' ? 'border-red-200 bg-red-50 text-red-800' : tone === 'warning' ? 'border-amber-200 bg-amber-50 text-amber-800' : tone === 'good' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-lang-line bg-lang-paper text-lang-brown';
   return (
     <div className={`min-w-0 rounded-2xl border px-3 py-2 shadow-sm ${toneClass}`}>
-      <p className="truncate text-[10px] font-black uppercase tracking-wide opacity-60">{label}</p>
-      <p className="mt-0.5 truncate text-sm font-extrabold">{value || 'Tất cả'}</p>
+      <p className="truncate text-[10px] font-black uppercase tracking-[0.15em] opacity-60">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-black">{value || 'Tất cả'}</p>
     </div>
   );
 }
@@ -108,10 +109,10 @@ export function GlobalFilterBar() {
   };
 
   return (
-    <section className="sticky top-16 z-10 border-b border-black/5 bg-lang-cream/92 backdrop-blur">
-      <form method="get" className="w-full px-3 py-2 sm:px-4 lg:px-5">
-        <div className="rounded-2xl bg-white/85 p-2 shadow-sm ring-1 ring-black/5">
-          <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+    <section className="sticky top-[76px] z-10 border-b border-lang-line/60 bg-lang-cream/82 backdrop-blur-xl">
+      <form method="get" className="mx-auto w-full max-w-[1640px] px-3 py-3 sm:px-5 lg:px-6 xl:px-7">
+        <div className="glass-surface rounded-3xl p-3">
+          <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
             <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-5">
               <FilterTile label="Chi nhánh" value={filters.branch || 'Toàn hệ thống'} />
               <FilterTile label="Kỳ báo cáo" value={filters.weekCode || 'Tuần hiện tại'} />
@@ -119,15 +120,15 @@ export function GlobalFilterBar() {
               <FilterTile label="Nguồn" value={filters.source || 'Tất cả nguồn'} />
               <FilterTile label="Cảnh báo" value={filters.alertStatus || 'Đang theo dõi'} tone={filters.alertStatus?.includes('Nguy') ? 'danger' : filters.alertStatus ? 'warning' : 'good'} />
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-2 xl:justify-end">
-              <span className="text-[11px] font-bold text-black/45">{status} · {activeFilterCount ? `${activeFilterCount} bộ lọc` : 'Chưa lọc'}</span>
-              <button className="h-9 rounded-xl bg-white px-3 text-xs font-extrabold text-lang-brown shadow-sm ring-1 ring-black/10 hover:bg-lang-cream" type="button" onClick={() => setExpanded((current) => !current)}>{expanded ? 'Ẩn bộ lọc' : 'Bộ lọc nâng cao'}</button>
-              <button className="h-9 rounded-xl bg-lang-red px-3 text-xs font-extrabold text-white shadow-sm hover:bg-lang-red/90" type="submit">Lọc</button>
-              <button className="h-9 rounded-xl bg-white px-3 text-xs font-extrabold text-lang-brown ring-1 ring-black/10 hover:bg-lang-cream" type="button" onClick={resetFilters}>Xóa</button>
+            <div className="flex flex-wrap items-center justify-between gap-2 2xl:justify-end">
+              <span className="rounded-full bg-white/70 px-3 py-2 text-[11px] font-black text-lang-muted ring-1 ring-lang-line">{status} · {activeFilterCount ? `${activeFilterCount} bộ lọc` : 'Chưa lọc'}</span>
+              <button className="inline-flex h-10 items-center gap-2 rounded-2xl bg-white px-3 text-xs font-black text-lang-brown shadow-sm ring-1 ring-lang-line hover:bg-lang-cream2" type="button" onClick={() => setExpanded((current) => !current)}><SlidersHorizontal className="h-4 w-4 text-lang-red" />{expanded ? 'Ẩn bộ lọc' : 'Bộ lọc nâng cao'}</button>
+              <button className="inline-flex h-10 items-center gap-2 rounded-2xl bg-lang-red px-4 text-xs font-black text-white shadow-card hover:bg-lang-redDark" type="submit"><Filter className="h-4 w-4" />Lọc</button>
+              <button className="inline-flex h-10 items-center gap-2 rounded-2xl bg-white px-3 text-xs font-black text-lang-brown ring-1 ring-lang-line hover:bg-lang-cream2" type="button" onClick={resetFilters}><RotateCcw className="h-4 w-4 text-lang-red" />Xóa</button>
             </div>
           </div>
           {expanded ? (
-            <div className="mt-3 grid gap-2 border-t border-black/5 pt-3 md:grid-cols-5 xl:grid-cols-10">
+            <div className="mt-3 grid gap-2 border-t border-lang-line pt-3 md:grid-cols-5 xl:grid-cols-10">
               <SelectField name="branch" label="Chi nhánh" value={filters.branch} options={options.branches} fallback={['Làng NVT', 'Bếp trung tâm', 'Toàn hệ thống']} onChange={updateFilter} />
               <SelectField name="weekCode" label="Kỳ báo cáo" value={filters.weekCode} options={options.weeks} fallback={['2026-W23']} onChange={updateFilter} />
               <Field label="Từ ngày"><input name="fromDate" className={inputClass} type="date" value={filters.fromDate} aria-label="Từ ngày" onChange={(event) => updateFilter('fromDate', event.target.value)} /></Field>
