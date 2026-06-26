@@ -4,6 +4,7 @@ import type { ImportPreviewResult } from './import-types';
 import { writeAuditLog } from '@/lib/audit/audit-log';
 import { AUDIT_EVENTS } from '@/lib/audit/audit-events';
 import { writeImportControlLogs } from './import-control-log';
+import { describeClosedPeriodMatches, findClosedPeriodMatches } from '@/lib/reports/v7/period-guard';
 
 function inferWeek(preview: ImportPreviewResult) {
   const week = preview.rows.map((row) => String(row.data['Mã tuần'] ?? row.data['Tuần'] ?? '').trim()).find(Boolean);
@@ -17,27 +18,45 @@ function importStatus(preview: ImportPreviewResult, writtenRows: number) {
   return 'Đã xác nhận';
 }
 
-export async function confirmImport(preview: ImportPreviewResult, actor: string, options: { allowPartial?: boolean } = {}) {
+async function appendImportHistory(preview: ImportPreviewResult, actor: string, status: string, note: string) {
+  await getDataStore().append(SHEET_NAMES.IMPORT_LICH_SU, [
+    {
+      'Mã lần import': preview.maLanImport,
+      'Ngày import': new Date().toISOString(),
+      'Người import': actor,
+      'Chi nhánh': preview.chiNhanh,
+      'Tuần': inferWeek(preview),
+      'Số file': 1,
+      'Tổng dòng mới': preview.summary.dongMoi,
+      'Tổng dòng trùng': preview.summary.duLieuTrung,
+      'Tổng dòng lệch': preview.summary.duLieuLech,
+      'Tổng dòng lỗi': preview.summary.dongLoi,
+      'Trạng thái': status,
+      'Ghi chú': note
+    }
+  ]);
+}
+
+export async function confirmImport(preview: ImportPreviewResult, actor: string, options: { allowPartial?: boolean; forceClosedPeriod?: boolean } = {}) {
   const hasBlockingRows = preview.summary.dongLoi > 0 || preview.summary.duLieuLech > 0;
   const controlLog = await writeImportControlLogs(preview);
 
+  const closedPeriodMatches = await findClosedPeriodMatches(preview);
+  if (closedPeriodMatches.length && options.forceClosedPeriod !== true) {
+    const closedMessage = describeClosedPeriodMatches(closedPeriodMatches);
+    await appendImportHistory(preview, actor, 'Thất bại', `${preview.loaiDuLieu}: ${preview.tenFile}. Kỳ đã chốt: ${closedMessage}`);
+    await writeAuditLog({ eventType: AUDIT_EVENTS.IMPORT_CONFIRM, actor, target: preview.maLanImport, after: { ...preview.summary, controlLog, status: 'closed_period_blocked', closedPeriodMatches } });
+    return {
+      ok: false,
+      writtenRows: 0,
+      controlLog,
+      closedPeriodMatches,
+      message: `Kỳ báo cáo đã chốt nên không ghi dữ liệu mới. Cần CEO/Admin mở kỳ hoặc dùng chốt đặc biệt: ${closedMessage}`
+    };
+  }
+
   if (hasBlockingRows && options.allowPartial !== true) {
-    await getDataStore().append(SHEET_NAMES.IMPORT_LICH_SU, [
-      {
-        'Mã lần import': preview.maLanImport,
-        'Ngày import': new Date().toISOString(),
-        'Người import': actor,
-        'Chi nhánh': preview.chiNhanh,
-        'Tuần': inferWeek(preview),
-        'Số file': 1,
-        'Tổng dòng mới': preview.summary.dongMoi,
-        'Tổng dòng trùng': preview.summary.duLieuTrung,
-        'Tổng dòng lệch': preview.summary.duLieuLech,
-        'Tổng dòng lỗi': preview.summary.dongLoi,
-        'Trạng thái': 'Thất bại',
-        'Ghi chú': `${preview.loaiDuLieu}: ${preview.tenFile}. Chưa ghi vì có lỗi/lệch.`
-      }
-    ]);
+    await appendImportHistory(preview, actor, 'Thất bại', `${preview.loaiDuLieu}: ${preview.tenFile}. Chưa ghi vì có lỗi/lệch.`);
     await writeAuditLog({ eventType: AUDIT_EVENTS.IMPORT_CONFIRM, actor, target: preview.maLanImport, after: { ...preview.summary, controlLog, status: 'blocked' } });
     return {
       ok: false,
@@ -70,22 +89,7 @@ export async function confirmImport(preview: ImportPreviewResult, actor: string,
   }
 
   const status = importStatus(preview, rowsToWrite.length);
-  await store.append(SHEET_NAMES.IMPORT_LICH_SU, [
-    {
-      'Mã lần import': preview.maLanImport,
-      'Ngày import': new Date().toISOString(),
-      'Người import': actor,
-      'Chi nhánh': preview.chiNhanh,
-      'Tuần': inferWeek(preview),
-      'Số file': 1,
-      'Tổng dòng mới': preview.summary.dongMoi,
-      'Tổng dòng trùng': preview.summary.duLieuTrung,
-      'Tổng dòng lệch': preview.summary.duLieuLech,
-      'Tổng dòng lỗi': preview.summary.dongLoi,
-      'Trạng thái': status,
-      'Ghi chú': `${preview.loaiDuLieu}: ${preview.tenFile}. Ghi ${rowsToWrite.length} dòng mới. ${controlLog.errorRows || controlLog.duplicateRows || controlLog.mismatchRows ? 'Có log kiểm soát.' : ''}`
-    }
-  ]);
+  await appendImportHistory(preview, actor, status, `${preview.loaiDuLieu}: ${preview.tenFile}. Ghi ${rowsToWrite.length} dòng mới. ${controlLog.errorRows || controlLog.duplicateRows || controlLog.mismatchRows ? 'Có log kiểm soát.' : ''}`);
 
   await writeAuditLog({ eventType: AUDIT_EVENTS.IMPORT_CONFIRM, actor, target: preview.maLanImport, after: { ...preview.summary, writtenRows: rowsToWrite.length, controlLog, status } });
   return {
