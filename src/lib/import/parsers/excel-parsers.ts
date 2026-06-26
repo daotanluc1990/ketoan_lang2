@@ -4,6 +4,7 @@ import { createRowHash } from '@/lib/import/row-hash';
 import type { ImportRow } from '@/lib/import/import-types';
 import type { ExcelFileInput, ParsedExcelImport } from './import-parser-types';
 import { cleanHeader, getMonth, getWeekCode, getYear, inferBranch, normalizeChannel, readWorkbook, rowsAsMatrix, sheetToRows, toDateString, toNumber } from './excel-utils';
+import { parseV7ExcelFile } from './v7-parsers';
 
 function makeImportRow(sheetDich: string, keyParts: Array<string | number | undefined | null>, data: Record<string, unknown>, errors: string[] = []): ImportRow {
   const maDongDuLieu = createRecordKey([sheetDich, ...keyParts]);
@@ -429,6 +430,9 @@ function parseFactDataStorageLoss(input: ExcelFileInput, workbook: ReturnType<ty
 }
 
 export function parseExcelFile(input: ExcelFileInput): ParsedExcelImport {
+  const v7Parsed = parseV7ExcelFile(input);
+  if (v7Parsed) return v7Parsed;
+
   const { workbook, firstSheet } = readWorkbook(input.buffer);
   const matrix = rowsAsMatrix(firstSheet);
   if (looksLikeStoreRevenue(input.filename, matrix)) return parseStoreRevenueFile(input);
