@@ -51,7 +51,6 @@ function looksLikeLossReport(filename: string, workbookSheetNames: string[], mat
   return filename.toLowerCase().includes('thất thoát') || workbookSheetNames.some((name) => name.toLowerCase().includes('thất thoát')) || rowText.includes('kiểm soát thất thoát');
 }
 
-
 function looksLikeDebtFile(filename: string, matrix: unknown[][]) {
   const rowText = matrix.slice(0, 5).flat().map(cleanHeader).join('|').toLowerCase();
   return filename.toLowerCase().includes('congno') || filename.toLowerCase().includes('công nợ') || (rowText.includes('phải trả') && rowText.includes('còn phải trả'));
@@ -73,6 +72,15 @@ function getValue(row: Record<string, unknown>, candidates: string[]) {
     if (found && String(found[1] ?? '').trim() !== '') return found[1];
   }
   return '';
+}
+
+function normalizeText(value: unknown) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
 }
 
 export function parseDebtFile(input: ExcelFileInput): ParsedExcelImport {
@@ -178,7 +186,7 @@ export function parseCashbookFile(input: ExcelFileInput): ParsedExcelImport {
   const rows = sheetToRows(firstSheet).filter((row) => String(row['Mã phiếu'] ?? '').trim());
   const parsedRows: ImportRow[] = rows.map((row, idx) => {
     const ngay = toDateString(row['Thời gian']);
-    const loaiThuChi = String(row['Loại thu chi'] ?? '');
+    const loaiThuChi = String(row['Loại thu chi'] ?? row['Diễn giải'] ?? row['Nội dung'] ?? '');
     const giaTri = toNumber(row['Giá trị']);
     const data = withSource({
       'Ngày': ngay,
@@ -186,7 +194,7 @@ export function parseCashbookFile(input: ExcelFileInput): ParsedExcelImport {
       'Tháng': getMonth(ngay),
       'Tuần': getWeekCode(ngay).split('-W')[1] ?? '',
       'Mã tuần': getWeekCode(ngay),
-      'Chi nhánh': inferBranch(loaiThuChi),
+      'Chi nhánh': inferCashbookBranch(row, loaiThuChi),
       'Loại giao dịch': giaTri >= 0 ? 'Thu' : 'Chi',
       'Nhóm thu/chi': inferExpenseGroup(loaiThuChi),
       'Diễn giải': loaiThuChi,
@@ -200,15 +208,31 @@ export function parseCashbookFile(input: ExcelFileInput): ParsedExcelImport {
   return { tenFile: input.filename, loaiDuLieu: 'Sổ quỹ', chiNhanh: 'NVT', rows: parsedRows, warnings: [] };
 }
 
+function inferCashbookBranch(row: Record<string, unknown>, description: string) {
+  const rawBranch = String(getValue(row, ['Chi nhánh', 'Cửa hàng', 'Tên CH']) ?? '').trim();
+  const normalized = normalizeText(`${rawBranch} ${description}`);
+  if (normalized.includes('btt') || normalized.includes('bep trung tam')) return 'BTT';
+  if (normalized.includes('nvt') || normalized.includes('nguyen van tang') || normalized.includes('lang nvt')) return 'NVT';
+  if (rawBranch && rawBranch.length <= 30 && !normalizeText(rawBranch).includes('phieu')) return inferBranch(rawBranch);
+  return 'Chưa xác định';
+}
+
 function inferExpenseGroup(text: string) {
-  const lower = text.toLowerCase();
-  if (lower.includes('doanh thu')) return 'Doanh thu';
-  if (lower.includes('rau')) return 'Rau củ';
-  if (lower.includes('thịt')) return 'Nguyên liệu chính';
-  if (lower.includes('lương') || lower.includes('tạm ứng')) return 'Lao động';
-  if (lower.includes('gas') || lower.includes('điện') || lower.includes('nước')) return 'Điện/nước/gas';
-  if (lower.includes('sửa')) return 'Sửa chữa/bảo trì';
-  return 'Khác';
+  const lower = normalizeText(text);
+  if (lower.includes('doanh thu') || lower.includes('khach tra')) return 'Doanh thu';
+  if (lower.includes('tra ncc') || lower.includes('nha cung cap') || lower.includes('phai tra')) return 'Trả NCC';
+  if (lower.includes('bao bi') || lower.includes('hop') || lower.includes('ly') || lower.includes('muong') || lower.includes('tui')) return 'Bao bì';
+  if (lower.includes('rau') || lower.includes('dua leo') || lower.includes('do chua')) return 'Rau củ';
+  if (lower.includes('suon') || lower.includes('thit') || lower.includes('moc') || lower.includes('trung')) return 'Nguyên liệu chính';
+  if (lower.includes('gao') || lower.includes('com')) return 'Gạo/cơm';
+  if (lower.includes('tac') || lower.includes('mat ong') || lower.includes('tra') || lower.includes('nuoc duong')) return 'Đồ uống';
+  if (lower.includes('luong') || lower.includes('tam ung') || lower.includes('cong')) return 'Lao động';
+  if (lower.includes('mat bang') || lower.includes('tien nha') || lower.includes('thue nha')) return 'Mặt bằng';
+  if (lower.includes('gas') || lower.includes('dien') || lower.includes('nuoc') || lower.includes('nhien lieu')) return 'Điện/nước/gas';
+  if (lower.includes('sua') || lower.includes('bao duong') || lower.includes('bao tri')) return 'Sửa chữa/bảo trì';
+  if (lower.includes('marketing') || lower.includes('quang cao') || lower.includes('khuyen mai')) return 'Marketing';
+  if (lower.includes('btt') || lower.includes('bep trung tam')) return 'Bếp trung tâm';
+  return 'Chưa phân loại';
 }
 
 export function parseInventoryFile(input: ExcelFileInput): ParsedExcelImport {
@@ -231,7 +255,8 @@ export function parseInventoryFile(input: ExcelFileInput): ParsedExcelImport {
       'Giá trị tồn': giaVon * ton,
       'Trạng thái tồn âm': ton < 0 ? 'Tồn âm' : 'Không',
       'Định mức tồn tối thiểu': min,
-      'Định mức tồn tối đa': max
+      'Định mức tồn tối đa': max,
+      'Trạng thái kiểm soát tồn': getInventoryStatus(ton, min, max)
     }, input.filename, idx + 2);
     return makeImportRow(SHEET_NAMES.DL_TON_KHO, [String(row['Mã hàng'] ?? ''), today], data, row['Mã hàng'] ? [] : ['Thiếu mã hàng']);
   });
@@ -356,7 +381,6 @@ export function parseLossReportFile(input: ExcelFileInput): ParsedExcelImport {
   });
   return { tenFile: input.filename, loaiDuLieu: 'Thất thoát NVL', chiNhanh: 'NVT', rows: parsedRows, warnings: [] };
 }
-
 
 function buildLossPriceMap(workbook: ReturnType<typeof readWorkbook>['workbook']) {
   const sheet = workbook.Sheets['DATA GIÁ VỐN NVL'];

@@ -21,7 +21,7 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-3">
       <PageHeader
-        title="Tổng quan kế toán ERP"
+        title="Tổng quan kế toán"
         description="Theo dõi dữ liệu nhập - xuất - tồn - bán - hủy - đối chiếu trước khi chốt báo cáo."
         status={status}
       />

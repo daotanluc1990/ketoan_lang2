@@ -6,10 +6,6 @@ import { navigationGroups, navigationItems } from './navigation';
 import { clsx } from 'clsx';
 import { ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 
-function displayLabel(item: { href: string; label: string }) {
-  return item.href === '/tong-quan' ? 'Tổng quan kế toán ERP' : item.label;
-}
-
 export function Sidebar({ collapsed, onToggle, role }: { collapsed: boolean; onToggle: () => void; role: import('@/lib/report-types').Role }) {
   const pathname = usePathname();
 
@@ -22,7 +18,7 @@ export function Sidebar({ collapsed, onToggle, role }: { collapsed: boolean; onT
         </button>
         <div className={clsx(collapsed && 'text-center')}>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-lang-yellow">CTL</p>
-          {!collapsed ? <><h1 className="mt-1 text-base font-bold leading-tight">Kế toán ERP</h1><p className="mt-1 text-xs text-white/65">Kế toán làm · CEO xem</p></> : <Menu className="mx-auto mt-2 h-5 w-5 text-white/70" />}
+          {!collapsed ? <><h1 className="mt-1 text-base font-bold leading-tight">Kế toán ERP Mini</h1><p className="mt-1 text-xs text-white/65">Kế toán chốt · CEO xem</p></> : <Menu className="mx-auto mt-2 h-5 w-5 text-white/70" />}
         </div>
       </div>
       <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-3 sidebar-scroll" aria-label="Điều hướng chính">
@@ -33,11 +29,10 @@ export function Sidebar({ collapsed, onToggle, role }: { collapsed: boolean; onT
               {navigationItems.filter((item) => item.group === group && item.allowedRoles.includes(role)).map((item) => {
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 const Icon = item.icon;
-                const label = displayLabel(item);
                 return (
-                  <Link key={item.href} href={item.href} title={collapsed ? label : undefined} className={clsx('flex items-center rounded-lg text-sm font-medium transition', collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5', active ? 'bg-lang-yellow text-lang-brown shadow' : 'text-white/78 hover:bg-white/10 hover:text-white')}>
+                  <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} className={clsx('flex items-center rounded-lg text-sm font-medium transition', collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5', active ? 'bg-lang-yellow text-lang-brown shadow' : 'text-white/78 hover:bg-white/10 hover:text-white')}>
                     <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed ? <span className="truncate">{label}</span> : null}
+                    {!collapsed ? <span className="truncate">{item.label}</span> : null}
                   </Link>
                 );
               })}
@@ -45,7 +40,7 @@ export function Sidebar({ collapsed, onToggle, role }: { collapsed: boolean; onT
           </div>
         ))}
       </nav>
-      <div className={clsx('sidebar-foot shrink-0 border-t border-white/10 px-4 py-3 text-[11px] text-white/60', collapsed && 'hidden')}>V4.9 · ERP-lite · Production strict</div>
+      <div className={clsx('sidebar-foot shrink-0 border-t border-white/10 px-4 py-3 text-[11px] text-white/60', collapsed && 'hidden')}>V7.1 · ERP mini · Data Master strict</div>
     </aside>
   );
 }
