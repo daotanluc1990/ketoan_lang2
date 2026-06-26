@@ -16,7 +16,7 @@ type CloseInput = {
 };
 
 function hasBlockingStatus(status: string) {
-  return ['Cảnh báo', 'Nguy hiểm', 'Chưa đủ dữ liệu'].includes(status);
+  return ['Cảnh báo', 'Nguy hiểm', 'Chưa đủ dữ liệu', 'Cần đối chiếu'].includes(status);
 }
 
 function metricValue(metrics: Array<{ label: string; value: string }>, label: string) {
