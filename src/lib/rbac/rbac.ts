@@ -32,7 +32,9 @@ export type Permission =
   | 'view_stock_loss'
   | 'view_master_data'
   | 'view_debt'
-  | 'view_close_history';
+  | 'view_close_history'
+  | 'weekly_close_preview'
+  | 'weekly_close_confirm';
 
 export const ROLES: AppRole[] = ['CEO', 'Kế toán', 'Admin', 'Quản lý cửa hàng'];
 
@@ -86,7 +88,9 @@ export const PERMISSION_MATRIX: Record<Permission, AppRole[]> = {
   view_stock_loss: OPERATION_ROLES,
   view_master_data: FULL_FINANCE_ROLES,
   view_debt: FULL_FINANCE_ROLES,
-  view_close_history: FULL_FINANCE_ROLES
+  view_close_history: FULL_FINANCE_ROLES,
+  weekly_close_preview: FULL_FINANCE_ROLES,
+  weekly_close_confirm: ['CEO', 'Admin']
 };
 
 export type RbacContext = {
