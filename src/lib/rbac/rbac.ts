@@ -101,121 +101,81 @@ export type RbacContext = {
 };
 
 function normalizeKey(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/[^a-z0-9]+/g, '-');
+  return value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, '-');
 }
 
-function allowRequestRoleOverride() {
-  if (process.env.APP_ALLOW_ROLE_OVERRIDE === 'true') return true;
-  return process.env.NODE_ENV !== 'production';
+function allowClientRoleSource() {
+  return process.env.APP_ALLOW_ROLE_OVERRIDE === 'true' || process.env.NODE_ENV !== 'production';
 }
 
 export function normalizeRole(value: unknown): AppRole | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   if (ROLES.includes(trimmed as AppRole)) return trimmed as AppRole;
-  const key = normalizeKey(trimmed);
-  return ROLE_ALIASES[key] ?? null;
+  return ROLE_ALIASES[normalizeKey(trimmed)] ?? null;
 }
 
 export function canRole(role: AppRole | null | undefined, permission: Permission) {
-  if (!role) return false;
-  return PERMISSION_MATRIX[permission].includes(role);
+  return Boolean(role && PERMISSION_MATRIX[permission].includes(role));
 }
 
 export function getRolePermissionLabels(role: AppRole) {
-  return Object.entries(PERMISSION_MATRIX)
-    .filter(([, roles]) => roles.includes(role))
-    .map(([permission]) => permission);
+  return Object.entries(PERMISSION_MATRIX).filter(([, roles]) => roles.includes(role)).map(([permission]) => permission);
+}
+
+function requestOverrideContext(request: NextRequest, rbacEnabled: boolean): RbacContext | null {
+  if (!allowClientRoleSource()) return null;
+  const url = new URL(request.url);
+  const headerRole = normalizeRole(request.headers.get('x-ctl-role') ?? request.headers.get('x-user-role'));
+  if (headerRole) return { role: headerRole, actor: request.headers.get('x-ctl-actor') ?? headerRole, rbacEnabled, source: 'header' };
+  const queryRole = normalizeRole(url.searchParams.get('role'));
+  if (queryRole) return { role: queryRole, actor: url.searchParams.get('actor') ?? queryRole, rbacEnabled, source: 'query' };
+  const cookieRole = normalizeRole(request.cookies.get('ctl_role')?.value);
+  if (cookieRole) return { role: cookieRole, actor: request.cookies.get('ctl_actor')?.value ?? cookieRole, rbacEnabled, source: 'cookie' };
+  return null;
+}
+
+function fallbackContext(rbacEnabled: boolean, defaultRole: AppRole | null): RbacContext {
+  if (!rbacEnabled) {
+    const role = defaultRole ?? 'Kế toán';
+    return { role, actor: role, rbacEnabled, source: defaultRole ? 'disabled' : 'default' };
+  }
+  if (defaultRole) return { role: defaultRole, actor: defaultRole, rbacEnabled, source: 'default' };
+  return { role: null, actor: 'unknown', rbacEnabled, source: 'missing' };
 }
 
 export function getRoleFromRequest(request: NextRequest): RbacContext {
   const env = getServerEnv();
-  const url = new URL(request.url);
-  const allowOverride = allowRequestRoleOverride();
-  const headerRole = allowOverride ? normalizeRole(request.headers.get('x-ctl-role') ?? request.headers.get('x-user-role')) : null;
-  if (headerRole) return { role: headerRole, actor: request.headers.get('x-ctl-actor') ?? headerRole, rbacEnabled: env.rbacEnabled, source: 'header' };
-
-  const queryRole = allowOverride ? normalizeRole(url.searchParams.get('role')) : null;
-  if (queryRole) return { role: queryRole, actor: url.searchParams.get('actor') ?? queryRole, rbacEnabled: env.rbacEnabled, source: 'query' };
-
-  const cookieRole = normalizeRole(request.cookies.get('ctl_role')?.value);
-  if (cookieRole) return { role: cookieRole, actor: request.cookies.get('ctl_actor')?.value ?? cookieRole, rbacEnabled: env.rbacEnabled, source: 'cookie' };
-
-  const defaultRole = normalizeRole(env.appDefaultRole);
-  if (!env.rbacEnabled) {
-    const softRole = defaultRole ?? 'Kế toán';
-    return { role: softRole, actor: softRole, rbacEnabled: env.rbacEnabled, source: defaultRole ? 'disabled' : 'default' };
-  }
-  if (defaultRole) return { role: defaultRole, actor: defaultRole, rbacEnabled: env.rbacEnabled, source: 'default' };
-  return { role: null, actor: 'unknown', rbacEnabled: env.rbacEnabled, source: 'missing' };
+  return requestOverrideContext(request, env.rbacEnabled) ?? fallbackContext(env.rbacEnabled, normalizeRole(env.appDefaultRole));
 }
 
 export async function getRoleFromServerCookies(): Promise<RbacContext> {
   const env = getServerEnv();
-  const cookieStore = await cookies();
-  const cookieRole = normalizeRole(cookieStore.get('ctl_role')?.value);
-  const defaultRole = normalizeRole(env.appDefaultRole);
-  const role = cookieRole ?? defaultRole ?? (!env.rbacEnabled ? 'Kế toán' : null);
-  return {
-    role,
-    actor: cookieStore.get('ctl_actor')?.value ?? role ?? 'unknown',
-    rbacEnabled: env.rbacEnabled,
-    source: cookieRole ? 'cookie' : defaultRole ? 'default' : env.rbacEnabled ? 'missing' : 'disabled'
-  };
+  if (allowClientRoleSource()) {
+    const cookieStore = await cookies();
+    const role = normalizeRole(cookieStore.get('ctl_role')?.value);
+    if (role) return { role, actor: cookieStore.get('ctl_actor')?.value ?? role, rbacEnabled: env.rbacEnabled, source: 'cookie' };
+  }
+  return fallbackContext(env.rbacEnabled, normalizeRole(env.appDefaultRole));
 }
 
 export function forbiddenResponse(message: string, context?: Partial<RbacContext>) {
-  return NextResponse.json(
-    {
-      ok: false,
-      error: {
-        code: 'FORBIDDEN',
-        message,
-        details: context?.role ? `Vai trò hiện tại: ${context.role}` : 'Chưa xác định vai trò'
-      }
-    },
-    { status: 403 }
-  );
+  return NextResponse.json({ ok: false, error: { code: 'FORBIDDEN', message, details: context?.role ? `Vai trò hiện tại: ${context.role}` : 'Chưa xác định vai trò' } }, { status: 403 });
 }
 
 export function unauthorizedResponse(message = 'Chưa xác thực vai trò người dùng.') {
-  return NextResponse.json(
-    {
-      ok: false,
-      error: {
-        code: 'UNAUTHORIZED',
-        message
-      }
-    },
-    { status: 401 }
-  );
+  return NextResponse.json({ ok: false, error: { code: 'UNAUTHORIZED', message } }, { status: 401 });
 }
 
 export function requireApiPermission(request: NextRequest, permission: Permission): { ok: true; context: RbacContext } | { ok: false; response: NextResponse } {
   const context = getRoleFromRequest(request);
   if (context.rbacEnabled && !context.role) return { ok: false, response: unauthorizedResponse() };
-  if (!canRole(context.role, permission)) {
-    return { ok: false, response: forbiddenResponse('Bạn không có quyền thực hiện thao tác này.', context) };
-  }
+  if (!canRole(context.role, permission)) return { ok: false, response: forbiddenResponse('Bạn không có quyền thực hiện thao tác này.', context) };
   return { ok: true, context };
 }
 
 export function appendRbacMeta<T extends Record<string, unknown>>(payload: T, context: RbacContext) {
-  return {
-    ...payload,
-    rbac: {
-      enabled: context.rbacEnabled,
-      role: context.role,
-      actor: context.actor,
-      source: context.source
-    }
-  };
+  return { ...payload, rbac: { enabled: context.rbacEnabled, role: context.role, actor: context.actor, source: context.source } };
 }
 
 export function maskDashboardReportForRole(report: DashboardReport, role: AppRole | null): DashboardReport {
@@ -225,18 +185,7 @@ export function maskDashboardReportForRole(report: DashboardReport, role: AppRol
     executiveKpis: report.executiveKpis.filter((item) => !['Tổng doanh thu', 'Doanh thu cửa hàng', 'Doanh thu app net', 'Thất thoát quy tiền'].includes(item.label)),
     pnlRows: [['Phân quyền', 'P&L Tuần', 'Không có quyền xem', '—', '—', '—', 'Vai trò hiện tại không được xem lợi nhuận/P&L']],
     balanceRows: [['Phân quyền', 'Cân đối rút gọn', 'Không có quyền xem', '—', '—', 'Không có quyền', 'Vai trò hiện tại không được xem cân đối tài chính']],
-    totals: {
-      ...report.totals,
-      revenue: 0,
-      storeSales: 0,
-      appNet: 0,
-      appGross: 0,
-      appFees: 0,
-      appCogs: 0,
-      lossValue: 0,
-      cogsPercent: 0,
-      appFeePercent: 0
-    }
+    totals: { ...report.totals, revenue: 0, storeSales: 0, appNet: 0, appGross: 0, appFees: 0, appCogs: 0, lossValue: 0, cogsPercent: 0, appFeePercent: 0 }
   };
 }
 
