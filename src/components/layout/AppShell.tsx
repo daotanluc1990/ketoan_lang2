@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     writeRoleCookie(nextRole);
   };
 
-  const contentPadding = useMemo(() => (collapsed ? 'lg:pl-[86px]' : 'lg:pl-[280px]'), [collapsed]);
+  const contentPadding = useMemo(() => (collapsed ? 'lg:pl-[72px]' : 'lg:pl-60'), [collapsed]);
 
   return (
     <div className="app-bg min-h-screen overflow-x-hidden text-lang-ink">
@@ -71,8 +71,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className={clsx('min-h-screen transition-[padding] duration-200', contentPadding)}>
         <TopBar role={role} onRoleChange={setSelectedRole} />
         <GlobalFilterBar />
-        <main className="w-full px-3 py-4 sm:px-5 lg:px-6 xl:px-7">
-          <div className="mx-auto w-full max-w-[1640px] space-y-4">
+        <main className="w-full px-4 py-4 lg:px-6">
+          <div className="mx-auto w-full max-w-[1480px] space-y-4 pb-24">
             {children}
           </div>
         </main>
