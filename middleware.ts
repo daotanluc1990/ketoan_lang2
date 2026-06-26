@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 function isPublicAsset(pathname: string) {
-  return pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.startsWith('/robots') || pathname.startsWith('/sitemap') || pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|css|js|map|txt)$/i);
+  return Boolean(
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/robots') ||
+    pathname.startsWith('/sitemap') ||
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|css|js|map|txt)$/i)
+  );
 }
 
 function unauthorized(message = 'Authentication required') {
