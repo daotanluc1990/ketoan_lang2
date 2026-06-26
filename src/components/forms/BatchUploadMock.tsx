@@ -142,7 +142,7 @@ export function BatchUploadMock() {
       const payload = await readImportResponse(response);
       if (!response.ok || !payload.ok) throw new Error(payload.message ?? 'Không import được batch.');
       const writtenRows = Array.isArray(payload.results) ? payload.results.reduce((total: number, item: { writtenRows?: number }) => total + (item.writtenRows ?? 0), 0) : 0;
-      setMessage(`Đã ghi Google Sheet: ${writtenRows} dòng mới. Hãy mở các sheet DL_* và IMPORT_* để kiểm tra dữ liệu, lỗi/trùng/lệch.`);
+      setMessage(`Đã ghi Google Sheet: ${writtenRows} dòng mới. Hãy mở các sheet DL_*, DM_*, KQ_* và IMPORT_* để kiểm tra dữ liệu, lỗi/trùng/lệch.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Import file đạt thất bại.');
     } finally {
@@ -183,7 +183,7 @@ export function BatchUploadMock() {
             }}
           />
           <span className="text-base font-bold text-lang-brown">Kéo thả hoặc bấm để chọn nhiều file</span>
-          <span className="mt-2 block text-sm text-black/60">Hỗ trợ 7 nguồn: doanh thu app, doanh thu cửa hàng, sổ quỹ, tồn kho, thất thoát, công nợ, thu mua.</span>
+          <span className="mt-2 block text-sm text-black/60">Hỗ trợ nguồn cũ và Data Master V7: doanh thu, sổ quỹ, XNT cửa hàng, XNT BTT, xuất/nhận BTT, hàng hủy, chế biến thực tế, định mức, công nợ.</span>
           <span className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-lang-brown shadow-sm">Preview trước, confirm sau</span>
         </label>
 
