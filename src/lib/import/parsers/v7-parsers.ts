@@ -15,7 +15,10 @@ type V7Target = {
   branchHeaders?: string[];
   khoHeaders?: string[];
   numericHeaders?: string[];
+  looseSchema?: boolean;
 };
+
+const BTT_ITEM_HEADERS = ['Mã hàng', 'Mã NVL', 'Tên hàng', 'Tên NVL', 'Tên nguyên liệu', 'Nguyên liệu', 'Mặt hàng', 'Sản phẩm', 'Tên sản phẩm', 'Tên'];
 
 const TARGETS: V7Target[] = [
   { sheetName: SHEET_NAMES.DM_CHI_NHANH, loaiDuLieu: 'Danh mục chi nhánh', keywords: ['dm chi nhanh', 'danh muc chi nhanh'], requiredHeaders: ['Mã chi nhánh', 'Tên chi nhánh'], identityHeaders: ['Mã chi nhánh', 'Tên chi nhánh'] },
@@ -27,7 +30,7 @@ const TARGETS: V7Target[] = [
   { sheetName: SHEET_NAMES.DM_DON_GIA_NVL, loaiDuLieu: 'Đơn giá NVL', keywords: ['don gia nvl', 'gia von nvl', 'don gia nguyen vat lieu'], requiredHeaders: ['Mã NVL', 'Đơn giá'], identityHeaders: ['Mã NVL', 'Tên NVL', 'Đơn giá'], dateHeaders: ['Ngày hiệu lực', 'Hiệu lực từ ngày'], numericHeaders: ['Đơn giá', 'Giá vốn'] },
 
   { sheetName: SHEET_NAMES.DL_XNT_CUA_HANG, loaiDuLieu: 'XNT cửa hàng', keywords: ['xnt cua hang', 'xuat nhap ton cua hang', 'kho cua hang', 'ton kho cua hang'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Chi nhánh', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho', 'Kho cửa hàng'], numericHeaders: ['Tồn đầu', 'Nhập', 'Xuất', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch'] },
-  { sheetName: SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM, loaiDuLieu: 'XNT Bếp Trung Tâm', keywords: ['xnt bep trung tam', 'xnt btt', 'kho btt', 'ton kho bep trung tam', 'ton kho btt', 'ton kho bep'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'], numericHeaders: ['Tồn đầu', 'Nhập NCC', 'Xuất cửa hàng', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch', 'Tồn kho', 'Tồn kho hiện tại'] },
+  { sheetName: SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM, loaiDuLieu: 'XNT Bếp Trung Tâm', keywords: ['xnt bep trung tam', 'xnt btt', 'kho btt', 'ton kho bep trung tam', 'ton kho btt', 'ton kho bep'], requiredHeaders: ['Tên hàng|Tên NVL|Tên nguyên liệu|Nguyên liệu|Mặt hàng|Sản phẩm|Tên sản phẩm|Tên|Tồn kho|Tồn|Số lượng'], identityHeaders: ['Ngày', 'Kho', ...BTT_ITEM_HEADERS], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'], numericHeaders: ['Tồn đầu', 'Nhập NCC', 'Xuất cửa hàng', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch', 'Tồn kho', 'Tồn kho hiện tại', 'Tồn', 'Số lượng', 'SL'], looseSchema: true },
   { sheetName: SHEET_NAMES.DL_XUAT_BTT_CHO_CUA_HANG, loaiDuLieu: 'BTT xuất cho cửa hàng', keywords: ['xuat btt cho cua hang', 'btt xuat', 'xuat btt'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng xuất'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày xuất', 'Thời gian xuất'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho xuất', 'Kho BTT'], numericHeaders: ['Số lượng xuất', 'Số lượng', 'SL xuất'] },
   { sheetName: SHEET_NAMES.DL_CUA_HANG_NHAN_TU_BTT, loaiDuLieu: 'Cửa hàng nhận từ BTT', keywords: ['cua hang nhan tu btt', 'nhan tu btt', 'cua hang nhan'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng nhận'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày nhận', 'Thời gian nhận'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho nhận', 'Kho cửa hàng'], numericHeaders: ['Số lượng nhận', 'Số lượng', 'SL nhận'] },
   { sheetName: SHEET_NAMES.DL_HUY_HANG_CUA_HANG, loaiDuLieu: 'Hủy hàng cửa hàng', keywords: ['huy hang cua hang', 'hang huy cua hang'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho'], numericHeaders: ['Số lượng', 'Giá trị hủy', 'Đơn giá'] },
@@ -42,6 +45,14 @@ function normalize(value: unknown) {
   return String(value ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+function requirementAliases(requirement: string) {
+  return requirement.split('|').map((item) => item.trim()).filter(Boolean);
+}
+
+function requirementLabel(requirement: string) {
+  return requirementAliases(requirement)[0] ?? requirement;
+}
+
 function makeImportRow(sheetDich: string, keyParts: Array<string | number | undefined | null>, data: Record<string, unknown>, errors: string[] = []): ImportRow {
   const maDongDuLieu = createRecordKey([sheetDich, ...keyParts]);
   return { maDongDuLieu, dauVetDong: createRowHash(data), sheetDich, data, errors };
@@ -52,13 +63,17 @@ function withSource(data: Record<string, unknown>, filename: string, rowIndex: n
 }
 
 function getValue(row: Record<string, unknown>, candidates: string[]) {
-  for (const candidate of candidates) {
+  const expandedCandidates = candidates.flatMap(requirementAliases);
+  for (const candidate of expandedCandidates) {
     if (row[candidate] !== undefined && String(row[candidate] ?? '').trim() !== '') return row[candidate];
   }
   const entries = Object.entries(row);
-  for (const candidate of candidates) {
+  for (const candidate of expandedCandidates) {
     const target = normalize(candidate);
-    const found = entries.find(([key, value]) => normalize(key).includes(target) && String(value ?? '').trim() !== '');
+    const found = entries.find(([key, value]) => {
+      const normalizedKey = normalize(key);
+      return (normalizedKey.includes(target) || target.includes(normalizedKey)) && String(value ?? '').trim() !== '';
+    });
     if (found) return found[1];
   }
   return '';
@@ -68,9 +83,13 @@ function headersFromMatrix(matrix: unknown[][], headerRowIndex: number) {
   return (matrix[headerRowIndex] ?? []).map(cleanHeader).filter(Boolean);
 }
 
+function headerMatchesRequirement(header: string, requirement: string) {
+  const normalizedHeader = normalize(header);
+  return requirementAliases(requirement).some((alias) => normalizedHeader.includes(normalize(alias)) || normalize(alias).includes(normalizedHeader));
+}
+
 function countHeaderMatches(headers: string[], requiredHeaders: string[]) {
-  const normalizedHeaders = headers.map(normalize);
-  return requiredHeaders.filter((required) => normalizedHeaders.some((header) => header.includes(normalize(required)) || normalize(required).includes(header))).length;
+  return requiredHeaders.filter((required) => headers.some((header) => headerMatchesRequirement(header, required))).length;
 }
 
 function findHeaderRowIndex(matrix: unknown[][], target: V7Target) {
@@ -90,7 +109,7 @@ function headerScore(matrix: unknown[][], target: V7Target) {
 }
 
 function hasEnoughHeaderEvidence(matrix: unknown[][], target: V7Target) {
-  return headerScore(matrix, target) >= Math.min(2, target.requiredHeaders.length);
+  return target.looseSchema ? headerScore(matrix, target) >= 1 : headerScore(matrix, target) >= Math.min(2, target.requiredHeaders.length);
 }
 
 function isSpecificBttInventoryFilename(filename: string) {
@@ -107,7 +126,7 @@ function findTarget(input: ExcelFileInput, sheetNames: string[], firstSheetName:
   const filenameByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => filename.includes(normalize(keyword))) && (hasEnoughHeaderEvidence(matrix, target) || (target.sheetName === SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM && isSpecificBttInventoryFilename(filename))));
   if (filenameByKeyword) return filenameByKeyword;
   const headerMatch = TARGETS.map((target) => ({ target, matches: headerScore(matrix, target) })).sort((a, b) => b.matches - a.matches)[0];
-  if (headerMatch && headerMatch.matches >= headerMatch.target.requiredHeaders.length) return headerMatch.target;
+  if (headerMatch && headerMatch.matches >= Math.min(1, headerMatch.target.requiredHeaders.length)) return headerMatch.target;
   const workbookExact = TARGETS.find((target) => sheetNames.map(normalize).includes(normalize(target.sheetName)));
   return workbookExact ?? null;
 }
@@ -130,11 +149,16 @@ function parseLooseNumber(value: unknown) {
   return Number.isFinite(valueNumber) ? valueNumber : NaN;
 }
 
+function todayString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function enrichRow(row: Record<string, unknown>, target: V7Target, filename: string, rowIndex: number) {
+  const isBttInventory = target.sheetName === SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM;
   const dateValue = getValue(row, target.dateHeaders ?? ['Ngày', 'Ngày hủy', 'Ngày kiểm kê', 'Ngày xuất', 'Ngày nhận', 'Ngày hiệu lực']);
-  const ngay = toDateString(dateValue);
-  const branchValue = getValue(row, target.branchHeaders ?? ['Chi nhánh', 'Cửa hàng', 'Tên CH']);
-  const khoValue = getValue(row, target.khoHeaders ?? ['Kho', 'Kho xuất', 'Kho nhận']);
+  const ngay = toDateString(dateValue) || (isBttInventory ? todayString() : '');
+  const branchValue = getValue(row, target.branchHeaders ?? ['Chi nhánh', 'Cửa hàng', 'Tên CH']) || (isBttInventory ? 'BTT' : '');
+  const khoValue = getValue(row, target.khoHeaders ?? ['Kho', 'Kho xuất', 'Kho nhận']) || (isBttInventory ? 'Bếp Trung Tâm' : '');
   const data: Record<string, unknown> = {
     ...row,
     ...(ngay ? { 'Ngày': row['Ngày'] || ngay, 'Năm': getYear(ngay), 'Tháng': getMonth(ngay), 'Tuần': getWeekCode(ngay).split('-W')[1] ?? '', 'Mã tuần': getWeekCode(ngay) } : {}),
@@ -145,10 +169,11 @@ function enrichRow(row: Record<string, unknown>, target: V7Target, filename: str
 }
 
 function rowErrors(row: Record<string, unknown>, target: V7Target, missingHeaders: string[] = []) {
-  const errors = [
-    ...missingHeaders.map((header) => `Thiếu cột bắt buộc ${header}`),
-    ...target.requiredHeaders.filter((header) => !String(getValue(row, [header]) ?? '').trim()).map((header) => `Thiếu ${header}`)
+  const schemaErrors = target.looseSchema ? [] : [
+    ...missingHeaders.map((header) => `Thiếu cột bắt buộc ${requirementLabel(header)}`),
+    ...target.requiredHeaders.filter((header) => !String(getValue(row, requirementAliases(header)) ?? '').trim()).map((header) => `Thiếu ${requirementLabel(header)}`)
   ];
+  const errors = [...schemaErrors];
   for (const header of target.numericHeaders ?? []) {
     const value = getValue(row, [header]);
     const parsed = parseLooseNumber(value);
@@ -163,7 +188,7 @@ function keyParts(row: Record<string, unknown>, target: V7Target, rowIndex: numb
 }
 
 function schemaErrorRow(input: ExcelFileInput, target: V7Target, missingHeaders: string[]) {
-  const data = withSource({ 'Loại lỗi': 'Sai schema', 'Chi tiết lỗi': `Thiếu cột bắt buộc: ${missingHeaders.join(', ')}` }, input.filename, 0);
+  const data = withSource({ 'Loại lỗi': 'Sai schema', 'Chi tiết lỗi': `Thiếu cột bắt buộc: ${missingHeaders.map(requirementLabel).join(', ')}` }, input.filename, 0);
   return makeImportRow(target.sheetName, ['SCHEMA', input.filename], data, rowErrors(data, target, missingHeaders));
 }
 
@@ -185,18 +210,18 @@ export function parseV7ExcelFile(input: ExcelFileInput): ParsedExcelImport | nul
     const errors = rowErrors(data, target, missingHeaders);
     return makeImportRow(target.sheetName, keyParts(data, target, index + 1), data, errors);
   });
-  if (!parsedRows.length && missingHeaders.length) parsedRows.push(schemaErrorRow(input, target, missingHeaders));
+  if (!target.looseSchema && !parsedRows.length && missingHeaders.length) parsedRows.push(schemaErrorRow(input, target, missingHeaders));
 
   const warnings = [
     ...(picked.sheetName === firstSheetName ? [] : [`Đã tự chọn sheet ${picked.sheetName} trong workbook.`]),
-    ...(missingHeaders.length ? [`Thiếu cột bắt buộc: ${missingHeaders.join(', ')}`] : []),
+    ...(missingHeaders.length ? [`Thiếu cột chuẩn: ${missingHeaders.map(requirementLabel).join(', ')}${target.looseSchema ? '. Đã dùng chế độ nhận tồn kho nhanh và tự bổ sung Ngày/Kho nếu thiếu.' : ''}`] : []),
     ...(rows.length ? [] : ['File không có dòng dữ liệu sau header.'])
   ];
 
   return {
     tenFile: input.filename,
     loaiDuLieu: target.loaiDuLieu,
-    chiNhanh: inferBranch(getValue(parsedRows[0]?.data ?? {}, ['Chi nhánh', 'Cửa hàng']) || 'NVT'),
+    chiNhanh: inferBranch(getValue(parsedRows[0]?.data ?? {}, ['Chi nhánh', 'Cửa hàng']) || (target.sheetName === SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM ? 'BTT' : 'NVT')),
     rows: parsedRows,
     warnings
   };
