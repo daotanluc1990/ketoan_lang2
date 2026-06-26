@@ -89,20 +89,29 @@ function findHeaderRowIndex(matrix: unknown[][], target: V7Target) {
   return best.matches >= Math.min(2, target.requiredHeaders.length) ? best.index : 0;
 }
 
+function headerScore(matrix: unknown[][], target: V7Target) {
+  const headerRowIndex = findHeaderRowIndex(matrix, target);
+  const headers = headersFromMatrix(matrix, headerRowIndex);
+  return countHeaderMatches(headers, target.requiredHeaders);
+}
+
+function hasEnoughHeaderEvidence(matrix: unknown[][], target: V7Target) {
+  return headerScore(matrix, target) >= Math.min(2, target.requiredHeaders.length);
+}
+
 function findTarget(input: ExcelFileInput, sheetNames: string[], firstSheetName: string, matrix: unknown[][]): V7Target | null {
   const filename = normalize(input.filename);
   const firstName = normalize(firstSheetName);
   const firstSheetExact = TARGETS.find((target) => normalize(target.sheetName) === firstName);
   if (firstSheetExact) return firstSheetExact;
 
-  const firstSheetByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => firstName.includes(normalize(keyword)) || filename.includes(normalize(keyword))));
+  const firstSheetByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => firstName.includes(normalize(keyword))));
   if (firstSheetByKeyword) return firstSheetByKeyword;
 
-  const headerMatch = TARGETS.map((target) => {
-    const headerRowIndex = findHeaderRowIndex(matrix, target);
-    const headers = headersFromMatrix(matrix, headerRowIndex);
-    return { target, matches: countHeaderMatches(headers, target.requiredHeaders) };
-  }).sort((a, b) => b.matches - a.matches)[0];
+  const filenameByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => filename.includes(normalize(keyword))) && hasEnoughHeaderEvidence(matrix, target));
+  if (filenameByKeyword) return filenameByKeyword;
+
+  const headerMatch = TARGETS.map((target) => ({ target, matches: headerScore(matrix, target) })).sort((a, b) => b.matches - a.matches)[0];
   if (headerMatch && headerMatch.matches >= headerMatch.target.requiredHeaders.length) return headerMatch.target;
 
   const workbookExact = TARGETS.find((target) => sheetNames.map(normalize).includes(normalize(target.sheetName)));
