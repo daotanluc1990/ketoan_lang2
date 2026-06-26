@@ -14,6 +14,7 @@ type V7Target = {
   dateHeaders?: string[];
   branchHeaders?: string[];
   khoHeaders?: string[];
+  numericHeaders?: string[];
 };
 
 const TARGETS: V7Target[] = [
@@ -21,31 +22,24 @@ const TARGETS: V7Target[] = [
   { sheetName: SHEET_NAMES.DM_KHO_CHI_NHANH, loaiDuLieu: 'Danh mục kho chi nhánh', keywords: ['dm kho chi nhanh', 'kho chi nhanh'], requiredHeaders: ['Mã kho', 'Tên kho'], identityHeaders: ['Mã kho', 'Tên kho'] },
   { sheetName: SHEET_NAMES.DM_MON_BAN, loaiDuLieu: 'Danh mục món bán', keywords: ['dm mon ban', 'danh muc mon ban', 'mon ban'], requiredHeaders: ['Mã món', 'Tên món'], identityHeaders: ['Mã món', 'Tên món'] },
   { sheetName: SHEET_NAMES.DM_NGUYEN_VAT_LIEU, loaiDuLieu: 'Danh mục nguyên vật liệu', keywords: ['dm nguyen vat lieu', 'nguyen vat lieu', 'nvl'], requiredHeaders: ['Mã NVL', 'Tên NVL'], identityHeaders: ['Mã NVL', 'Mã hàng', 'Tên NVL', 'Tên hàng'] },
-  { sheetName: SHEET_NAMES.DM_CONG_THUC_CHE_BIEN, loaiDuLieu: 'Công thức chế biến', keywords: ['cong thuc che bien', 'dinh muc mon', 'recipe'], requiredHeaders: ['Mã món', 'Mã NVL', 'Định mức'], identityHeaders: ['Mã món', 'Mã NVL', 'Tên món', 'Tên NVL'], branchHeaders: ['Chi nhánh', 'Cửa hàng'] },
-  { sheetName: SHEET_NAMES.DM_HAO_HUT_HOP_LE, loaiDuLieu: 'Hao hụt hợp lệ', keywords: ['hao hut hop le', 'dinh muc hao hut'], requiredHeaders: ['Mã NVL', 'Hao hụt hợp lệ'], identityHeaders: ['Mã NVL', 'Tên NVL', 'Nhóm NVL'] },
-  { sheetName: SHEET_NAMES.DM_DON_GIA_NVL, loaiDuLieu: 'Đơn giá NVL', keywords: ['don gia nvl', 'gia von nvl', 'don gia nguyen vat lieu'], requiredHeaders: ['Mã NVL', 'Đơn giá'], identityHeaders: ['Mã NVL', 'Tên NVL', 'Đơn giá'], dateHeaders: ['Ngày hiệu lực', 'Hiệu lực từ ngày'] },
+  { sheetName: SHEET_NAMES.DM_CONG_THUC_CHE_BIEN, loaiDuLieu: 'Công thức chế biến', keywords: ['cong thuc che bien', 'dinh muc mon', 'recipe'], requiredHeaders: ['Mã món', 'Mã NVL', 'Định mức'], identityHeaders: ['Mã món', 'Mã NVL', 'Tên món', 'Tên NVL'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], numericHeaders: ['Định mức', 'Tỷ lệ hao hụt', 'Số lượng'] },
+  { sheetName: SHEET_NAMES.DM_HAO_HUT_HOP_LE, loaiDuLieu: 'Hao hụt hợp lệ', keywords: ['hao hut hop le', 'dinh muc hao hut'], requiredHeaders: ['Mã NVL', 'Hao hụt hợp lệ'], identityHeaders: ['Mã NVL', 'Tên NVL', 'Nhóm NVL'], numericHeaders: ['Hao hụt hợp lệ', 'Tỷ lệ hao hụt'] },
+  { sheetName: SHEET_NAMES.DM_DON_GIA_NVL, loaiDuLieu: 'Đơn giá NVL', keywords: ['don gia nvl', 'gia von nvl', 'don gia nguyen vat lieu'], requiredHeaders: ['Mã NVL', 'Đơn giá'], identityHeaders: ['Mã NVL', 'Tên NVL', 'Đơn giá'], dateHeaders: ['Ngày hiệu lực', 'Hiệu lực từ ngày'], numericHeaders: ['Đơn giá', 'Giá vốn'] },
 
-  { sheetName: SHEET_NAMES.DL_XNT_CUA_HANG, loaiDuLieu: 'XNT cửa hàng', keywords: ['xnt cua hang', 'xuat nhap ton cua hang', 'kho cua hang'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Chi nhánh', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho', 'Kho cửa hàng'] },
-  { sheetName: SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM, loaiDuLieu: 'XNT Bếp Trung Tâm', keywords: ['xnt bep trung tam', 'xnt btt', 'kho btt'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'] },
-  { sheetName: SHEET_NAMES.DL_XUAT_BTT_CHO_CUA_HANG, loaiDuLieu: 'BTT xuất cho cửa hàng', keywords: ['xuat btt cho cua hang', 'btt xuat', 'xuat btt'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng xuất'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày xuất', 'Thời gian xuất'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho xuất', 'Kho BTT'] },
-  { sheetName: SHEET_NAMES.DL_CUA_HANG_NHAN_TU_BTT, loaiDuLieu: 'Cửa hàng nhận từ BTT', keywords: ['cua hang nhan tu btt', 'nhan tu btt', 'cua hang nhan'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng nhận'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày nhận', 'Thời gian nhận'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho nhận', 'Kho cửa hàng'] },
-  { sheetName: SHEET_NAMES.DL_HUY_HANG_CUA_HANG, loaiDuLieu: 'Hủy hàng cửa hàng', keywords: ['huy hang cua hang', 'hang huy cua hang'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho'] },
-  { sheetName: SHEET_NAMES.DL_HUY_HANG_BTT, loaiDuLieu: 'Hủy hàng BTT', keywords: ['huy hang btt', 'hang huy btt', 'huy hang bep trung tam'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'] },
-  { sheetName: SHEET_NAMES.DL_CHE_BIEN_THUC_TE, loaiDuLieu: 'Chế biến thực tế', keywords: ['che bien thuc te', 'thuc te che bien', 'actual production'], requiredHeaders: ['Ngày', 'Món', 'NVL', 'Thực tế dùng'], identityHeaders: ['Ngày', 'Món', 'NVL', 'Ca', 'Người thực hiện'], dateHeaders: ['Ngày', 'Ngày chế biến'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho'] },
+  { sheetName: SHEET_NAMES.DL_XNT_CUA_HANG, loaiDuLieu: 'XNT cửa hàng', keywords: ['xnt cua hang', 'xuat nhap ton cua hang', 'kho cua hang'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Chi nhánh', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho', 'Kho cửa hàng'], numericHeaders: ['Tồn đầu', 'Nhập', 'Xuất', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch'] },
+  { sheetName: SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM, loaiDuLieu: 'XNT Bếp Trung Tâm', keywords: ['xnt bep trung tam', 'xnt btt', 'kho btt'], requiredHeaders: ['Ngày', 'Kho', 'Mã hàng'], identityHeaders: ['Ngày', 'Kho', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê', 'Ngày giao dịch'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'], numericHeaders: ['Tồn đầu', 'Nhập NCC', 'Xuất cửa hàng', 'Hủy', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị lệch'] },
+  { sheetName: SHEET_NAMES.DL_XUAT_BTT_CHO_CUA_HANG, loaiDuLieu: 'BTT xuất cho cửa hàng', keywords: ['xuat btt cho cua hang', 'btt xuat', 'xuat btt'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng xuất'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày xuất', 'Thời gian xuất'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho xuất', 'Kho BTT'], numericHeaders: ['Số lượng xuất', 'Số lượng', 'SL xuất'] },
+  { sheetName: SHEET_NAMES.DL_CUA_HANG_NHAN_TU_BTT, loaiDuLieu: 'Cửa hàng nhận từ BTT', keywords: ['cua hang nhan tu btt', 'nhan tu btt', 'cua hang nhan'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng nhận'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày nhận', 'Thời gian nhận'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho nhận', 'Kho cửa hàng'], numericHeaders: ['Số lượng nhận', 'Số lượng', 'SL nhận'] },
+  { sheetName: SHEET_NAMES.DL_HUY_HANG_CUA_HANG, loaiDuLieu: 'Hủy hàng cửa hàng', keywords: ['huy hang cua hang', 'hang huy cua hang'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho'], numericHeaders: ['Số lượng', 'Giá trị hủy', 'Đơn giá'] },
+  { sheetName: SHEET_NAMES.DL_HUY_HANG_BTT, loaiDuLieu: 'Hủy hàng BTT', keywords: ['huy hang btt', 'hang huy btt', 'huy hang bep trung tam'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'], numericHeaders: ['Số lượng', 'Giá trị hủy', 'Đơn giá'] },
+  { sheetName: SHEET_NAMES.DL_CHE_BIEN_THUC_TE, loaiDuLieu: 'Chế biến thực tế', keywords: ['che bien thuc te', 'thuc te che bien', 'actual production'], requiredHeaders: ['Ngày', 'Món', 'NVL', 'Thực tế dùng'], identityHeaders: ['Ngày', 'Món', 'NVL', 'Ca', 'Người thực hiện'], dateHeaders: ['Ngày', 'Ngày chế biến'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho'], numericHeaders: ['Thực tế dùng', 'Số lượng chế biến', 'Định mức'] },
 
-  { sheetName: SHEET_NAMES.KQ_HAO_HUT_CHE_BIEN, loaiDuLieu: 'Kết quả hao hụt chế biến', keywords: ['kq hao hut che bien', 'hao hut che bien'], requiredHeaders: ['Ngày', 'Món', 'NVL'], identityHeaders: ['Ngày', 'Món', 'NVL', 'Ca'], dateHeaders: ['Ngày'], branchHeaders: ['Chi nhánh'] },
-  { sheetName: SHEET_NAMES.KQ_THAT_THOAT_TON_KHO, loaiDuLieu: 'Kết quả thất thoát tồn kho', keywords: ['kq that thoat ton kho', 'that thoat ton kho'], requiredHeaders: ['Kho', 'NVL', 'Tồn lý thuyết', 'Tồn thực tế'], identityHeaders: ['Kho', 'NVL', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho'] }
+  { sheetName: SHEET_NAMES.KQ_HAO_HUT_CHE_BIEN, loaiDuLieu: 'Kết quả hao hụt chế biến', keywords: ['kq hao hut che bien', 'hao hut che bien'], requiredHeaders: ['Ngày', 'Món', 'NVL'], identityHeaders: ['Ngày', 'Món', 'NVL', 'Ca'], dateHeaders: ['Ngày'], branchHeaders: ['Chi nhánh'], numericHeaders: ['Thực tế dùng', 'Định mức', 'Hao hụt', 'Vượt định mức', 'Giá trị vượt'] },
+  { sheetName: SHEET_NAMES.KQ_THAT_THOAT_TON_KHO, loaiDuLieu: 'Kết quả thất thoát tồn kho', keywords: ['kq that thoat ton kho', 'that thoat ton kho'], requiredHeaders: ['Kho', 'NVL', 'Tồn lý thuyết', 'Tồn thực tế'], identityHeaders: ['Kho', 'NVL', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho'], numericHeaders: ['Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị thất thoát', 'Tỷ lệ'] }
 ];
 
 function normalize(value: unknown) {
-  return String(value ?? '')
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
+  return String(value ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
 function makeImportRow(sheetDich: string, keyParts: Array<string | number | undefined | null>, data: Record<string, unknown>, errors: string[] = []): ImportRow {
@@ -104,16 +98,12 @@ function findTarget(input: ExcelFileInput, sheetNames: string[], firstSheetName:
   const firstName = normalize(firstSheetName);
   const firstSheetExact = TARGETS.find((target) => normalize(target.sheetName) === firstName);
   if (firstSheetExact) return firstSheetExact;
-
   const firstSheetByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => firstName.includes(normalize(keyword))));
   if (firstSheetByKeyword) return firstSheetByKeyword;
-
   const filenameByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => filename.includes(normalize(keyword))) && hasEnoughHeaderEvidence(matrix, target));
   if (filenameByKeyword) return filenameByKeyword;
-
   const headerMatch = TARGETS.map((target) => ({ target, matches: headerScore(matrix, target) })).sort((a, b) => b.matches - a.matches)[0];
   if (headerMatch && headerMatch.matches >= headerMatch.target.requiredHeaders.length) return headerMatch.target;
-
   const workbookExact = TARGETS.find((target) => sheetNames.map(normalize).includes(normalize(target.sheetName)));
   return workbookExact ?? null;
 }
@@ -126,6 +116,14 @@ function pickSheet(workbook: ReturnType<typeof readWorkbook>['workbook'], firstS
   const sheet = workbook.Sheets[sheetName];
   if (!sheet) throw new Error(`Không đọc được sheet ${sheetName}.`);
   return { sheetName, sheet };
+}
+
+function parseLooseNumber(value: unknown) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+  const normalized = raw.replace(/\s/g, '').replace(/,/g, '');
+  const valueNumber = Number(normalized);
+  return Number.isFinite(valueNumber) ? valueNumber : NaN;
 }
 
 function enrichRow(row: Record<string, unknown>, target: V7Target, filename: string, rowIndex: number) {
@@ -142,13 +140,27 @@ function enrichRow(row: Record<string, unknown>, target: V7Target, filename: str
   return withSource(data, filename, rowIndex);
 }
 
-function rowErrors(row: Record<string, unknown>, target: V7Target) {
-  return target.requiredHeaders.filter((header) => !String(getValue(row, [header]) ?? '').trim()).map((header) => `Thiếu ${header}`);
+function rowErrors(row: Record<string, unknown>, target: V7Target, missingHeaders: string[] = []) {
+  const errors = [
+    ...missingHeaders.map((header) => `Thiếu cột bắt buộc ${header}`),
+    ...target.requiredHeaders.filter((header) => !String(getValue(row, [header]) ?? '').trim()).map((header) => `Thiếu ${header}`)
+  ];
+  for (const header of target.numericHeaders ?? []) {
+    const value = getValue(row, [header]);
+    const parsed = parseLooseNumber(value);
+    if (parsed !== null && Number.isNaN(parsed)) errors.push(`${header} phải là số`);
+  }
+  return [...new Set(errors)];
 }
 
 function keyParts(row: Record<string, unknown>, target: V7Target, rowIndex: number) {
   const parts = target.identityHeaders.map((header) => getValue(row, [header])).filter((value) => String(value ?? '').trim());
   return parts.length ? parts : [rowIndex];
+}
+
+function schemaErrorRow(input: ExcelFileInput, target: V7Target, missingHeaders: string[]) {
+  const data = withSource({ 'Loại lỗi': 'Sai schema', 'Chi tiết lỗi': `Thiếu cột bắt buộc: ${missingHeaders.join(', ')}` }, input.filename, 0);
+  return makeImportRow(target.sheetName, ['SCHEMA', input.filename], data, rowErrors(data, target, missingHeaders));
 }
 
 export function parseV7ExcelFile(input: ExcelFileInput): ParsedExcelImport | null {
@@ -166,9 +178,10 @@ export function parseV7ExcelFile(input: ExcelFileInput): ParsedExcelImport | nul
 
   const parsedRows = rows.map((row, index) => {
     const data = enrichRow(row, target, input.filename, headerRowIndex + index + 2);
-    const errors = rowErrors(data, target);
+    const errors = rowErrors(data, target, missingHeaders);
     return makeImportRow(target.sheetName, keyParts(data, target, index + 1), data, errors);
   });
+  if (!parsedRows.length && missingHeaders.length) parsedRows.push(schemaErrorRow(input, target, missingHeaders));
 
   const warnings = [
     ...(picked.sheetName === firstSheetName ? [] : [`Đã tự chọn sheet ${picked.sheetName} trong workbook.`]),
