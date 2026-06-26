@@ -2,7 +2,7 @@ import { createFileHash } from '@/lib/import/file-hash';
 import { previewImport } from '@/lib/import/import-preview';
 import type { ImportPreviewResult } from '@/lib/import/import-types';
 import { parseExcelFile } from './excel-parsers';
-import type { ExcelFileInput } from './import-parser-types';
+import type { ExcelFileInput, ParsedExcelImport } from './import-parser-types';
 
 export type BatchImportPreview = {
   maBatch: string;
@@ -24,22 +24,52 @@ export type BatchImportPreview = {
   };
 };
 
+function buildBlockedPreview(parsed: ParsedExcelImport, dauVetFile: string, warnings: string[]): ImportPreviewResult {
+  return {
+    maLanImport: `IMP-${Date.now()}`,
+    loaiDuLieu: parsed.loaiDuLieu || 'Không nhận diện được',
+    chiNhanh: parsed.chiNhanh || 'NVT',
+    tenFile: parsed.tenFile,
+    dauVetFile,
+    rows: parsed.rows,
+    summary: { dongMoi: 0, duLieuTrung: 0, duLieuLech: 0, dongLoi: Math.max(1, parsed.rows.length) }
+  };
+}
+
+function unrecognizedFile(input: ExcelFileInput, dauVetFile: string, reason: string): ParsedExcelImport {
+  return {
+    tenFile: input.filename,
+    loaiDuLieu: 'Không nhận diện được',
+    chiNhanh: 'NVT',
+    rows: [],
+    warnings: [reason]
+  };
+}
+
 export async function previewExcelBatch(files: ExcelFileInput[], actor: string): Promise<BatchImportPreview> {
   const maBatch = `BATCH-${Date.now()}`;
   const results = [];
   for (const file of files) {
-    const parsed = parseExcelFile(file);
     const dauVetFile = createFileHash(file.buffer);
-    const sheetDich = parsed.rows[0]?.sheetDich ?? 'KHONG_NHAN_DIEN';
-    const preview = await previewImport({
-      loaiDuLieu: parsed.loaiDuLieu,
-      chiNhanh: parsed.chiNhanh,
-      tenFile: parsed.tenFile,
-      dauVetFile,
-      sheetDich,
-      rows: parsed.rows,
-      actor
-    });
+    let parsed: ParsedExcelImport;
+    try {
+      parsed = parseExcelFile(file);
+    } catch (error) {
+      parsed = unrecognizedFile(file, dauVetFile, error instanceof Error ? error.message : 'Không đọc được file Excel.');
+    }
+
+    const shouldSkipStoreRead = parsed.loaiDuLieu === 'Không nhận diện được' || parsed.rows.length === 0 || !parsed.rows[0]?.sheetDich;
+    const preview = shouldSkipStoreRead
+      ? buildBlockedPreview(parsed, dauVetFile, parsed.warnings)
+      : await previewImport({
+          loaiDuLieu: parsed.loaiDuLieu,
+          chiNhanh: parsed.chiNhanh,
+          tenFile: parsed.tenFile,
+          dauVetFile,
+          sheetDich: parsed.rows[0].sheetDich,
+          rows: parsed.rows,
+          actor
+        });
     results.push({ tenFile: parsed.tenFile, loaiDuLieu: parsed.loaiDuLieu, chiNhanh: parsed.chiNhanh, dauVetFile, warnings: parsed.warnings, preview });
   }
   const summary = results.reduce((acc, file) => {
