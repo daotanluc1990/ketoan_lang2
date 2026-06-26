@@ -12,7 +12,7 @@ export function TopBar({ role, onRoleChange }: { role: Role; onRoleChange: (role
       <div className="flex min-h-14 w-full flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-4 lg:px-5">
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-lang-red">Cơm Tấm Làng</p>
-          <h1 className="truncate text-base font-bold text-lang-brown">Báo cáo CEO & Bàn làm việc kế toán</h1>
+          <h1 className="truncate text-base font-bold text-lang-brown">ERP Mini Kế Toán · Data Master V7</h1>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Badge variant="warning">Production data strict</Badge>
