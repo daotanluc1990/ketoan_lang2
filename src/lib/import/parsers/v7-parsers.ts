@@ -50,23 +50,11 @@ function normalize(value: unknown) {
 
 function makeImportRow(sheetDich: string, keyParts: Array<string | number | undefined | null>, data: Record<string, unknown>, errors: string[] = []): ImportRow {
   const maDongDuLieu = createRecordKey([sheetDich, ...keyParts]);
-  return {
-    maDongDuLieu,
-    dauVetDong: createRowHash(data),
-    sheetDich,
-    data,
-    errors
-  };
+  return { maDongDuLieu, dauVetDong: createRowHash(data), sheetDich, data, errors };
 }
 
 function withSource(data: Record<string, unknown>, filename: string, rowIndex: number): Record<string, unknown> {
-  return {
-    ...data,
-    'Tên file nguồn': filename,
-    'Dấu vết dòng': `${filename}#${rowIndex}`,
-    'Trạng thái dữ liệu': 'Preview',
-    'Ngày import': new Date().toISOString()
-  };
+  return { ...data, 'Tên file nguồn': filename, 'Dấu vết dòng': `${filename}#${rowIndex}`, 'Trạng thái dữ liệu': 'Preview', 'Ngày import': new Date().toISOString() };
 }
 
 function getValue(row: Record<string, unknown>, candidates: string[]) {
@@ -104,23 +92,28 @@ function findHeaderRowIndex(matrix: unknown[][], target: V7Target) {
 function findTarget(input: ExcelFileInput, sheetNames: string[], firstSheetName: string, matrix: unknown[][]): V7Target | null {
   const filename = normalize(input.filename);
   const firstName = normalize(firstSheetName);
-  const allSheetNames = sheetNames.map(normalize);
-  const firstHeaders = headersFromMatrix(matrix, findHeaderRowIndex(matrix, TARGETS[0]));
+  const firstSheetExact = TARGETS.find((target) => normalize(target.sheetName) === firstName);
+  if (firstSheetExact) return firstSheetExact;
 
-  const exact = TARGETS.find((target) => allSheetNames.includes(normalize(target.sheetName)));
-  if (exact) return exact;
+  const firstSheetByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => firstName.includes(normalize(keyword)) || filename.includes(normalize(keyword))));
+  if (firstSheetByKeyword) return firstSheetByKeyword;
 
-  const byName = TARGETS.find((target) => normalize(target.sheetName) === firstName || target.keywords.some((keyword) => firstName.includes(normalize(keyword)) || filename.includes(normalize(keyword))));
-  if (byName) return byName;
+  const headerMatch = TARGETS.map((target) => {
+    const headerRowIndex = findHeaderRowIndex(matrix, target);
+    const headers = headersFromMatrix(matrix, headerRowIndex);
+    return { target, matches: countHeaderMatches(headers, target.requiredHeaders) };
+  }).sort((a, b) => b.matches - a.matches)[0];
+  if (headerMatch && headerMatch.matches >= headerMatch.target.requiredHeaders.length) return headerMatch.target;
 
-  const byHeaders = TARGETS.find((target) => countHeaderMatches(firstHeaders, target.requiredHeaders) >= target.requiredHeaders.length);
-  return byHeaders ?? null;
+  const workbookExact = TARGETS.find((target) => sheetNames.map(normalize).includes(normalize(target.sheetName)));
+  return workbookExact ?? null;
 }
 
 function pickSheet(workbook: ReturnType<typeof readWorkbook>['workbook'], firstSheetName: string, target: V7Target) {
+  const firstSheetIsTarget = normalize(firstSheetName) === normalize(target.sheetName) || target.keywords.some((keyword) => normalize(firstSheetName).includes(normalize(keyword)));
   const exactName = workbook.SheetNames.find((sheetName) => normalize(sheetName) === normalize(target.sheetName));
   const keywordName = workbook.SheetNames.find((sheetName) => target.keywords.some((keyword) => normalize(sheetName).includes(normalize(keyword))));
-  const sheetName = exactName ?? keywordName ?? firstSheetName;
+  const sheetName = firstSheetIsTarget ? firstSheetName : exactName ?? keywordName ?? firstSheetName;
   const sheet = workbook.Sheets[sheetName];
   if (!sheet) throw new Error(`Không đọc được sheet ${sheetName}.`);
   return { sheetName, sheet };
@@ -141,9 +134,7 @@ function enrichRow(row: Record<string, unknown>, target: V7Target, filename: str
 }
 
 function rowErrors(row: Record<string, unknown>, target: V7Target) {
-  return target.requiredHeaders
-    .filter((header) => !String(getValue(row, [header]) ?? '').trim())
-    .map((header) => `Thiếu ${header}`);
+  return target.requiredHeaders.filter((header) => !String(getValue(row, [header]) ?? '').trim()).map((header) => `Thiếu ${header}`);
 }
 
 function keyParts(row: Record<string, unknown>, target: V7Target, rowIndex: number) {
