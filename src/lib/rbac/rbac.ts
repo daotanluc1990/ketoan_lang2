@@ -23,7 +23,16 @@ export type Permission =
   | 'view_workbench'
   | 'resolve_conflict'
   | 'view_data_control'
-  | 'view_forecast';
+  | 'view_forecast'
+  | 'view_inventory'
+  | 'view_btt_inventory'
+  | 'view_transfer'
+  | 'view_waste'
+  | 'view_standard_loss'
+  | 'view_stock_loss'
+  | 'view_master_data'
+  | 'view_debt'
+  | 'view_close_history';
 
 export const ROLES: AppRole[] = ['CEO', 'Kế toán', 'Admin', 'Quản lý cửa hàng'];
 
@@ -47,25 +56,37 @@ const ROLE_ALIASES: Record<string, AppRole> = {
   store_manager: 'Quản lý cửa hàng'
 };
 
+const FULL_FINANCE_ROLES: AppRole[] = ['CEO', 'Kế toán', 'Admin'];
+const OPERATION_ROLES: AppRole[] = ['CEO', 'Kế toán', 'Admin', 'Quản lý cửa hàng'];
+
 export const PERMISSION_MATRIX: Record<Permission, AppRole[]> = {
-  view_dashboard: ['CEO', 'Kế toán', 'Admin', 'Quản lý cửa hàng'],
-  view_cashflow: ['CEO', 'Kế toán', 'Admin', 'Quản lý cửa hàng'],
-  view_pnl: ['CEO', 'Kế toán', 'Admin'],
-  view_balance: ['CEO', 'Kế toán', 'Admin'],
-  view_loss: ['CEO', 'Kế toán', 'Admin', 'Quản lý cửa hàng'],
-  view_import: ['CEO', 'Kế toán', 'Admin'],
-  import_preview: ['CEO', 'Kế toán', 'Admin'],
-  import_confirm: ['CEO', 'Kế toán', 'Admin'],
-  rollback_preview: ['CEO', 'Kế toán', 'Admin'],
+  view_dashboard: OPERATION_ROLES,
+  view_cashflow: OPERATION_ROLES,
+  view_pnl: FULL_FINANCE_ROLES,
+  view_balance: FULL_FINANCE_ROLES,
+  view_loss: OPERATION_ROLES,
+  view_import: FULL_FINANCE_ROLES,
+  import_preview: FULL_FINANCE_ROLES,
+  import_confirm: FULL_FINANCE_ROLES,
+  rollback_preview: FULL_FINANCE_ROLES,
   rollback_confirm: ['CEO', 'Admin'],
   view_settings: ['CEO', 'Admin'],
   manage_settings: ['CEO', 'Admin'],
   send_bot: ['CEO', 'Admin'],
-  view_agents: ['CEO', 'Kế toán', 'Admin'],
-  view_workbench: ['CEO', 'Kế toán', 'Admin', 'Quản lý cửa hàng'],
-  resolve_conflict: ['CEO', 'Kế toán', 'Admin'],
-  view_data_control: ['CEO', 'Kế toán', 'Admin'],
-  view_forecast: ['CEO', 'Kế toán', 'Admin']
+  view_agents: FULL_FINANCE_ROLES,
+  view_workbench: OPERATION_ROLES,
+  resolve_conflict: FULL_FINANCE_ROLES,
+  view_data_control: FULL_FINANCE_ROLES,
+  view_forecast: FULL_FINANCE_ROLES,
+  view_inventory: OPERATION_ROLES,
+  view_btt_inventory: OPERATION_ROLES,
+  view_transfer: OPERATION_ROLES,
+  view_waste: OPERATION_ROLES,
+  view_standard_loss: OPERATION_ROLES,
+  view_stock_loss: OPERATION_ROLES,
+  view_master_data: FULL_FINANCE_ROLES,
+  view_debt: FULL_FINANCE_ROLES,
+  view_close_history: FULL_FINANCE_ROLES
 };
 
 export type RbacContext = {
@@ -217,9 +238,18 @@ export const PAGE_PERMISSIONS: Record<string, Permission> = {
   '/can-doi': 'view_balance',
   '/du-toan': 'view_forecast',
   '/that-thoat': 'view_loss',
-  '/that-thoat-chi-tiet': 'view_loss',
+  '/that-thoat-chi-tiet': 'view_stock_loss',
   '/ban-lam-viec-ke-toan': 'view_workbench',
   '/import-nhap-lieu': 'view_import',
   '/kiem-soat-du-lieu': 'view_data_control',
-  '/cai-dat-bot': 'view_settings'
+  '/kho-cua-hang': 'view_inventory',
+  '/kho-bep-trung-tam': 'view_btt_inventory',
+  '/doi-chieu-btt-cua-hang': 'view_transfer',
+  '/hang-huy': 'view_waste',
+  '/hao-hut-vuot-dinh-muc': 'view_standard_loss',
+  '/that-thoat-ton-kho': 'view_stock_loss',
+  '/dinh-muc-mon-ban': 'view_master_data',
+  '/cong-no': 'view_debt',
+  '/cai-dat-bot': 'view_settings',
+  '/lich-su-chot-bao-cao': 'view_close_history'
 };
