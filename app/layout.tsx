@@ -1,4 +1,5 @@
 import '@/styles/globals.css';
+import '@/styles/final-overrides.css';
 import type { Metadata } from 'next';
 import { AppShell } from '@/components/layout/AppShell';
 
