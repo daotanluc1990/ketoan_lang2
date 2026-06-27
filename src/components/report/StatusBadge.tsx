@@ -18,6 +18,7 @@ const statusMap: Record<string, { label: string; variant: Status }> = {
   'Cần kiểm': { label: 'Cần kiểm', variant: 'warning' },
   'Cần đối chiếu': { label: 'Cần đối chiếu', variant: 'warning' },
   'Đang làm': { label: 'Đang làm', variant: 'warning' },
+  'Bị lọc': { label: 'Bị lọc', variant: 'warning' },
   'Chưa đủ dữ liệu': { label: 'Chưa đủ dữ liệu', variant: 'warning' },
   Chưa: { label: 'Chưa', variant: 'warning' },
   'Có lỗi': { label: 'Có lỗi', variant: 'danger' },
