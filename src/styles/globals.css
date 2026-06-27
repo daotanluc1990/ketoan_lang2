@@ -22,6 +22,7 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  font-size: 13px;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -34,8 +35,63 @@ button, input, select, textarea { font: inherit; }
 .glass-surface {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+  box-shadow: 0 5px 16px rgba(17, 24, 39, 0.05);
 }
+
+/* Compact dashboard density overrides */
+.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem !important; }
+.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.625rem !important; }
+.gap-4 { gap: 0.75rem !important; }
+.gap-3 { gap: 0.625rem !important; }
+.gap-2 { gap: 0.45rem !important; }
+.p-5 { padding: 1rem !important; }
+.p-4 { padding: 0.75rem !important; }
+.p-3 { padding: 0.625rem !important; }
+.px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+.px-5 { padding-left: 0.875rem !important; padding-right: 0.875rem !important; }
+.px-4 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+.px-3 { padding-left: 0.625rem !important; padding-right: 0.625rem !important; }
+.py-4 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+.py-3 { padding-top: 0.625rem !important; padding-bottom: 0.625rem !important; }
+.py-2\.5 { padding-top: 0.45rem !important; padding-bottom: 0.45rem !important; }
+.py-2 { padding-top: 0.4rem !important; padding-bottom: 0.4rem !important; }
+.mt-4 { margin-top: 0.75rem !important; }
+.mt-3 { margin-top: 0.625rem !important; }
+.mt-2 { margin-top: 0.4rem !important; }
+.mb-4 { margin-bottom: 0.75rem !important; }
+.mb-3 { margin-bottom: 0.625rem !important; }
+.rounded-3xl { border-radius: 1rem !important; }
+.rounded-2xl { border-radius: 0.75rem !important; }
+.rounded-xl { border-radius: 0.7rem !important; }
+.shadow-card, .shadow-soft { box-shadow: 0 5px 16px rgba(17, 24, 39, 0.05) !important; }
+.text-4xl { font-size: 1.7rem !important; line-height: 2rem !important; }
+.text-3xl { font-size: 1.5rem !important; line-height: 1.85rem !important; }
+.text-2xl { font-size: 1.28rem !important; line-height: 1.6rem !important; }
+.text-xl { font-size: 1.1rem !important; line-height: 1.35rem !important; }
+.text-lg { font-size: 1rem !important; line-height: 1.3rem !important; }
+.text-base { font-size: 0.92rem !important; line-height: 1.25rem !important; }
+.text-sm { font-size: 0.8rem !important; line-height: 1.15rem !important; }
+.h-11 { height: 2.25rem !important; }
+.h-10 { height: 2.1rem !important; }
+.h-9 { height: 1.95rem !important; }
+.h-8 { height: 1.75rem !important; }
+.w-11 { width: 2.25rem !important; }
+.w-10 { width: 2.1rem !important; }
+.w-9 { width: 1.95rem !important; }
+.w-8 { width: 1.75rem !important; }
+.min-h-\[72px\] { min-height: 52px !important; }
+.max-h-\[380px\] { max-height: 290px !important; }
+.max-h-\[360px\] { max-height: 280px !important; }
+.max-h-\[320px\] { max-height: 250px !important; }
+.max-h-\[300px\] { max-height: 230px !important; }
+.max-h-\[260px\] { max-height: 210px !important; }
+.max-h-\[240px\] { max-height: 190px !important; }
+.max-h-\[210px\] { max-height: 165px !important; }
+.lg\:px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+.lg\:px-7 { padding-left: 1rem !important; padding-right: 1rem !important; }
+.lg\:pl-60 { padding-left: 14rem !important; }
+.lg\:pl-\[72px\] { padding-left: 64px !important; }
+.max-w-\[1480px\] { max-width: 1400px !important; }
 
 .sidebar-scroll, .table-scroll {
   scrollbar-width: thin;
