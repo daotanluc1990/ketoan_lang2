@@ -53,6 +53,8 @@ const SOURCE_LABELS: Record<string, string> = {
   DL_THU_MUA: 'Thu mua'
 };
 
+const CHANNEL_FILTER_SHEETS = new Set(['DL_DOANH_THU_APP', 'DL_DOANH_THU_CUA_HANG']);
+
 export function normalizeText(value: unknown) {
   return String(value ?? '')
     .trim()
@@ -160,6 +162,11 @@ function rowMatchesChannel(row: Record<string, unknown>, sheetName: string, filt
   if (!filters.channel) return true;
   const expected = normalizeText(filters.channel);
   if (sheetName === 'DL_DOANH_THU_CUA_HANG' && ['offline', 'cua-hang', 'tai-cua-hang', 'ban-tai-cua-hang'].includes(expected)) return true;
+
+  // Channel is a sales filter. Do not let a selected sales channel hide cashbook,
+  // inventory, BTT, or loss rows that do not have channel-level fields.
+  if (!CHANNEL_FILTER_SHEETS.has(sheetName)) return true;
+
   const values = [row['Kênh bán'], row['Tài khoản app'], row['Phương thức'], row['Ca bán']].map(normalizeText).filter(Boolean);
   return values.some((value) => value === expected || value.includes(expected) || expected.includes(value));
 }
@@ -176,6 +183,11 @@ function rowMatchesDataStatus(row: Record<string, unknown>, filters: ReportFilte
   if (!filters.dataStatus) return true;
   const expected = normalizeText(filters.dataStatus);
   const values = [row['Trạng thái dữ liệu'], row['Trạng thái']].map(normalizeText).filter(Boolean);
+
+  if (expected === 'dat' || expected === 'hop-le' || expected === 'da-xac-nhan') {
+    return values.some((value) => ['dat', 'hop-le', 'tot', 'da-xac-nhan', 'thanh-cong', 'thanh-cong-mot-phan'].includes(value) || value.includes('xac-nhan') || value.includes('thanh-cong'));
+  }
+
   return values.some((value) => value === expected || value.includes(expected) || expected.includes(value));
 }
 
