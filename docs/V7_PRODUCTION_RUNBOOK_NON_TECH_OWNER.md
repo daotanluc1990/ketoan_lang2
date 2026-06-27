@@ -1,15 +1,62 @@
-# V8.0 Production Runbook cho chủ không rành kỹ thuật
+# V8.4 Production Runbook cho chủ không rành kỹ thuật
 
-Tài liệu này dùng khi chuẩn bị đưa app vào dùng thật cho kế toán báo cáo tuần.
+Tài liệu này dùng khi đưa app kế toán Cơm Tấm Làng vào dùng thật.
 
-## 1. Trước khi bấm merge
+## 1. Trạng thái bản hiện tại
 
-Không merge nếu chưa có ít nhất một trong hai điều kiện:
+Commit production QA mới nhất cần kiểm tra trên Vercel:
 
-- Vercel preview chạy lại được và không báo lỗi.
-- Hoặc máy dev đã chạy đủ bộ lệnh QA và pass.
+```text
+f5606883347cf242342d39d874815257ce1b1656
+```
 
-Bộ lệnh QA:
+Vercel project cần dùng:
+
+```text
+https://vercel.com/com-tam-lang/ketoan-lang2
+```
+
+Không dùng kết luận từ Vercel cũ `cotamlang` nếu nó báo rate-limit hoặc trỏ sai project.
+
+## 2. Biến môi trường bắt buộc
+
+Dữ liệu thật:
+
+```text
+DATA_STORE=google_sheets
+GOOGLE_SHEET_ID=1L361UPAsaJd_VDjBrxQBwoCgnlkRceXB6C04feZYUrA
+GOOGLE_CLIENT_EMAIL=<service-account-email>
+GOOGLE_PRIVATE_KEY=<service-account-private-key>
+```
+
+Quyền và bảo vệ app:
+
+```text
+APP_RBAC_ENABLED=true
+APP_DEFAULT_ROLE=Kế toán
+APP_ALLOW_ROLE_OVERRIDE=false
+```
+
+Basic Auth nếu bật lại:
+
+```text
+APP_BASIC_AUTH_ENABLED=true
+APP_USERNAME=<user>
+APP_PASSWORD=<password>
+```
+
+Bot nếu dùng:
+
+```text
+TELEGRAM_BOT_TOKEN=<token>
+TELEGRAM_CHAT_ID=<chat-id>
+```
+
+Không đưa file `.env`, service account JSON, key, token lên GitHub.
+
+## 3. QA kỹ thuật trước khi live
+
+Bộ lệnh máy dev nếu có:
 
 ```bash
 npm install
@@ -18,118 +65,144 @@ npm run lint
 npm run test
 npm run smoke
 npm run static-ui-qa
+npm run synthetic-data-qa
 npm run build
 ```
 
-## 2. Cấu hình Vercel production
+Nếu không có máy dev, dùng Vercel build làm cổng kiểm tra tối thiểu. Vercel phải báo Ready/Success.
 
-Vercel project mới cần kiểm tra: `https://vercel.com/com-tam-lang/ketoan-lang2`.
+## 4. QA Google Sheet
 
-Vào Vercel project `ketoan-lang2`, kiểm tra Environment Variables.
+Google Sheet production phải có đủ các nhóm sheet:
 
-Bắt buộc cho dữ liệu thật:
+```text
+DL_DOANH_THU_APP
+DL_DOANH_THU_CUA_HANG
+DL_SO_QUY
+DL_TON_KHO
+DL_THAT_THOAT_NVL
+DL_CONG_NO
+DL_THU_MUA
+DM_*
+DL_XNT_*
+DL_XUAT_BTT_CHO_CUA_HANG
+DL_CUA_HANG_NHAN_TU_BTT
+DL_HUY_*
+DL_CHE_BIEN_THUC_TE
+KQ_*
+IMPORT_*
+AUDIT_LOG
+LICH_SU_CHOT_BAO_CAO
+```
 
-- DATA_STORE = google_sheets
-- GOOGLE_SHEET_ID
-- GOOGLE_CLIENT_EMAIL
-- GOOGLE_PRIVATE_KEY
+File `SoQuy_*.xlsx` phải luôn nhận là **Sổ quỹ**, không được nhận nhầm thành tồn kho/thất thoát.
 
-Bảo vệ app:
+File `Công nợ.xlsx` phải nhận là **Công nợ**.
 
-- APP_BASIC_AUTH_ENABLED = true
-- APP_USERNAME
-- APP_PASSWORD
-- APP_RBAC_ENABLED = true
-- APP_DEFAULT_ROLE = Kế toán
-- APP_ALLOW_ROLE_OVERRIDE = false
+File `TỒN KHO BẾP TRUNG TÂM.xlsx` phải nhận là **XNT Bếp Trung Tâm**.
 
-Bot nếu dùng:
+File `Xuất Hủy.xlsx` phải nhận là **Hủy hàng BTT**.
 
-- TELEGRAM_BOT_TOKEN
-- TELEGRAM_CHAT_ID
+## 5. Test production 15 phút
 
-Không đưa service account JSON lên GitHub.
+Mở app production và kiểm tra:
 
-## 3. Sau khi merge main
+```text
+Tổng quan kế toán
+Bàn làm việc kế toán
+Nhập liệu & Import
+P&L Tuần
+Dòng tiền Tuần
+Cân đối rút gọn
+Dự toán tuần tới
+Kho cửa hàng
+Kho Bếp Trung Tâm
+Đối chiếu BTT - Cửa hàng
+Hàng hủy
+Hao hụt / Vượt định mức
+Thất thoát tồn kho
+Định mức món bán
+Công nợ
+Cài đặt & Bot báo cáo
+Lịch sử chốt báo cáo
+```
 
-Làm theo thứ tự:
+Yêu cầu:
 
-1. Vào GitHub PR.
-2. Merge bằng squash merge.
-3. Vào Vercel project mới.
-4. Chờ deployment production chạy xong.
-5. Nếu deployment lỗi, không test tiếp; đọc lỗi trước.
-6. Nếu deployment ready, mở app production.
+```text
+Không trang trắng
+Không crash
+Không dùng dữ liệu mẫu
+Không hiện mô tả dài làm rối dashboard
+Bảng phải scroll nội bộ
+KPI phải compact
+Thiếu dữ liệu chỉ hiển thị trạng thái nhỏ
+```
 
-## 4. Test production nhanh trong 15 phút
+## 6. Test import thật
 
-### Kiểm tra đăng nhập
+Thứ tự test:
 
-- Mở app bằng trình duyệt ẩn danh.
-- App phải hỏi Basic Auth nếu đã bật.
-- Nhập user/password đã cấu hình.
+```text
+1. Chọn nhiều file Excel.
+2. Bấm Kiểm tra batch.
+3. Chỉ bấm Import file đạt khi Lỗi = 0 và Lệch = 0.
+4. Mở Google Sheet kiểm tra đúng sheet đích.
+5. Mở tab báo cáo tương ứng để xem số đọc lên.
+```
 
-### Kiểm tra quyền
+Bộ file tối thiểu:
 
-- Vào tab Lịch sử chốt báo cáo.
-- Thử bằng vai trò Kế toán.
-- Kế toán không được xác nhận chốt.
-- Đổi sang CEO/Admin theo cách hợp lệ rồi test lại.
+```text
+TỒN KHO BẾP TRUNG TÂM.xlsx
+Công nợ.xlsx
+Xuất Hủy.xlsx
+SoQuy_*.xlsx
+Doanh thu app
+Doanh thu cửa hàng
+Tồn kho cửa hàng
+Thất thoát NVL
+```
 
-### Kiểm tra dữ liệu
+## 7. Chốt báo cáo
 
-Mở các tab:
+Chỉ chốt khi:
 
-- Tổng quan kế toán.
-- Nhập liệu & Import.
-- Kho cửa hàng.
-- Kho Bếp Trung Tâm.
-- Đối chiếu BTT - Cửa hàng.
-- Hàng hủy.
-- Hao hụt / Vượt định mức.
-- Thất thoát tồn kho.
-- Lịch sử chốt báo cáo.
+```text
+Lỗi import = 0
+Dữ liệu lệch = 0
+File nhận diện đúng sheet
+Các tab kho/BTT/hủy/hao hụt/thất thoát đọc được dữ liệu
+CEO/Admin xem lại dashboard
+```
 
-Yêu cầu: không trang nào trắng, không crash, không bịa số mẫu.
+Kế toán được preview. CEO/Admin mới được xác nhận chốt.
 
-## 5. Quy trình dùng hằng tuần
+## 8. Rollback
 
-1. Kế toán gom file nguồn.
-2. Kế toán vào Nhập liệu & Import.
-3. Bấm Kiểm tra batch.
-4. Sửa lỗi nếu preview báo lỗi.
-5. Import file đạt.
-6. Mở các tab đối chiếu.
-7. Xử lý cảnh báo.
-8. Vào Lịch sử chốt báo cáo.
-9. Preview chốt.
-10. CEO/Admin xác nhận chốt khi đủ điều kiện.
-11. Kiểm tra snapshot và audit log.
+Khi có lỗi production:
 
-## 6. Khi có lỗi production
+```text
+1. Không sửa tay dữ liệu trước khi ghi nhận lỗi.
+2. Chụp màn hình lỗi.
+3. Ghi tên file đang import.
+4. Ghi thời điểm lỗi.
+5. Rollback Vercel về deployment Ready gần nhất hoặc revert commit GitHub.
+6. Nếu dữ liệu đã ghi sai, dùng Hoàn tác import theo Mã lần import.
+```
 
-Không sửa tay dữ liệu trước khi ghi nhận lỗi.
+## 9. Khi nào được gọi là production ready
 
-Ghi lại:
+Chỉ gọi là production ready khi:
 
-- Trang bị lỗi.
-- Thời điểm lỗi.
-- File đang import nếu có.
-- Ảnh màn hình.
-- Kết quả mong muốn.
-- Kết quả thực tế.
-
-Sau đó chọn một trong hai phương án:
-
-- Rollback Vercel về deployment trước.
-- Revert PR trên GitHub nếu lỗi do code.
-
-## 7. Khi nào được gọi là live
-
-App được xem là live khi:
-
-- Kế toán import được ít nhất 1 tuần dữ liệu thật.
-- Các báo cáo kho/BTT/hủy/hao hụt/thất thoát đọc đúng dữ liệu.
-- Có chốt báo cáo tuần thành công.
-- CEO xem được dashboard và cảnh báo.
-- Có rollback rõ ràng.
+```text
+Vercel build success
+17 tab mở được
+Import batch thật pass
+Google Sheet ghi đúng sheet đích
+Báo cáo đọc lại đúng dữ liệu thật
+RBAC không cho sai quyền chốt báo cáo
+Có audit log
+Có rollback bằng Mã lần import
+CEO xem được dashboard/chốt tuần
+```
