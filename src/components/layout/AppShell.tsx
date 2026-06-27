@@ -71,8 +71,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className={clsx('min-h-screen transition-[padding] duration-200', contentPadding)}>
         <TopBar role={role} onRoleChange={setSelectedRole} />
         <GlobalFilterBar />
-        <main className="w-full px-4 py-4 lg:px-6">
-          <div className="mx-auto w-full max-w-[1480px] space-y-4 pb-24">
+        <main className="w-full px-3 py-2.5 lg:px-4">
+          <div className="mx-auto w-full max-w-[1480px] space-y-3 pb-10">
             {children}
           </div>
         </main>
