@@ -5,14 +5,14 @@ export function ChartCard({ title, description, items, type = 'bar' }: { title: 
   return (
     <Card>
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0"><CardTitle>{title}</CardTitle>{description ? <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-black/55">{description}</p> : null}</div>
-        <span className="shrink-0 rounded-full bg-lang-cream px-2.5 py-1 text-[10px] font-bold text-lang-brown">{type === 'line' ? 'Trend' : type === 'status' ? 'Status' : 'Bar'}</span>
+        <div className="min-w-0"><CardTitle>{title}</CardTitle>{description ? <p className="mt-0.5 line-clamp-2 text-[12px] leading-5 text-lang-muted">{description}</p> : null}</div>
+        <span className="shrink-0 rounded-full bg-gray-50 px-2 py-0.5 text-[10px] font-bold text-lang-muted ring-1 ring-lang-line">{type === 'line' ? 'Trend' : type === 'status' ? 'Status' : 'Bar'}</span>
       </div>
-      <div className="mt-3 space-y-2.5">
+      <div className="mt-3 space-y-2">
         {items.map((item) => (
           <div key={item.label}>
-            <div className="flex items-center justify-between gap-3 text-xs"><span className="truncate font-semibold text-lang-brown">{item.label}</span><span className="number shrink-0 text-black/60">{item.caption ?? item.value}</span></div>
-            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-lang-cream"><div className="h-full rounded-full bg-lang-red" style={{ width: `${Math.max(8, Math.round((item.value / max) * 100))}%` }} /></div>
+            <div className="flex items-center justify-between gap-3 text-[12px]"><span className="truncate font-semibold text-lang-ink">{item.label}</span><span className="number shrink-0 text-lang-muted">{item.caption ?? item.value}</span></div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-lang-red" style={{ width: `${Math.max(8, Math.round((item.value / max) * 100))}%` }} /></div>
           </div>
         ))}
       </div>
