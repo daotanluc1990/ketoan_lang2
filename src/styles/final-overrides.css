@@ -1,0 +1,24 @@
+@media (min-width: 1024px) {
+  .lg\:pl-60,
+  .lg\:pl-\[72px\] {
+    padding-left: 60px !important;
+  }
+
+  .lg\:grid-cols-5 {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  .\32xl\:grid-cols-8 {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}
+
+.max-w-\[1480px\] {
+  max-width: none !important;
+}
+
+main > div {
+  max-width: none !important;
+}
