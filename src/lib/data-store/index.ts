@@ -3,6 +3,8 @@ import { googleSheetsStore } from './google-sheets-store';
 import { localJsonStore } from './local-json-store';
 import { withSanitizedReads } from './sanitized-data-store';
 
+const MISSING_GOOGLE_SHEETS_MESSAGE = 'PRODUCTION_GOOGLE_SHEETS_NOT_CONFIGURED: Vercel chưa kết nối Google Sheet thật. Không được đọc/ghi local .data trên production. Kiểm tra GOOGLE_SHEET_ID, GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY, DATA_STORE=google_sheets.';
+
 function hasGoogleSheetsRuntimeEnv() {
   return Boolean(process.env.GOOGLE_SHEET_ID && process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY);
 }
@@ -13,16 +15,16 @@ function isProductionRuntime() {
 
 const productionMissingGoogleSheetsStore: DataStore = {
   async read() {
-    return [];
+    throw new Error(MISSING_GOOGLE_SHEETS_MESSAGE);
   },
   async append() {
-    throw new Error('PRODUCTION_GOOGLE_SHEETS_NOT_CONFIGURED: Vercel chưa cấu hình Google Sheet runtime. Không được ghi local .data trên production. Kiểm tra GOOGLE_SHEET_ID, GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY, DATA_STORE=google_sheets.');
+    throw new Error(MISSING_GOOGLE_SHEETS_MESSAGE);
   },
   async replace() {
-    throw new Error('PRODUCTION_GOOGLE_SHEETS_NOT_CONFIGURED: Vercel chưa cấu hình Google Sheet runtime. Không được ghi local .data trên production.');
+    throw new Error(MISSING_GOOGLE_SHEETS_MESSAGE);
   },
   async markRowsByImportId(input) {
-    throw new Error(`PRODUCTION_GOOGLE_SHEETS_NOT_CONFIGURED: Không thể rollback ${input.maLanImport} vì production chưa kết nối Google Sheet.`);
+    throw new Error(`${MISSING_GOOGLE_SHEETS_MESSAGE} Không thể rollback ${input.maLanImport}.`);
   }
 };
 
