@@ -1,7 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { clsx } from 'clsx';
+import { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { GlobalFilterBar } from './GlobalFilterBar';
@@ -46,7 +45,7 @@ function readStoredRole(): Role {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(() => readStoredBool(COLLAPSE_KEY, false));
+  const [collapsed, setCollapsed] = useState(() => readStoredBool(COLLAPSE_KEY, true));
   const [role, setRole] = useState<Role>(() => readStoredRole());
 
   const toggleCollapsed = () => {
@@ -63,12 +62,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     writeRoleCookie(nextRole);
   };
 
-  const contentPadding = useMemo(() => (collapsed ? 'lg:pl-[72px]' : 'lg:pl-60'), [collapsed]);
-
   return (
     <div className="app-bg min-h-screen overflow-x-hidden text-lang-ink">
       <Sidebar collapsed={collapsed} onToggle={toggleCollapsed} role={role} />
-      <div className={clsx('min-h-screen transition-[padding] duration-200', contentPadding)}>
+      <div className="min-h-screen transition-[padding] duration-200 lg:pl-[72px]">
         <TopBar role={role} onRoleChange={setSelectedRole} />
         <GlobalFilterBar />
         <main className="w-full px-2 py-2 lg:px-3">
