@@ -135,7 +135,13 @@ function topValueRows(rows: DataRow[], labelKeys: string[], valueKeys: string[],
 }
 
 async function readSources(store: Store, specs: Array<{ sheetName: string; label: string }>): Promise<SourceSpec[]> {
-  return Promise.all(specs.map(async (spec) => ({ ...spec, rows: await store.read(spec.sheetName) })));
+  return Promise.all(specs.map(async (spec) => {
+    const rows = await store.read(spec.sheetName).catch((error) => {
+      console.warn('[v7-report-engines] Cannot read', spec.sheetName, error instanceof Error ? error.message : error);
+      return [] as DataRow[];
+    });
+    return { ...spec, rows };
+  }));
 }
 
 export async function buildStoreInventoryReport(): Promise<V7Report> {

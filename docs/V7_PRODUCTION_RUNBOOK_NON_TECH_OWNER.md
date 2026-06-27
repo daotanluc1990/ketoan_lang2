@@ -101,7 +101,7 @@ File `Công nợ.xlsx` phải nhận là **Công nợ**.
 
 File `TỒN KHO BẾP TRUNG TÂM.xlsx` phải nhận là **XNT Bếp Trung Tâm**.
 
-File `Xuất Hủy.xlsx` phải nhận là **Hủy hàng BTT**.
+File `Xuất Hủy.xlsx` của KiotViet trong quy trình hiện tại phải nhận là **BTT xuất cho cửa hàng**, không phải hàng hủy.
 
 ## 5. Test production 15 phút
 

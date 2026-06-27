@@ -86,13 +86,20 @@ function normalizeText(value: unknown) {
 
 export function parseDebtFile(input: ExcelFileInput): ParsedExcelImport {
   const { firstSheet } = readWorkbook(input.buffer);
-  const rows = sheetToRows(firstSheet);
+  const matrix = rowsAsMatrix(firstSheet);
+  const headerRowIndex = findBestHeaderRow(matrix, ['Mã nhà cung cấp|Nhà cung cấp|Đối tượng|NCC', 'Nợ cuối kỳ|Còn phải trả|Phải trả|Ghi nợ']);
+  const fallbackDate = reportEndDate(matrix) || new Date().toISOString().slice(0, 10);
+  const rows = sheetToRows(firstSheet, headerRowIndex).filter((row) => {
+    const code = normalizeText(getValue(row, ['Mã nhà cung cấp', 'Mã NCC', 'NCC']));
+    const supplier = normalizeText(getValue(row, ['Tên nhà cung cấp', 'Nhà cung cấp/Đối tượng', 'Nhà cung cấp', 'Đối tượng', 'NCC']));
+    return Boolean(supplier) && !code.includes('sl ncc') && !supplier.includes('sl ncc') && !supplier.includes('tong cong');
+  });
   const parsedRows: ImportRow[] = rows.map((row, idx) => {
-    const ngay = toDateString(getValue(row, ['Ngày', 'Ngày chứng từ', 'Ngày phát sinh']));
-    const doiTuong = String(getValue(row, ['Nhà cung cấp/Đối tượng', 'Nhà cung cấp', 'Đối tượng', 'NCC']) ?? '').trim();
-    const phaiTra = toNumber(getValue(row, ['Phải trả', 'Tổng phải trả', 'Số tiền phải trả']));
-    const daTra = toNumber(getValue(row, ['Đã trả', 'Đã thanh toán', 'Thanh toán']));
-    const conPhaiTra = toNumber(getValue(row, ['Còn phải trả', 'Còn nợ', 'Số dư công nợ'])) || Math.max(phaiTra - daTra, 0);
+    const ngay = toDateString(getValue(row, ['Ngày', 'Ngày chứng từ', 'Ngày phát sinh'])) || fallbackDate;
+    const doiTuong = String(getValue(row, ['Nhà cung cấp/Đối tượng', 'Tên nhà cung cấp', 'Nhà cung cấp', 'Đối tượng', 'NCC']) ?? '').trim();
+    const phaiTra = toNumber(getValue(row, ['Phải trả', 'Tổng phải trả', 'Số tiền phải trả', 'Ghi nợ']));
+    const daTra = toNumber(getValue(row, ['Đã trả', 'Đã thanh toán', 'Thanh toán', 'Ghi có']));
+    const conPhaiTra = toNumber(getValue(row, ['Còn phải trả', 'Còn nợ', 'Số dư công nợ', 'Nợ cuối kỳ'])) || Math.max(phaiTra - daTra, 0);
     const quaHan = toNumber(getValue(row, ['Quá hạn', 'Số ngày quá hạn']));
     const data = withSource({
       'Ngày': ngay,
@@ -109,11 +116,40 @@ export function parseDebtFile(input: ExcelFileInput): ParsedExcelImport {
       'Đến hạn': getValue(row, ['Đến hạn', 'Ngày đến hạn']),
       'Quá hạn': quaHan,
       'Cần CEO duyệt': conPhaiTra > 10000000 || quaHan > 0 ? 'Có' : 'Không',
-      'Ghi chú': getValue(row, ['Ghi chú', 'Diễn giải', 'Nội dung'])
+      'Ghi chú': getValue(row, ['Ghi chú', 'Diễn giải', 'Nội dung']) || getValue(row, ['Mã nhà cung cấp', 'Mã NCC'])
     }, input.filename, idx + 2);
     return makeImportRow(SHEET_NAMES.DL_CONG_NO, [ngay, doiTuong, phaiTra, conPhaiTra], data, doiTuong ? [] : ['Thiếu nhà cung cấp/đối tượng']);
   });
   return { tenFile: input.filename, loaiDuLieu: 'Công nợ', chiNhanh: 'NVT', rows: parsedRows, warnings: [] };
+}
+
+function findBestHeaderRow(matrix: unknown[][], requirements: string[]) {
+  let best = { index: 0, score: 0 };
+  matrix.slice(0, 15).forEach((row, index) => {
+    const headers = row.map(cleanHeader);
+    const score = requirements.filter((requirement) => {
+      const aliases = requirement.split('|').map((item) => normalizeText(item));
+      return headers.some((header) => {
+        const normalizedHeader = normalizeText(header);
+        return Boolean(normalizedHeader) && aliases.some((alias) => normalizedHeader.includes(alias) || alias.includes(normalizedHeader));
+      });
+    }).length;
+    if (score > best.score) best = { index, score };
+  });
+  return best.index;
+}
+
+function reportEndDate(matrix: unknown[][]) {
+  for (const row of matrix.slice(0, 12)) {
+    for (const cell of row) {
+      const text = String(cell ?? '');
+      const rangeMatch = text.match(/đến ngày\s+(\d{1,2}[/-]\d{1,2}[/-]\d{4})/i) ?? text.match(/den ngay\s+(\d{1,2}[/-]\d{1,2}[/-]\d{4})/i);
+      if (rangeMatch) return toDateString(rangeMatch[1]);
+      const dateMatch = text.match(/Ngày lập\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})/i) ?? text.match(/Ngay lap\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})/i);
+      if (dateMatch) return toDateString(dateMatch[1]);
+    }
+  }
+  return '';
 }
 
 export function parsePurchaseFile(input: ExcelFileInput): ParsedExcelImport {
@@ -430,11 +466,9 @@ function parseFactDataStorageLoss(input: ExcelFileInput, workbook: ReturnType<ty
 }
 
 export function parseExcelFile(input: ExcelFileInput): ParsedExcelImport {
-  const v7Parsed = parseV7ExcelFile(input);
-  if (v7Parsed) return v7Parsed;
-
   const { workbook, firstSheet } = readWorkbook(input.buffer);
   const matrix = rowsAsMatrix(firstSheet);
+
   if (looksLikeStoreRevenue(input.filename, matrix)) return parseStoreRevenueFile(input);
   if (looksLikeCashbook(input.filename, matrix)) return parseCashbookFile(input);
   if (looksLikeInventory(input.filename, matrix)) return parseInventoryFile(input);
@@ -442,5 +476,9 @@ export function parseExcelFile(input: ExcelFileInput): ParsedExcelImport {
   if (looksLikeLossReport(input.filename, workbook.SheetNames, matrix)) return parseLossReportFile(input);
   if (looksLikeDebtFile(input.filename, matrix)) return parseDebtFile(input);
   if (looksLikePurchaseFile(input.filename, matrix)) return parsePurchaseFile(input);
+
+  const v7Parsed = parseV7ExcelFile(input);
+  if (v7Parsed) return v7Parsed;
+
   return { tenFile: input.filename, loaiDuLieu: 'Không nhận diện được', chiNhanh: 'NVT', rows: [], warnings: ['Không nhận diện được loại file. Cần kiểm tra thủ công.'] };
 }

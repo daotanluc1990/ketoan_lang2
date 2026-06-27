@@ -18,27 +18,30 @@
     "synthetic-data-qa": "tsx scripts/synthetic-data-qa.ts"
   },
   "dependencies": {
-    "@googleapis/sheets": "9.3.0",
+    "@e965/xlsx": "^0.20.3",
+    "@googleapis/sheets": "13.0.2",
     "clsx": "2.1.1",
     "date-fns": "4.1.0",
     "lucide-react": "0.468.0",
     "next": "16.2.9",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "xlsx": "0.18.5",
     "zod": "3.24.1"
   },
   "devDependencies": {
-    "@types/node": "22.10.2",
+    "@types/node": "22.12.0",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "autoprefixer": "10.4.20",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.9",
-    "postcss": "8.4.49",
+    "postcss": "8.5.15",
     "tailwindcss": "3.4.17",
-    "tsx": "4.19.2",
+    "tsx": "4.22.4",
     "typescript": "5.7.2",
-    "vitest": "2.1.8"
+    "vitest": "4.1.9"
+  },
+  "overrides": {
+    "postcss": "8.5.15"
   }
 }

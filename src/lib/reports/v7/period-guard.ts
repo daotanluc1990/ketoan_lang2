@@ -49,7 +49,10 @@ export async function findClosedPeriodMatches(preview: ImportPreviewResult): Pro
   const periods = getPreviewPeriodCodes(preview);
   if (!periods.length) return [];
   const branch = preview.chiNhanh || 'Toàn hệ thống';
-  const rows = await getDataStore().read(SHEET_NAMES.LICH_SU_CHOT_BAO_CAO);
+  const rows = await getDataStore().read(SHEET_NAMES.LICH_SU_CHOT_BAO_CAO).catch((error) => {
+    console.warn('[period-guard] Cannot read close history:', error instanceof Error ? error.message : error);
+    return [] as Record<string, unknown>[];
+  });
   const matches: ClosedPeriodMatch[] = [];
   for (const row of rows) {
     const periodCode = text(row['Kỳ báo cáo'] ?? row['Mã tuần'] ?? row['Tuần']);

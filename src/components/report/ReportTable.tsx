@@ -6,7 +6,7 @@ export function ReportTable({ headers, rows, maxHeight = 'max-h-[320px]' }: { he
   return (
     <div className="overflow-hidden rounded-lg border border-lang-line bg-white">
       <div className={`table-scroll overflow-auto ${maxHeight}`}>
-        <table className="min-w-full border-separate border-spacing-0 text-[11.5px]">
+        <table className="min-w-full border-separate border-spacing-0 text-[12px]">
           <thead className="sticky top-0 z-10 bg-gray-50 text-left uppercase tracking-wide text-lang-muted">
             <tr>{headers.map((h) => <th className="border-b border-lang-line px-2.5 py-1.5 font-black" key={h}>{h}</th>)}</tr>
           </thead>

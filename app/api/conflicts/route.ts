@@ -8,6 +8,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const rbac = requireApiPermission(request, 'view_data_control');
   if (!rbac.ok) return rbac.response;
-  const rows = await getDataStore().read(SHEET_NAMES.IMPORT_DU_LIEU_LECH);
+  const rows = await getDataStore().read(SHEET_NAMES.IMPORT_DU_LIEU_LECH).catch((error) => {
+    console.warn('[conflicts] Cannot read conflict rows:', error instanceof Error ? error.message : error);
+    return [];
+  });
   return NextResponse.json(appendRbacMeta({ ok: true, data: rows }, rbac.context));
 }
