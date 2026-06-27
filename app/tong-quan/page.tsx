@@ -1,5 +1,5 @@
 import { PageHeader } from '@/components/layout/PageHeader';
-import { AccountingOverviewPage } from '@/components/dashboard/AccountingOverviewPage';
+import { AccountingOverviewCompactPage } from '@/components/dashboard/AccountingOverviewCompactPage';
 import { buildDashboardReport } from '@/lib/reports/report-aggregator';
 import { parsePageReportFilters } from '@/lib/reports/report-filters';
 
@@ -19,13 +19,9 @@ export default async function TongQuanPage({ searchParams }: PageProps) {
     : 'Chưa đủ dữ liệu';
 
   return (
-    <div className="space-y-3">
-      <PageHeader
-        title="Tổng quan kế toán"
-        description="Theo dõi dữ liệu nhập - xuất - tồn - bán - hủy - đối chiếu trước khi chốt báo cáo."
-        status={status}
-      />
-      <AccountingOverviewPage report={report} />
+    <div className="space-y-2.5">
+      <PageHeader title="Tổng quan kế toán" status={status} />
+      <AccountingOverviewCompactPage report={report} />
     </div>
   );
 }
