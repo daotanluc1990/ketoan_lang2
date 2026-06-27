@@ -3,6 +3,7 @@ import { SHEET_NAMES } from '@/lib/google-sheets/sheet-names';
 import { writeAuditLog } from '@/lib/audit/audit-log';
 import { AUDIT_EVENTS } from '@/lib/audit/audit-events';
 import { buildDashboardReport } from '@/lib/reports/report-aggregator';
+import { normalizeText, type ReportFilters } from '@/lib/reports/report-filters';
 import { sendCeoWeeklyCloseMessage } from '@/lib/bot/ceo-telegram';
 import { buildBttInventoryReport, buildBttTransferReport, buildStandardLossReport, buildStockLossReport, buildStoreInventoryReport, buildWasteReport } from './report-engines';
 
@@ -32,18 +33,53 @@ function closeId(periodCode: string, branch: string) {
   return `CLOSE-${periodCode}-${branch}-${Date.now()}`.replace(/\s+/g, '-');
 }
 
+function isAllBranch(branch: string) {
+  const key = normalizeText(branch || 'Toàn hệ thống');
+  return !key || key === 'toan-he-thong' || key === 'toan-bo' || key === 'tat-ca';
+}
+
+function closeFilters(input: Pick<CloseInput, 'periodCode' | 'branch'>): ReportFilters {
+  const branch = String(input.branch ?? '').trim();
+  return {
+    weekCode: input.periodCode,
+    ...(branch && !isAllBranch(branch) ? { branch } : {})
+  };
+}
+
+function activeClose(row: Record<string, unknown>) {
+  const status = normalizeText(row['Trạng thái dữ liệu'] ?? row['Trạng thái']);
+  if (status.includes('hoan-tac')) return false;
+  return Boolean(String(row['Mã chốt'] ?? '').trim() || String(row['Snapshot JSON'] ?? '').trim() || String(row['Thời gian chốt'] ?? '').trim());
+}
+
+function sameBranch(left: string, right: string) {
+  if (isAllBranch(left) || isAllBranch(right)) return true;
+  const a = normalizeText(left);
+  const b = normalizeText(right);
+  return a === b || a.includes(b) || b.includes(a);
+}
+
+async function existingCloseRows(periodCode: string, branch: string) {
+  const rows = await getDataStore().read(SHEET_NAMES.LICH_SU_CHOT_BAO_CAO).catch(() => [] as Record<string, unknown>[]);
+  return rows.filter((row) => String(row['Kỳ báo cáo'] ?? row['Mã tuần'] ?? row['Tuần'] ?? '').trim() === periodCode && sameBranch(String(row['Chi nhánh'] ?? 'Toàn hệ thống'), branch) && activeClose(row));
+}
+
 export async function buildWeeklyClosePreview(input: Omit<CloseInput, 'actor'> & { actor?: string }) {
   const branch = input.branch ?? 'Toàn hệ thống';
-  const dashboard = await buildDashboardReport({});
+  const filters = closeFilters({ periodCode: input.periodCode, branch });
+  const dashboard = await buildDashboardReport(filters);
   const storeInventory = await buildStoreInventoryReport();
   const bttInventory = await buildBttInventoryReport();
   const transfer = await buildBttTransferReport();
   const waste = await buildWasteReport();
   const standardLoss = await buildStandardLossReport();
   const stockLoss = await buildStockLossReport();
+  const existingCloses = await existingCloseRows(input.periodCode, branch);
 
   const checks = [
-    { code: 'DATA_MASTER', label: 'Tổng quan kế toán', status: dashboard.hasRealData ? (dashboard.missingSources.length ? 'Cần đối chiếu' : 'Tốt') : 'Chưa đủ dữ liệu', detail: dashboard.missingSources.length ? `Thiếu: ${dashboard.missingSources.join(', ')}` : 'Đã đọc nguồn chính' },
+    { code: 'PERIOD_SCOPE', label: 'Kỳ báo cáo', status: dashboard.filterActive ? 'Tốt' : 'Cần đối chiếu', detail: `Đang chốt kỳ ${input.periodCode}${filters.branch ? ` · ${filters.branch}` : ' · Toàn hệ thống'}` },
+    { code: 'DUPLICATE_CLOSE', label: 'Trùng kỳ chốt', status: existingCloses.length ? 'Cần đối chiếu' : 'Tốt', detail: existingCloses.length ? `Đã có ${existingCloses.length} lần chốt cho kỳ này` : 'Chưa có lần chốt còn hiệu lực' },
+    { code: 'DATA_MASTER', label: 'Tổng quan kế toán', status: dashboard.hasRealData ? (dashboard.missingSources.length ? 'Cần đối chiếu' : 'Tốt') : 'Chưa đủ dữ liệu', detail: dashboard.missingSources.length ? `Thiếu: ${dashboard.missingSources.join(', ')}` : 'Đã đọc nguồn chính theo kỳ' },
     { code: 'STORE_INVENTORY', label: 'Kho cửa hàng', status: storeInventory.status, detail: metricValue(storeInventory.metrics, 'Dòng XNT') },
     { code: 'BTT_INVENTORY', label: 'Kho Bếp Trung Tâm', status: bttInventory.status, detail: metricValue(bttInventory.metrics, 'Dòng XNT BTT') },
     { code: 'BTT_TRANSFER', label: 'Đối chiếu BTT - Cửa hàng', status: transfer.status, detail: metricValue(transfer.metrics, 'SL lệch tạm') },
@@ -57,10 +93,13 @@ export async function buildWeeklyClosePreview(input: Omit<CloseInput, 'actor'> &
   const snapshot = {
     periodCode: input.periodCode,
     branch,
+    filters,
     generatedAt: nowIso(),
     status,
     totals: dashboard.totals,
     executiveKpis: dashboard.executiveKpis,
+    sourceCounts: dashboard.sourceCounts,
+    rawSourceCounts: dashboard.rawSourceCounts,
     moduleMetrics: {
       storeInventory: storeInventory.metrics,
       bttInventory: bttInventory.metrics,
@@ -76,15 +115,31 @@ export async function buildWeeklyClosePreview(input: Omit<CloseInput, 'actor'> &
     ok: true,
     periodCode: input.periodCode,
     branch,
+    filters,
     status,
     canClose: status === 'Đủ điều kiện chốt',
     blockingChecks,
     checks,
+    existingCloses: existingCloses.map((row) => ({ closeId: row['Mã chốt'], closedAt: row['Thời gian chốt'], status: row['Trạng thái dữ liệu'] })),
     snapshot
   };
 }
 
 export async function confirmWeeklyClose(input: CloseInput) {
+  const branch = input.branch ?? 'Toàn hệ thống';
+  const existingCloses = await existingCloseRows(input.periodCode, branch);
+  if (existingCloses.length && !input.force) {
+    await writeAuditLog({ eventType: AUDIT_EVENTS.WEEKLY_CLOSE_REJECTED, actor: input.actor, target: input.periodCode, after: { existingCloses }, note: input.note });
+    return {
+      ok: false,
+      error: {
+        code: 'WEEKLY_CLOSE_DUPLICATE',
+        message: 'Kỳ báo cáo này đã được chốt. Muốn chốt lại phải dùng Chốt đặc biệt và ghi rõ lý do.',
+        existingCloses
+      }
+    };
+  }
+
   const preview = await buildWeeklyClosePreview(input);
   if (!preview.canClose && !input.force) {
     await writeAuditLog({ eventType: AUDIT_EVENTS.WEEKLY_CLOSE_REJECTED, actor: input.actor, target: input.periodCode, after: preview, note: input.note });
@@ -110,7 +165,7 @@ export async function confirmWeeklyClose(input: CloseInput) {
     'Người chốt': input.actor,
     'Thời gian chốt': closedAt,
     'Trạng thái dữ liệu': preview.status,
-    'Chốt cưỡng bức': !preview.canClose && input.force ? 'Có' : 'Không',
+    'Chốt cưỡng bức': !preview.canClose && input.force ? 'Có' : existingCloses.length && input.force ? 'Chốt lại kỳ đã chốt' : 'Không',
     'Số lỗi chặn': preview.blockingChecks.length,
     'Gửi CEO/Bot': botResult.ok ? 'Đã gửi' : botResult.skipped ? 'Chưa cấu hình' : 'Gửi lỗi',
     'Snapshot JSON': JSON.stringify(preview.snapshot),
