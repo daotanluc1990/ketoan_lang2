@@ -8,6 +8,8 @@ const statusMap: Record<string, { label: string; variant: Status }> = {
   neutral: { label: 'Chờ dữ liệu', variant: 'neutral' },
   Tốt: { label: 'Tốt', variant: 'good' },
   Đạt: { label: 'Đạt', variant: 'good' },
+  'Có dữ liệu': { label: 'Có dữ liệu', variant: 'good' },
+  'Đủ dữ liệu': { label: 'Đủ dữ liệu', variant: 'good' },
   'Có thể chốt': { label: 'Có thể chốt', variant: 'good' },
   'Có thể gửi': { label: 'Có thể gửi', variant: 'good' },
   'Đã xong': { label: 'Đã xong', variant: 'good' },
