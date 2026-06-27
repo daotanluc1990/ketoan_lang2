@@ -9,8 +9,20 @@ function clamp(value: number) {
   return Math.max(0, Math.min(100, value));
 }
 
+function countLabel(filtered: number, raw: number) {
+  if (!raw) return 'Thiếu';
+  if (filtered === raw) return `${raw} dòng`;
+  return `${filtered}/${raw} dòng sau lọc`;
+}
+
+function countStatus(filtered: number, raw: number, whenPresent: string = 'Tốt') {
+  if (!raw) return 'Chưa đủ dữ liệu';
+  if (!filtered) return 'Bị lọc';
+  return whenPresent;
+}
+
 function kpiList(report: DashboardReport) {
-  return report.executiveKpis.slice(0, 10).map((kpi) => ({ label: kpi.label, value: kpi.value, status: kpi.status, trend: kpi.trend }));
+  return report.executiveKpis.slice(0, 10).map((kpi) => ({ label: kpi.label, value: kpi.value, status: kpi.status ?? 'neutral', trend: kpi.trend }));
 }
 
 function issueStats(report: DashboardReport) {
@@ -33,20 +45,20 @@ function workRows(report: DashboardReport) {
   const canClose = report.hasRealData && report.missingSources.length === 0;
   return [
     ['1', 'Báo cáo tuần', canClose ? 'Có thể chốt' : 'Chưa thể chốt', report.missingSources.length ? `Thiếu ${report.missingSources.length} nguồn` : 'Đủ nguồn', canClose ? 'Preview' : 'Import'],
-    ['2', 'Cửa hàng', report.sourceCounts.storeRevenue || report.sourceCounts.inventory ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu', 'Bán hàng / tồn kho', 'Kiểm kho'],
-    ['3', 'Bếp Trung Tâm', report.sourceCounts.inventory ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu', 'Tồn / xuất BTT', 'Đối chiếu'],
-    ['4', 'Sổ quỹ', report.sourceCounts.cashbook ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu', `${report.sourceCounts.cashbook} dòng`, 'Phân loại'],
-    ['5', 'Thất thoát', report.sourceCounts.lossRows ? 'Cảnh báo' : 'Chưa đủ dữ liệu', `${report.sourceCounts.lossRows} dòng`, 'Kiểm tra']
+    ['2', 'Cửa hàng', report.sourceCounts.storeRevenue || report.sourceCounts.inventory ? 'Cần đối chiếu' : countStatus(report.sourceCounts.storeRevenue + report.sourceCounts.inventory, report.rawSourceCounts.storeRevenue + report.rawSourceCounts.inventory), 'Bán hàng / tồn kho', 'Kiểm kho'],
+    ['3', 'Bếp Trung Tâm', report.sourceCounts.inventory ? 'Cần đối chiếu' : countStatus(report.sourceCounts.inventory, report.rawSourceCounts.inventory), 'Tồn / xuất BTT', 'Đối chiếu'],
+    ['4', 'Sổ quỹ', countStatus(report.sourceCounts.cashbook, report.rawSourceCounts.cashbook, 'Cần đối chiếu'), countLabel(report.sourceCounts.cashbook, report.rawSourceCounts.cashbook), 'Phân loại'],
+    ['5', 'Thất thoát', report.sourceCounts.lossRows ? 'Cảnh báo' : countStatus(report.sourceCounts.lossRows, report.rawSourceCounts.lossRows), countLabel(report.sourceCounts.lossRows, report.rawSourceCounts.lossRows), 'Kiểm tra']
   ];
 }
 
 function sourceRows(report: DashboardReport) {
   return [
-    ['Doanh thu CH', report.sourceCounts.storeRevenue ? 'Tốt' : 'Chưa đủ dữ liệu', report.sourceCounts.storeRevenue ? `${report.sourceCounts.storeRevenue} dòng` : 'Thiếu'],
-    ['Doanh thu app', report.sourceCounts.appRevenue ? 'Tốt' : 'Chưa đủ dữ liệu', report.sourceCounts.appRevenue ? `${report.sourceCounts.appRevenue} dòng` : 'Thiếu'],
-    ['Sổ quỹ', report.sourceCounts.cashbook ? 'Tốt' : 'Chưa đủ dữ liệu', report.sourceCounts.cashbook ? `${report.sourceCounts.cashbook} dòng` : 'Thiếu'],
-    ['Tồn kho', report.sourceCounts.inventory ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu', report.sourceCounts.inventory ? `${report.sourceCounts.inventory} dòng` : 'Thiếu'],
-    ['Thất thoát', report.sourceCounts.lossRows ? 'Cảnh báo' : 'Chưa đủ dữ liệu', report.sourceCounts.lossRows ? `${report.sourceCounts.lossRows} dòng` : 'Thiếu']
+    ['Doanh thu CH', countStatus(report.sourceCounts.storeRevenue, report.rawSourceCounts.storeRevenue), countLabel(report.sourceCounts.storeRevenue, report.rawSourceCounts.storeRevenue)],
+    ['Doanh thu app', countStatus(report.sourceCounts.appRevenue, report.rawSourceCounts.appRevenue), countLabel(report.sourceCounts.appRevenue, report.rawSourceCounts.appRevenue)],
+    ['Sổ quỹ', countStatus(report.sourceCounts.cashbook, report.rawSourceCounts.cashbook), countLabel(report.sourceCounts.cashbook, report.rawSourceCounts.cashbook)],
+    ['Tồn kho', countStatus(report.sourceCounts.inventory, report.rawSourceCounts.inventory, 'Cần đối chiếu'), countLabel(report.sourceCounts.inventory, report.rawSourceCounts.inventory)],
+    ['Thất thoát', countStatus(report.sourceCounts.lossRows, report.rawSourceCounts.lossRows, 'Cảnh báo'), countLabel(report.sourceCounts.lossRows, report.rawSourceCounts.lossRows)]
   ];
 }
 
@@ -54,7 +66,7 @@ function topIssues(report: DashboardReport, canClose: boolean) {
   return [
     { title: canClose ? 'Preview chốt tuần' : 'Bổ sung nguồn', value: canClose ? 'Sẵn sàng' : `${report.missingSources.length} nguồn`, status: canClose ? 'Tốt' : 'Cần đối chiếu', href: canClose ? '/lich-su-chot-bao-cao' : '/import-nhap-lieu', icon: canClose ? ShieldCheck : FileInput },
     { title: 'Chi lớn', value: `${report.cashbookWarningRows.length} khoản`, status: report.cashbookWarningRows.length ? 'Cảnh báo' : 'Tốt', href: '/dong-tien', icon: AlertTriangle },
-    { title: 'Kho & BTT', value: `${report.totals.negativeStockCount} tồn âm`, status: report.sourceCounts.inventory ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu', href: '/kho-bep-trung-tam', icon: Database }
+    { title: 'Kho & BTT', value: `${report.totals.negativeStockCount} tồn âm`, status: report.sourceCounts.inventory ? 'Cần đối chiếu' : countStatus(report.sourceCounts.inventory, report.rawSourceCounts.inventory), href: '/kho-bep-trung-tam', icon: Database }
   ];
 }
 
@@ -72,11 +84,16 @@ export function AccountingOverviewCompactPage({ report }: { report: DashboardRep
   const canClose = report.hasRealData && report.missingSources.length === 0;
   const status = canClose ? 'Tốt' : report.hasRealData ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu';
   const readiness = clamp(Math.round(((5 - report.missingSources.length) / 5) * 100));
+  const rawTotal = report.rawSourceCounts.storeRevenue + report.rawSourceCounts.appRevenue + report.rawSourceCounts.cashbook + report.rawSourceCounts.inventory + report.rawSourceCounts.lossRows;
+  const filteredTotal = report.sourceCounts.storeRevenue + report.sourceCounts.appRevenue + report.sourceCounts.cashbook + report.sourceCounts.inventory + report.sourceCounts.lossRows;
+  const filteredOut = report.filterActive && rawTotal > 0 && filteredTotal === 0;
 
   return (
     <div className="space-y-2.5">
+      {filteredOut ? <Card className="border-amber-200 bg-amber-50 p-2.5"><p className="text-[12px] font-bold text-amber-800">Có {rawTotal} dòng dữ liệu trong Google Sheet, nhưng bộ lọc hiện tại đang loại hết dữ liệu. Bấm “Xóa” trên thanh lọc hoặc đổi Kỳ/Trạng thái/Nguồn dữ liệu.</p></Card> : null}
+
       <section className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-lang-muted"><span>Tuần 25/2026</span><span>·</span><span>Làng NVT</span><span>·</span><StatusBadge status={status} /></div>
+        <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-lang-muted"><span>Google Sheet</span><span>·</span><span>{rawTotal ? `${rawTotal} dòng nguồn` : 'Chưa có dữ liệu nguồn'}</span><span>·</span><StatusBadge status={status} /></div>
         <div className="flex flex-wrap gap-2">
           <Link href="/import-nhap-lieu" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-bold text-lang-ink shadow-sm hover:bg-gray-50"><FileInput className="h-3.5 w-3.5" />Import</Link>
           <Link href="/cai-dat-bot" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-bold text-lang-ink shadow-sm hover:bg-gray-50"><Send className="h-3.5 w-3.5" />CEO/Bot</Link>
