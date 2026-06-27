@@ -34,7 +34,7 @@ const TARGETS: V7Target[] = [
   { sheetName: SHEET_NAMES.DL_XUAT_BTT_CHO_CUA_HANG, loaiDuLieu: 'BTT xuất cho cửa hàng', keywords: ['xuat btt cho cua hang', 'btt xuat', 'xuat btt'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng xuất'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày xuất', 'Thời gian xuất'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho xuất', 'Kho BTT'], numericHeaders: ['Số lượng xuất', 'Số lượng', 'SL xuất'] },
   { sheetName: SHEET_NAMES.DL_CUA_HANG_NHAN_TU_BTT, loaiDuLieu: 'Cửa hàng nhận từ BTT', keywords: ['cua hang nhan tu btt', 'nhan tu btt', 'cua hang nhan'], requiredHeaders: ['Ngày', 'Cửa hàng', 'Mã hàng', 'Số lượng nhận'], identityHeaders: ['Ngày', 'Mã phiếu', 'Cửa hàng', 'Mã hàng'], dateHeaders: ['Ngày', 'Ngày nhận', 'Thời gian nhận'], branchHeaders: ['Cửa hàng', 'Chi nhánh'], khoHeaders: ['Kho nhận', 'Kho cửa hàng'], numericHeaders: ['Số lượng nhận', 'Số lượng', 'SL nhận'] },
   { sheetName: SHEET_NAMES.DL_HUY_HANG_CUA_HANG, loaiDuLieu: 'Hủy hàng cửa hàng', keywords: ['huy hang cua hang', 'hang huy cua hang'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho'], numericHeaders: ['Số lượng', 'Giá trị hủy', 'Đơn giá'] },
-  { sheetName: SHEET_NAMES.DL_HUY_HANG_BTT, loaiDuLieu: 'Hủy hàng BTT', keywords: ['huy hang btt', 'hang huy btt', 'huy hang bep trung tam'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'], numericHeaders: ['Số lượng', 'Giá trị hủy', 'Đơn giá'] },
+  { sheetName: SHEET_NAMES.DL_HUY_HANG_BTT, loaiDuLieu: 'Hủy hàng BTT', keywords: ['xuat huy', 'huy hang btt', 'hang huy btt', 'huy hang bep trung tam'], requiredHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Số lượng'], identityHeaders: ['Ngày hủy', 'Kho', 'Mã hàng', 'Lý do'], dateHeaders: ['Ngày hủy', 'Ngày'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho', 'Kho BTT'], numericHeaders: ['Số lượng', 'Giá trị hủy', 'Đơn giá'], looseSchema: true },
   { sheetName: SHEET_NAMES.DL_CHE_BIEN_THUC_TE, loaiDuLieu: 'Chế biến thực tế', keywords: ['che bien thuc te', 'thuc te che bien', 'actual production'], requiredHeaders: ['Ngày', 'Món', 'NVL', 'Thực tế dùng'], identityHeaders: ['Ngày', 'Món', 'NVL', 'Ca', 'Người thực hiện'], dateHeaders: ['Ngày', 'Ngày chế biến'], branchHeaders: ['Chi nhánh', 'Cửa hàng'], khoHeaders: ['Kho'], numericHeaders: ['Thực tế dùng', 'Số lượng chế biến', 'Định mức'] },
   { sheetName: SHEET_NAMES.KQ_HAO_HUT_CHE_BIEN, loaiDuLieu: 'Kết quả hao hụt chế biến', keywords: ['kq hao hut che bien', 'hao hut che bien'], requiredHeaders: ['Ngày', 'Món', 'NVL'], identityHeaders: ['Ngày', 'Món', 'NVL', 'Ca'], dateHeaders: ['Ngày'], branchHeaders: ['Chi nhánh'], numericHeaders: ['Thực tế dùng', 'Định mức', 'Hao hụt', 'Vượt định mức', 'Giá trị vượt'] },
   { sheetName: SHEET_NAMES.KQ_THAT_THOAT_TON_KHO, loaiDuLieu: 'Kết quả thất thoát tồn kho', keywords: ['kq that thoat ton kho', 'that thoat ton kho'], requiredHeaders: ['Kho', 'NVL', 'Tồn lý thuyết', 'Tồn thực tế'], identityHeaders: ['Kho', 'NVL', 'Mã hàng', 'Tên hàng'], dateHeaders: ['Ngày', 'Ngày kiểm kê'], branchHeaders: ['Chi nhánh'], khoHeaders: ['Kho'], numericHeaders: ['Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị thất thoát', 'Tỷ lệ'] }
@@ -125,7 +125,7 @@ function findTarget(input: ExcelFileInput, sheetNames: string[], firstSheetName:
   const filenameByKeyword = TARGETS.find((target) => target.keywords.some((keyword) => filename.includes(normalize(keyword))) && (hasEnoughHeaderEvidence(matrix, target) || (target.sheetName === SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM && isSpecificBttInventoryFilename(filename))));
   if (filenameByKeyword) return filenameByKeyword;
   const headerMatch = TARGETS.map((target) => ({ target, matches: headerScore(matrix, target) })).sort((a, b) => b.matches - a.matches)[0];
-  if (headerMatch && headerMatch.matches >= Math.min(1, headerMatch.target.requiredHeaders.length)) return headerMatch.target;
+  if (headerMatch && headerMatch.matches >= Math.min(2, headerMatch.target.requiredHeaders.length)) return headerMatch.target;
   const workbookExact = TARGETS.find((target) => sheetNames.map(normalize).includes(normalize(target.sheetName)));
   return workbookExact ?? null;
 }
@@ -202,10 +202,11 @@ function canonicalizeBttInventoryRow(row: Record<string, unknown>) {
 
 function enrichRow(row: Record<string, unknown>, target: V7Target, filename: string, rowIndex: number, fallbackDate = '') {
   const isBttInventory = target.sheetName === SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM;
+  const isWasteBtt = target.sheetName === SHEET_NAMES.DL_HUY_HANG_BTT;
   const dateValue = getValue(row, target.dateHeaders ?? ['Ngày', 'Ngày hủy', 'Ngày kiểm kê', 'Ngày xuất', 'Ngày nhận', 'Ngày hiệu lực']);
-  const ngay = toDateString(dateValue) || fallbackDate || (isBttInventory ? todayString() : '');
-  const branchValue = getValue(row, target.branchHeaders ?? ['Chi nhánh', 'Cửa hàng', 'Tên CH']) || (isBttInventory ? 'BTT' : '');
-  const khoValue = getValue(row, target.khoHeaders ?? ['Kho', 'Kho xuất', 'Kho nhận']) || (isBttInventory ? 'Bếp Trung Tâm' : '');
+  const ngay = toDateString(dateValue) || fallbackDate || (isBttInventory || isWasteBtt ? todayString() : '');
+  const branchValue = getValue(row, target.branchHeaders ?? ['Chi nhánh', 'Cửa hàng', 'Tên CH']) || (isBttInventory || isWasteBtt ? 'BTT' : '');
+  const khoValue = getValue(row, target.khoHeaders ?? ['Kho', 'Kho xuất', 'Kho nhận']) || (isBttInventory || isWasteBtt ? 'Bếp Trung Tâm' : '');
   const baseData: Record<string, unknown> = {
     ...row,
     ...(ngay ? { 'Ngày': row['Ngày'] || ngay, 'Năm': getYear(ngay), 'Tháng': getMonth(ngay), 'Tuần': getWeekCode(ngay).split('-W')[1] ?? '', 'Mã tuần': getWeekCode(ngay) } : {}),
@@ -227,10 +228,12 @@ function rowErrors(row: Record<string, unknown>, target: V7Target, missingHeader
     if (!String(getValue(row, ['Mã hàng', 'Tên hàng'])).trim()) errors.push('Thiếu mã hàng hoặc tên hàng');
     if (!String(getValue(row, ['Tồn thực tế', 'Tồn lý thuyết', ...BTT_STOCK_HEADERS])).trim()) errors.push('Thiếu tồn cuối kỳ/tồn kho');
   }
-  for (const header of target.numericHeaders ?? []) {
-    const value = getValue(row, [header]);
-    const parsed = parseLooseNumber(value);
-    if (parsed !== null && Number.isNaN(parsed)) errors.push(`${header} phải là số`);
+  if (!target.looseSchema) {
+    for (const header of target.numericHeaders ?? []) {
+      const value = getValue(row, [header]);
+      const parsed = parseLooseNumber(value);
+      if (parsed !== null && Number.isNaN(parsed)) errors.push(`${header} phải là số`);
+    }
   }
   return [...new Set(errors)];
 }
@@ -257,7 +260,7 @@ export function parseV7ExcelFile(input: ExcelFileInput): ParsedExcelImport | nul
   const headers = headersFromMatrix(matrix, headerRowIndex);
   const missingHeaders = target.requiredHeaders.filter((header) => countHeaderMatches(headers, [header]) === 0);
   const isBttInventory = target.sheetName === SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM;
-  const fallbackDate = isBttInventory ? reportEndDate(matrix) : '';
+  const fallbackDate = target.looseSchema ? reportEndDate(matrix) : '';
   const rows = sheetToRows(picked.sheet, headerRowIndex).filter((row) => !(isBttInventory && isBttSummaryRow(row)));
 
   const parsedRows = rows.map((row, index) => {
@@ -269,7 +272,7 @@ export function parseV7ExcelFile(input: ExcelFileInput): ParsedExcelImport | nul
 
   const warnings = [
     ...(picked.sheetName === firstSheetName ? [] : [`Đã tự chọn sheet ${picked.sheetName} trong workbook.`]),
-    ...(missingHeaders.length ? [`Thiếu cột chuẩn: ${missingHeaders.map(requirementLabel).join(', ')}${target.looseSchema ? '. Đã dùng chế độ nhận tồn kho nhanh và tự bổ sung Ngày/Kho nếu thiếu.' : ''}`] : []),
+    ...(missingHeaders.length && !target.looseSchema ? [`Thiếu cột chuẩn: ${missingHeaders.map(requirementLabel).join(', ')}`] : []),
     ...(rows.length ? [] : ['File không có dòng dữ liệu sau header.'])
   ];
 
