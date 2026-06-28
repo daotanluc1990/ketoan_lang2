@@ -126,7 +126,16 @@ export function getRolePermissionLabels(role: AppRole) {
 function authContextFromHeaders(getHeader: (name: string) => string | null, rbacEnabled: boolean): RbacContext | null {
   const role = normalizeRole(getHeader('x-ctl-auth-role'));
   if (!role) return null;
-  return { role, actor: getHeader('x-ctl-auth-actor') ?? role, rbacEnabled, source: 'auth' };
+  const actorHeader = getHeader('x-ctl-auth-actor');
+  let actor: string = role;
+  if (actorHeader) {
+    try {
+      actor = decodeURIComponent(actorHeader);
+    } catch {
+      actor = role;
+    }
+  }
+  return { role, actor, rbacEnabled, source: 'auth' };
 }
 
 function requestOverrideContext(request: NextRequest, rbacEnabled: boolean): RbacContext | null {

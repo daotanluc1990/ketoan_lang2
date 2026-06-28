@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { GlobalFilterBar } from './GlobalFilterBar';
@@ -45,6 +46,7 @@ function readStoredRole(): Role {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(() => readStoredBool(COLLAPSE_KEY, true));
   const [role, setRole] = useState<Role>(() => readStoredRole());
 
@@ -61,6 +63,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     try { window.localStorage.setItem(ROLE_KEY, nextRole); } catch {}
     writeRoleCookie(nextRole);
   };
+
+  if (pathname === '/login') return <>{children}</>;
 
   return (
     <div className="app-bg min-h-screen overflow-x-hidden text-lang-ink">
