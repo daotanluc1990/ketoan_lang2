@@ -8,5 +8,5 @@ const variants = {
 };
 
 export function Badge({ children, variant = 'neutral' }: { children: React.ReactNode; variant?: keyof typeof variants }) {
-  return <span className={clsx('inline-flex min-h-6 items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-extrabold leading-4 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full', variants[variant])}>{children}</span>;
+  return <span className={clsx('inline-flex min-h-6 items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-bold leading-4 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full', variants[variant])}>{children}</span>;
 }

@@ -5,10 +5,10 @@ import type { FilterOption, ReportFilterOptions } from '@/lib/reports/report-fil
 import { Filter, RotateCcw } from 'lucide-react';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="min-w-0"><span className="mb-1 block text-[10px] font-black uppercase tracking-wide text-lang-muted">{label}</span>{children}</label>;
+  return <label className="min-w-0"><span className="mb-1 block text-[10px] font-extrabold uppercase tracking-wide text-lang-muted">{label}</span>{children}</label>;
 }
 
-const inputClass = 'h-9 w-full min-w-0 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-bold text-lang-ink outline-none transition focus:border-lang-red/60 focus:ring-2 focus:ring-lang-red/10';
+const inputClass = 'h-9 w-full min-w-0 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-semibold text-lang-ink outline-none transition focus:border-lang-red/60 focus:ring-2 focus:ring-lang-red/10';
 const emptyOptions: ReportFilterOptions = { branches: [], weeks: [], channels: [], sources: [], dataStatuses: [], alertStatuses: [], costGroups: [], importedBy: [] };
 
 type FilterState = {
@@ -30,7 +30,8 @@ function readFiltersFromUrl(): FilterState {
 function optionList(options: FilterOption[], current: string, fallback: string[] = []) {
   const normalized = new Set<string>();
   const list: FilterOption[] = [];
-  for (const label of fallback) {
+  const fallbackLabels = options.length ? [] : fallback;
+  for (const label of fallbackLabels) {
     const key = label.trim().toLowerCase();
     if (!key || normalized.has(key)) continue;
     normalized.add(key);
@@ -84,9 +85,9 @@ export function GlobalFilterBar() {
       <form method="get" className="mx-auto w-full max-w-[1480px] px-4 py-2 lg:px-6">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-3">
-            <SelectField name="branch" label="Chi nhánh" value={filters.branch} options={options.branches} fallback={['CS1 · Nguyễn Văn Tăng', 'NVT', 'Bếp trung tâm', 'Toàn hệ thống']} onChange={updateFilter} />
-            <SelectField name="weekCode" label="Kỳ báo cáo" value={filters.weekCode} options={options.weeks} fallback={['2026-W25']} onChange={updateFilter} />
-            <SelectField name="dataStatus" label="Trạng thái" value={filters.dataStatus} options={options.dataStatuses} fallback={['Đạt', 'Cần đối chiếu', 'Lỗi', 'Đã hoàn tác']} onChange={updateFilter} />
+            <SelectField name="branch" label="Chi nhánh" value={filters.branch} options={options.branches} fallback={['CS1 · Nguyễn Văn Tăng', 'Bếp trung tâm']} onChange={updateFilter} />
+            <SelectField name="weekCode" label="Kỳ báo cáo" value={filters.weekCode} options={options.weeks} fallback={['2026-W26', '2026-W27']} onChange={updateFilter} />
+            <SelectField name="dataStatus" label="Trạng thái" value={filters.dataStatus} options={options.dataStatuses} fallback={['Đạt', 'Cảnh báo', 'Thiếu dữ liệu', 'Chưa xử lý', 'Đã xử lý']} onChange={updateFilter} />
           </div>
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <span className="text-[11px] font-semibold text-lang-muted">{status} · {activeFilterCount ? `${activeFilterCount} lọc` : 'Chưa lọc'}</span>

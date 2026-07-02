@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { getDataStore } from '@/lib/data-store';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { ReportTable } from '@/components/report/ReportTable';
 import { StatusBadge } from '@/components/report/StatusBadge';
+import { RelatedActionsPanel } from './RelatedActionsPanel';
 import { KPI_DICTIONARY_CORE, type OptionCPage } from '@/lib/option-c/catalog';
 import { buildModuleDashboardTable } from '@/lib/option-c/module-dashboard-tables';
 import { getSubtabDashboardSpec } from '@/lib/option-c/subtab-dashboard-spec';
@@ -114,18 +114,7 @@ export async function OptionCModulePage({ page }: { page: OptionCPage }) {
             );})}
           </div>
         </Card>
-        <Card>
-          <CardTitle>Tài liệu / AI</CardTitle>
-          <div className="mt-2 space-y-1.5">
-            {page.relatedDocs.map((doc) => (
-              <Link key={doc} href="/tai-lieu/quy-trinh-checklist" className="block rounded-lg border border-lang-line px-3 py-2 text-[12px] font-bold text-lang-ink hover:bg-gray-50">{doc}</Link>
-            ))}
-          </div>
-          <div className="mt-3 grid gap-2">
-            <Link href="/tai-lieu/quy-trinh-checklist" className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-lang-red px-3 text-[12px] font-bold text-white">Mở tài liệu</Link>
-            <Link href="/tai-lieu/tinh-huong-phat-sinh" className="inline-flex h-9 w-full items-center justify-center rounded-lg border border-lang-line bg-white px-3 text-[12px] font-bold text-lang-ink">Hỏi AI nội bộ</Link>
-          </div>
-        </Card>
+        <RelatedActionsPanel docs={page.relatedDocs} />
       </section>
 
       <Card className="p-0">

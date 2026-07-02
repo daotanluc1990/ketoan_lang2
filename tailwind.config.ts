@@ -6,25 +6,28 @@ const config: Config = {
     extend: {
       colors: {
         lang: {
-          red: '#C90013',
-          redDark: '#A50010',
-          redDeep: '#7F000C',
-          redSoft: '#FFF1F2',
+          red: '#A61919',
+          redDark: '#6F1515',
+          redDeep: '#3F0D0D',
+          redSoft: '#FFF1F0',
           yellow: '#F6C453',
-          yellowSoft: '#FFF7D6',
-          cream: '#F7F8FA',
-          cream2: '#FAFAFA',
+          yellowSoft: '#FFF6D8',
+          green: '#22C55E',
+          orange: '#F97316',
+          cream: '#F5F7FA',
+          cream2: '#FFFFFF',
+          mist: '#EEF2F7',
           paper: '#FFFFFF',
-          brown: '#161B2A',
-          ink: '#111827',
-          muted: '#6B7280',
-          line: '#E5E7EB'
+          brown: '#1E293B',
+          ink: '#172033',
+          muted: '#64748B',
+          line: '#D8E0EA'
         }
       },
       boxShadow: {
-        soft: '0 8px 24px rgba(17, 24, 39, 0.06)',
-        card: '0 10px 28px rgba(17, 24, 39, 0.07)',
-        glow: '0 16px 32px rgba(201, 0, 19, 0.12)'
+        soft: '0 8px 22px rgba(15, 23, 42, 0.06)',
+        card: '0 18px 42px rgba(15, 23, 42, 0.10)',
+        glow: '0 16px 32px rgba(166, 25, 25, 0.16)'
       }
     }
   },

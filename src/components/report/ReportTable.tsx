@@ -46,7 +46,8 @@ export function ReportTable({ emptyDescription = 'Import hoặc đổi bộ lọ
   const widths = headers.map((header, index) => columnWidth(header, index, wide));
   const frozenWidth = wide ? widths[0] + widths[1] : 0;
   const tableWidth = wide ? widths.reduce((total, width) => total + width, 0) : 0;
-  const hasRows = rows.length > 0;
+  const visibleRows = rows.length;
+  const hasRows = visibleRows > 0;
 
   const stickyStyle = (index: number): CSSProperties | undefined => {
     if (!wide || index > 1) return undefined;
@@ -59,14 +60,14 @@ export function ReportTable({ emptyDescription = 'Import hoặc đổi bộ lọ
       'sticky',
       index === 0 ? 'z-30' : 'z-20',
       head ? 'bg-lang-mist' : 'bg-white group-hover:bg-lang-cream2',
-      'shadow-[1px_0_0_#D9E2D0]'
+      'shadow-[1px_0_0_#D8E0EA]'
     ].join(' ');
   };
 
   return (
     <div className="overflow-hidden rounded-lg border border-lang-line bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-lang-line bg-lang-mist px-3 py-2 text-[12px] font-bold text-lang-muted">
-        <span>{loading ? 'Đang tải dữ liệu' : `${rows.length.toLocaleString('vi-VN')} dòng`}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-lang-line bg-lang-mist px-3 py-2 text-[12px] font-semibold text-lang-muted">
+        <span>{loading ? 'Đang tải dữ liệu' : `${visibleRows.toLocaleString('vi-VN')} dòng`}</span>
         <span>{wide ? `Kéo ngang để xem thêm, giữ cố định ${frozenWidth}px đầu bảng` : 'Bảng dữ liệu'}</span>
       </div>
       <div className={`table-scroll overflow-auto ${maxHeight}`}>
@@ -74,10 +75,10 @@ export function ReportTable({ emptyDescription = 'Import hoặc đổi bộ lọ
           <colgroup>
             {widths.map((width, index) => <col key={`${headers[index]}-${index}`} style={wide ? { width } : undefined} />)}
           </colgroup>
-          <thead className="sticky top-0 z-10 bg-lang-mist text-left uppercase tracking-wide text-lang-muted">
+          <thead className="sticky top-0 z-10 bg-lang-mist text-left uppercase tracking-wide text-slate-600">
             <tr>
               {headers.map((header, index) => (
-                <th className={`border-b border-lang-line px-3 py-2 font-black ${stickyClass(index, true)}`} key={`${header}-${index}`} style={stickyStyle(index)}>
+                <th className={`border-b border-lang-line px-3 py-2 font-extrabold ${stickyClass(index, true)}`} key={`${header}-${index}`} style={stickyStyle(index)}>
                   {header}
                 </th>
               ))}
@@ -89,7 +90,7 @@ export function ReportTable({ emptyDescription = 'Import hoặc đổi bộ lọ
               <tr>
                 <td colSpan={headers.length} className="px-4 py-8 text-center">
                   <div className="mx-auto max-w-md rounded-lg border border-dashed border-lang-line bg-lang-cream2 px-4 py-5">
-                    <p className="text-[14px] font-black text-lang-ink">{emptyTitle}</p>
+                    <p className="text-[14px] font-extrabold text-lang-ink">{emptyTitle}</p>
                     <p className="mt-1 text-[12px] font-semibold text-lang-muted">{emptyDescription}</p>
                   </div>
                 </td>
