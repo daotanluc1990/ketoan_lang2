@@ -57,9 +57,16 @@ function SidebarNav({ collapsed, onNavigate, role }: { collapsed: boolean; onNav
         return (
           <div key={group} className="mb-3">
             {!collapsed ? (
-              <p className={clsx('mb-1.5 rounded-lg px-2 py-1 text-[11px] font-black uppercase tracking-wide', groupActive ? 'bg-lang-redSoft text-lang-redDark' : 'text-lang-muted')}>{group}</p>
+              <p
+                className={clsx(
+                  'mb-1.5 rounded-lg bg-[#FDECEC] px-2 py-1.5 text-[11px] font-extrabold uppercase text-[#7A1B16]',
+                  groupActive && 'ring-1 ring-[#F0C7C2]'
+                )}
+              >
+                {group}
+              </p>
             ) : (
-              <div className={clsx('mb-2 h-px', groupActive ? 'bg-lang-red' : 'bg-lang-line')} />
+              <div className={clsx('mb-2 h-px', groupActive ? 'bg-[#A61919]' : 'bg-lang-line')} />
             )}
             <div className="space-y-0.5">
               {items.map((item) => {
@@ -77,12 +84,16 @@ function SidebarNav({ collapsed, onNavigate, role }: { collapsed: boolean; onNav
                       onNavigate?.();
                     }}
                     className={clsx(
-                      'group flex min-h-10 items-center rounded-lg text-[13px] font-semibold transition',
+                      'group flex min-h-10 items-center rounded-lg border text-[13px] font-semibold transition',
                       collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5',
-                      active ? 'bg-lang-redSoft text-lang-redDark shadow-sm ring-1 ring-lang-red/15' : pending ? 'bg-lang-yellowSoft text-amber-900 ring-1 ring-lang-yellow/45' : 'text-lang-ink/82 hover:bg-lang-mist hover:text-lang-ink'
+                      active
+                        ? 'border-[#F0C7C2] bg-[#FFF1F1] text-[#8E241F] shadow-sm'
+                        : pending
+                          ? 'border-lang-yellow/45 bg-lang-yellowSoft text-amber-900'
+                          : 'border-transparent text-lang-ink/82 hover:border-lang-line hover:bg-lang-mist hover:text-lang-ink'
                     )}
                   >
-                    {pending ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-700" /> : <Icon className={clsx('h-4 w-4 shrink-0', active ? 'text-lang-red' : 'text-lang-muted group-hover:text-lang-red')} />}
+                    {pending ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-700" /> : <Icon className={clsx('h-4 w-4 shrink-0', active ? 'text-[#C51D1D]' : 'text-lang-muted group-hover:text-lang-red')} />}
                     {!collapsed ? <span className="truncate">{item.label}</span> : null}
                   </Link>
                 );

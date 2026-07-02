@@ -86,15 +86,18 @@ export async function OptionCModulePage({ page }: { page: OptionCPage }) {
 
   return (
     <div className="space-y-2.5">
-      <section className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section>
         <Card>
-          <div className="flex items-start gap-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
             <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-lang-redSoft text-lang-red"><Icon className="h-5 w-5" /></span>
-            <div>
+            <div className="min-w-0">
               <p className="text-[12px] font-bold uppercase text-lang-redDark">{page.group}</p>
-              <h3 className="text-xl font-black text-lang-ink">{page.title}</h3>
+              <h3 className="text-xl font-extrabold text-lang-ink">{page.title}</h3>
               <p className="mt-1 text-[12px] font-semibold text-lang-muted">{page.description}</p>
             </div>
+            </div>
+            <RelatedActionsPanel docs={page.relatedDocs} />
           </div>
           <div className="mt-3 rounded-lg border border-lang-line bg-lang-cream px-3 py-2 text-[12px] font-bold text-lang-brown">
             {spec.focus}
@@ -114,7 +117,6 @@ export async function OptionCModulePage({ page }: { page: OptionCPage }) {
             );})}
           </div>
         </Card>
-        <RelatedActionsPanel docs={page.relatedDocs} />
       </section>
 
       <Card className="p-0">
@@ -132,7 +134,10 @@ export async function OptionCModulePage({ page }: { page: OptionCPage }) {
         <Card>
           <div className="flex items-center justify-between">
             <CardTitle>Việc cần xử lý trong module</CardTitle>
-            <StatusBadge status={missingSourceRows.length ? 'Đỏ' : actionRows.some((row) => row[0] === 'Cam' || row[0] === 'Cần đối chiếu') ? 'Cần đối chiếu' : 'Tốt'} />
+            <div className="flex items-center gap-2">
+              <span className="rounded-lg border border-lang-line bg-white px-2 py-1 text-[11px] font-black text-lang-muted">Hỏi AI nội bộ</span>
+              <StatusBadge status={missingSourceRows.length ? 'Đỏ' : actionRows.some((row) => row[0] === 'Cam' || row[0] === 'Cần đối chiếu') ? 'Cần đối chiếu' : 'Tốt'} />
+            </div>
           </div>
           <div className="mt-2"><ReportTable headers={['Mức', 'Vấn đề / việc cần làm', 'Phụ trách', 'Hạn xử lý', 'Hành động / nguồn']} rows={actionRows} maxHeight="max-h-[300px]" /></div>
         </Card>
