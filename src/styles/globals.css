@@ -4,14 +4,21 @@
 
 :root {
   color-scheme: light;
-  --background: #f7f8fa;
-  --foreground: #111827;
-  --brand-red: #c90013;
-  --brand-red-dark: #a50010;
-  --brand-line: #e5e7eb;
+  --background: #f7f8f4;
+  --foreground: #1b1d16;
+  --brand-red: #a61919;
+  --brand-red-dark: #6f1515;
+  --brand-red-deep: #3f0d0d;
+  --brand-line: #d9e2d0;
+  --surface: #ffffff;
+  --surface-muted: #fbfcf8;
+  --table-header: #eef3e8;
+  --muted: #5f6859;
+  --focus-ring: rgba(166, 25, 25, 0.24);
 }
 
-html, body {
+html,
+body {
   margin: 0;
   min-height: 100%;
   background: var(--background);
@@ -19,126 +26,96 @@ html, body {
 }
 
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-app), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  font-size: 12.5px;
 }
 
-a { color: inherit; text-decoration: none; }
-button, input, select, textarea { font: inherit; }
-::selection { background: rgba(201, 0, 19, 0.16); color: #111827; }
-.number { font-variant-numeric: tabular-nums; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
-.app-bg { background: #f7f8fa; }
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+select,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(166, 25, 25, 0.16);
+  color: var(--foreground);
+}
+
+.app-bg {
+  background: var(--background);
+}
 
 .glass-surface {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.045);
+  background: var(--surface);
+  border: 1px solid var(--brand-line);
+  box-shadow: 0 6px 18px rgba(45, 50, 35, 0.07);
 }
 
-/* Final compact dashboard density overrides */
-.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.625rem !important; }
-.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem !important; }
-.space-y-2\.5 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem !important; }
-.space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.45rem !important; }
-.gap-5 { gap: 0.75rem !important; }
-.gap-4 { gap: 0.625rem !important; }
-.gap-3 { gap: 0.5rem !important; }
-.gap-2 { gap: 0.4rem !important; }
-.gap-1\.5 { gap: 0.32rem !important; }
-.p-6 { padding: 1rem !important; }
-.p-5 { padding: 0.85rem !important; }
-.p-4 { padding: 0.65rem !important; }
-.p-3 { padding: 0.55rem !important; }
-.p-2\.5 { padding: 0.5rem !important; }
-.p-2 { padding: 0.45rem !important; }
-.px-7 { padding-left: 1rem !important; padding-right: 1rem !important; }
-.px-6 { padding-left: 0.875rem !important; padding-right: 0.875rem !important; }
-.px-5 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
-.px-4 { padding-left: 0.65rem !important; padding-right: 0.65rem !important; }
-.px-3 { padding-left: 0.55rem !important; padding-right: 0.55rem !important; }
-.px-2\.5 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
-.py-5 { padding-top: 0.85rem !important; padding-bottom: 0.85rem !important; }
-.py-4 { padding-top: 0.65rem !important; padding-bottom: 0.65rem !important; }
-.py-3 { padding-top: 0.52rem !important; padding-bottom: 0.52rem !important; }
-.py-2\.5 { padding-top: 0.38rem !important; padding-bottom: 0.38rem !important; }
-.py-2 { padding-top: 0.34rem !important; padding-bottom: 0.34rem !important; }
-.mt-5 { margin-top: 0.85rem !important; }
-.mt-4 { margin-top: 0.65rem !important; }
-.mt-3 { margin-top: 0.52rem !important; }
-.mt-2 { margin-top: 0.34rem !important; }
-.mt-1\.5 { margin-top: 0.28rem !important; }
-.mt-1 { margin-top: 0.2rem !important; }
-.mb-5 { margin-bottom: 0.85rem !important; }
-.mb-4 { margin-bottom: 0.65rem !important; }
-.mb-3 { margin-bottom: 0.52rem !important; }
-.rounded-3xl { border-radius: 0.9rem !important; }
-.rounded-2xl { border-radius: 0.7rem !important; }
-.rounded-xl { border-radius: 0.6rem !important; }
-.rounded-lg { border-radius: 0.5rem !important; }
-.shadow-card, .shadow-soft { box-shadow: 0 4px 12px rgba(17, 24, 39, 0.045) !important; }
-.text-5xl { font-size: 1.9rem !important; line-height: 2.2rem !important; }
-.text-4xl { font-size: 1.55rem !important; line-height: 1.85rem !important; }
-.text-3xl { font-size: 1.35rem !important; line-height: 1.65rem !important; }
-.text-2xl, .md\:text-\[28px\] { font-size: 1.18rem !important; line-height: 1.45rem !important; }
-.text-xl { font-size: 1rem !important; line-height: 1.24rem !important; }
-.text-lg { font-size: 0.94rem !important; line-height: 1.18rem !important; }
-.text-base { font-size: 0.86rem !important; line-height: 1.12rem !important; }
-.text-sm { font-size: 0.76rem !important; line-height: 1.05rem !important; }
-.text-\[13px\] { font-size: 12px !important; line-height: 1rem !important; }
-.text-\[12px\] { font-size: 11.5px !important; line-height: 0.95rem !important; }
-.text-\[11px\] { font-size: 10.5px !important; line-height: 0.9rem !important; }
-.text-\[10px\] { font-size: 9.5px !important; line-height: 0.82rem !important; }
-.h-12 { height: 2.35rem !important; }
-.h-11 { height: 2.1rem !important; }
-.h-10 { height: 1.95rem !important; }
-.h-9 { height: 1.8rem !important; }
-.h-8 { height: 1.6rem !important; }
-.h-7 { height: 1.45rem !important; }
-.h-6 { height: 1.35rem !important; }
-.w-12 { width: 2.35rem !important; }
-.w-11 { width: 2.1rem !important; }
-.w-10 { width: 1.95rem !important; }
-.w-9 { width: 1.8rem !important; }
-.w-8 { width: 1.6rem !important; }
-.w-7 { width: 1.45rem !important; }
-.w-6 { width: 1.35rem !important; }
-.min-h-\[72px\] { min-height: 48px !important; }
-.min-h-\[54px\] { min-height: 42px !important; }
-.min-h-\[46px\] { min-height: 38px !important; }
-.max-h-\[380px\] { max-height: 270px !important; }
-.max-h-\[360px\] { max-height: 260px !important; }
-.max-h-\[320px\] { max-height: 235px !important; }
-.max-h-\[300px\] { max-height: 220px !important; }
-.max-h-\[280px\] { max-height: 210px !important; }
-.max-h-\[260px\] { max-height: 195px !important; }
-.max-h-\[240px\] { max-height: 180px !important; }
-.max-h-\[230px\] { max-height: 175px !important; }
-.max-h-\[220px\] { max-height: 170px !important; }
-.max-h-\[210px\] { max-height: 160px !important; }
-.max-h-\[180px\] { max-height: 145px !important; }
-.max-h-\[160px\] { max-height: 130px !important; }
-.max-h-\[150px\] { max-height: 120px !important; }
-.max-h-\[140px\] { max-height: 110px !important; }
-.max-h-\[120px\] { max-height: 100px !important; }
-.lg\:px-6 { padding-left: 0.85rem !important; padding-right: 0.85rem !important; }
-.lg\:px-7 { padding-left: 0.85rem !important; padding-right: 0.85rem !important; }
-.lg\:pl-60 { padding-left: 13.5rem !important; }
-.lg\:pl-\[72px\] { padding-left: 60px !important; }
-.max-w-\[1480px\] { max-width: 1380px !important; }
-.pb-24 { padding-bottom: 3rem !important; }
+.number {
+  font-variant-numeric: tabular-nums;
+}
 
-.sidebar-scroll, .table-scroll {
+.sidebar-scroll,
+.table-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.7) transparent;
+  scrollbar-color: rgba(95, 104, 89, 0.6) transparent;
 }
 
-.sidebar-scroll::-webkit-scrollbar, .table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-.sidebar-scroll::-webkit-scrollbar-track, .table-scroll::-webkit-scrollbar-track { background: transparent; }
-.sidebar-scroll::-webkit-scrollbar-thumb, .table-scroll::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.7); border-radius: 999px; }
+.sidebar-scroll::-webkit-scrollbar,
+.table-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track,
+.table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb,
+.table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(95, 104, 89, 0.55);
+  border-radius: 999px;
+}
 
 @media (max-height: 780px) {
-  .sidebar-foot { display: none; }
+  .sidebar-foot {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

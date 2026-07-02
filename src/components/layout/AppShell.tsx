@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
@@ -48,7 +49,9 @@ function readStoredRole(): Role {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(() => readStoredBool(COLLAPSE_KEY, true));
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [role, setRole] = useState<Role>(() => readStoredRole());
+  const shellStyle = { '--sidebar-width': collapsed ? '72px' : '240px' } as CSSProperties;
 
   const toggleCollapsed = () => {
     setCollapsed((current: boolean) => {
@@ -68,9 +71,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-bg min-h-screen overflow-x-hidden text-lang-ink">
-      <Sidebar collapsed={collapsed} onToggle={toggleCollapsed} role={role} />
-      <div className="min-h-screen transition-[padding] duration-200 lg:pl-[72px]">
-        <TopBar role={role} onRoleChange={setSelectedRole} />
+      <Sidebar collapsed={collapsed} mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} onToggle={toggleCollapsed} role={role} />
+      <div className="min-h-screen transition-[padding] duration-200 ease-out lg:pl-[var(--sidebar-width)]" style={shellStyle}>
+        <TopBar role={role} onMenuClick={() => setMobileOpen(true)} onRoleChange={setSelectedRole} />
         <GlobalFilterBar />
         <main className="w-full px-2 py-2 lg:px-3">
           <div className="w-full space-y-2.5 pb-8">

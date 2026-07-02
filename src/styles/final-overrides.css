@@ -1,24 +1,27 @@
+/* Executive Ledger Warm polish layer. Keep this file small: no global Tailwind class rewrites. */
+
+.shadow-soft,
+.shadow-card {
+  box-shadow: 0 6px 18px rgba(45, 50, 35, 0.07);
+}
+
+.login-panel {
+  max-width: 420px;
+}
+
 @media (min-width: 1024px) {
-  .lg\:pl-60,
-  .lg\:pl-\[72px\] {
-    padding-left: 60px !important;
-  }
-
-  .lg\:grid-cols-5 {
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  main {
+    min-width: 0;
   }
 }
 
-@media (min-width: 1536px) {
-  .\32xl\:grid-cols-8 {
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+@media (max-width: 767px) {
+  body {
+    font-size: 16px;
   }
-}
 
-.max-w-\[1480px\] {
-  max-width: none !important;
-}
-
-main > div {
-  max-width: none !important;
+  main {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
 }
