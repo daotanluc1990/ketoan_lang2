@@ -33,7 +33,7 @@ export default async function PlTuanPage({ searchParams }: PageProps) {
         {report.executiveKpis.slice(0, 8).map((kpi) => <MetricCard key={kpi.label} label={kpi.label} value={kpi.value} status={kpi.status} compact />)}
       </section>
       <section className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_330px]">
-        <Card className="p-0"><div className="border-b border-lang-line px-3 py-2"><CardTitle>Bảng P&L chính</CardTitle></div><div className="p-2"><ReportTable headers={['Nhóm', 'Chỉ số', 'Tuần này', 'Tuần trước', 'Chênh lệch', 'Tỷ lệ', 'Đánh giá']} rows={report.pnlRows} maxHeight="max-h-[300px]" /></div></Card>
+        <Card className="p-0"><div className="border-b border-lang-line px-3 py-2"><CardTitle>Bảng P&L chính</CardTitle></div><div className="p-2"><ReportTable headers={['Nhóm', 'Chỉ số', 'Tuần này', 'Tuần 24', 'Chênh lệch', '%DT / tỷ lệ', '% thay đổi', 'Đánh giá']} rows={report.pnlRows} maxHeight="max-h-[300px]" /></div></Card>
         <Card><CardTitle>Quy tắc P&L</CardTitle><div className="mt-2"><ReportTable headers={['Nhóm', 'Chỉ số', 'Số tiền', 'Quy tắc', 'Trạng thái']} rows={business.pnlRows} maxHeight="max-h-[260px]" /></div></Card>
       </section>
       <section className="grid gap-2 xl:grid-cols-2">

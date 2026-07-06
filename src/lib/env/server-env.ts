@@ -16,7 +16,8 @@ const rawEnvSchema = z.object({
   APP_PASSWORD: z.string().optional(),
   APP_BASIC_AUTH_ENABLED: z.string().optional(),
   APP_RBAC_ENABLED: z.string().optional(),
-  APP_DEFAULT_ROLE: z.string().optional()
+  APP_DEFAULT_ROLE: z.string().optional(),
+  APP_2FA_ISSUER: z.string().optional()
 });
 
 export type EnvCheck = {
@@ -43,7 +44,8 @@ export function getServerEnv() {
     appPassword: env.APP_PASSWORD,
     basicAuthEnabled: env.APP_BASIC_AUTH_ENABLED === 'true',
     rbacEnabled: env.APP_RBAC_ENABLED === 'true',
-    appDefaultRole: env.APP_DEFAULT_ROLE
+    appDefaultRole: env.APP_DEFAULT_ROLE,
+    twoFactorIssuer: env.APP_2FA_ISSUER ?? 'Com Tam Lang ERP'
   };
 }
 
@@ -69,7 +71,8 @@ export function getEnvChecklist(): EnvCheck[] {
     { name: 'APP_USERNAME', configured: Boolean(env.appUsername), requiredFor: 'Basic Auth tạm' },
     { name: 'APP_PASSWORD', configured: Boolean(env.appPassword), requiredFor: 'Basic Auth tạm' },
     { name: 'APP_RBAC_ENABLED', configured: env.rbacEnabled, requiredFor: 'Bật kiểm soát quyền server-side' },
-    { name: 'APP_DEFAULT_ROLE', configured: Boolean(env.appDefaultRole), requiredFor: 'Vai trò mặc định khi RBAC chưa bật cứng' }
+    { name: 'APP_DEFAULT_ROLE', configured: Boolean(env.appDefaultRole), requiredFor: 'Vai trò mặc định khi RBAC chưa bật cứng' },
+    { name: 'APP_2FA_ISSUER', configured: Boolean(env.twoFactorIssuer), requiredFor: 'Tên hiển thị trong ứng dụng xác thực 2FA' }
   ];
 }
 

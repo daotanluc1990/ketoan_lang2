@@ -7,6 +7,10 @@ const decoder = new TextDecoder();
 export type AuthSession = {
   role: Role;
   actor: string;
+  username?: string;
+  email?: string;
+  branchScope?: string[];
+  provider?: 'password' | 'google_workspace' | 'rescue';
   expiresAt: number;
 };
 
@@ -59,10 +63,36 @@ function safeEqual(left: string, right: string) {
   return diff === 0;
 }
 
-export async function createAuthSessionCookie(input: { role: Role; actor?: string }, now = Date.now()) {
+function cleanOptionalString(value: unknown) {
+  const text = String(value ?? '').trim();
+  return text || undefined;
+}
+
+function cleanStringArray(value: unknown) {
+  return Array.isArray(value)
+    ? value.map((item) => String(item ?? '').trim()).filter(Boolean)
+    : undefined;
+}
+
+function normalizeProvider(value: unknown): AuthSession['provider'] {
+  return value === 'google_workspace' || value === 'rescue' || value === 'password' ? value : undefined;
+}
+
+export async function createAuthSessionCookie(input: {
+  role: Role;
+  actor?: string;
+  username?: string;
+  email?: string;
+  branchScope?: string[];
+  provider?: AuthSession['provider'];
+}, now = Date.now()) {
   const session: AuthSession = {
     role: input.role,
     actor: input.actor?.trim() || input.role,
+    username: cleanOptionalString(input.username),
+    email: cleanOptionalString(input.email),
+    branchScope: cleanStringArray(input.branchScope),
+    provider: input.provider,
     expiresAt: now + getSessionMaxAgeSeconds() * 1000
   };
   const payload = bytesToBase64Url(encoder.encode(JSON.stringify(session)));
@@ -81,7 +111,15 @@ export async function verifyAuthSessionCookie(value?: string | null, now = Date.
     const parsed = JSON.parse(decoder.decode(base64UrlToBytes(payload))) as Partial<AuthSession>;
     const role = normalizeSessionRole(parsed.role);
     if (!role || !parsed.expiresAt || parsed.expiresAt < now) return null;
-    return { role, actor: String(parsed.actor ?? role), expiresAt: parsed.expiresAt };
+    return {
+      role,
+      actor: String(parsed.actor ?? role),
+      username: cleanOptionalString(parsed.username),
+      email: cleanOptionalString(parsed.email),
+      branchScope: cleanStringArray(parsed.branchScope),
+      provider: normalizeProvider(parsed.provider),
+      expiresAt: parsed.expiresAt
+    };
   } catch {
     return null;
   }

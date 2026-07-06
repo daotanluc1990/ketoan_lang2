@@ -18,13 +18,13 @@ export default async function ImportNhapLieuPage() {
   if (!canRole(rbac.role, 'view_import')) return <NoPermission role={rbac.role} permission="view_import" />;
   const history = await readImportHistory();
   const historyRows = history.slice(-8).reverse().map((row) => [String(row['Ngày import'] ?? ''), String(row['Người import'] ?? ''), String(row['Trạng thái'] ?? ''), String(row['Tổng dòng mới'] ?? ''), String(row['Tổng dòng lỗi'] ?? '')]);
-  const ruleRows = [['Preview', 'Chưa ghi', 'Đạt'], ['Confirm', 'Ghi Sheet', 'Đạt'], ['Lỗi/lệch', 'Chặn', 'Cảnh báo'], ['Rollback', 'Hoàn tác mềm', 'Đạt']];
+  const ruleRows = [['Xem trước', 'Chưa ghi dữ liệu', 'Đạt'], ['Ghi file đạt', 'Ghi vào Google Sheet', 'Đạt'], ['Lỗi/lệch', 'Chặn import', 'Cảnh báo'], ['Hoàn tác', 'Hoàn tác mềm', 'Đạt']];
   return (
     <div className="space-y-2.5">
       <PageHeader title="Nhập liệu & Import" status="Cần đối chiếu" />
       <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Lịch sử import" value={`${history.length}`} status={history.length ? 'good' : 'neutral'} compact />
-        <MetricCard label="Quy tắc ghi" value="Confirm" status="good" compact />
+        <MetricCard label="Quy tắc ghi" value="Ghi sau kiểm tra" status="good" compact />
         <MetricCard label="Dòng lỗi" value="Chặn" status="warning" compact />
         <MetricCard label="Nguồn" value="Google Sheet" status="good" compact />
       </section>
@@ -32,8 +32,13 @@ export default async function ImportNhapLieuPage() {
       <section className="grid gap-2 xl:grid-cols-[0.8fr_1.2fr]">
         <Card><CardTitle>Hoàn tác import</CardTitle><div className="mt-2"><ImportRollbackPanel /></div></Card>
         <div className="space-y-2">
-          <Card><CardTitle>Quy tắc</CardTitle><div className="mt-2"><ReportTable headers={['Quy tắc', 'Ý nghĩa', 'Trạng thái']} rows={ruleRows} maxHeight="max-h-[160px]" /></div></Card>
-          <Card><CardTitle>Lịch sử gần nhất</CardTitle><div className="mt-2"><ReportTable headers={['Ngày import', 'Người import', 'Trạng thái', 'Dòng mới', 'Dòng lỗi']} rows={historyRows.length ? historyRows : [['—', '—', 'Chưa đủ dữ liệu', '0', '0']]} maxHeight="max-h-[180px]" /></div></Card>
+          <Card><CardTitle>Quy tắc</CardTitle>
+            {/* C1.2: ReportTable dùng embedded — không double-card */}
+            <div className="mt-2"><ReportTable headers={['Quy tắc', 'Ý nghĩa', 'Trạng thái']} rows={ruleRows} maxHeight="max-h-[160px]" embedded /></div>
+          </Card>
+          <Card><CardTitle>Lịch sử gần nhất</CardTitle>
+            <div className="mt-2"><ReportTable headers={['Ngày import', 'Người import', 'Trạng thái', 'Dòng mới', 'Dòng lỗi']} rows={historyRows.length ? historyRows : [['—', '—', 'Chưa đủ dữ liệu', '0', '0']]} maxHeight="max-h-[180px]" embedded /></div>
+          </Card>
         </div>
       </section>
     </div>

@@ -14,6 +14,8 @@ export function GET() {
       rbacEnabled: env.rbacEnabled,
       defaultRole: env.appDefaultRole,
       basicAuthEnabled: env.basicAuthEnabled,
+      authMode: 'Tài khoản nội bộ + phân quyền + 2FA',
+      twoFactorIssuer: env.twoFactorIssuer,
       note: env.rbacEnabled ? 'Server-side RBAC đang bật.' : 'RBAC đang ở chế độ mềm. Bật APP_RBAC_ENABLED=true khi UAT quyền xong.'
     },
     integrations: {

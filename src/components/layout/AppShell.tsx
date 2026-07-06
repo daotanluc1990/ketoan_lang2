@@ -1,15 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { GlobalFilterBar } from './GlobalFilterBar';
+import { FloatingAiButton } from './FloatingAiButton';
+import { CommandPalette } from './CommandPalette';
 import type { Role } from '@/lib/report-types';
 
 const COLLAPSE_KEY = 'ctl-ceo-sidebar-collapsed';
 const ROLE_KEY = 'ctl-ceo-role';
+// C3: density mode persist
+const DENSITY_KEY = 'ctl-density';
 
 function readStoredBool(key: string, fallback: boolean) {
   if (typeof window === 'undefined') return fallback;
@@ -51,7 +55,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(() => readStoredBool(COLLAPSE_KEY, true));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [role, setRole] = useState<Role>(() => readStoredRole());
+  // C2: command palette
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  // C3: density mode ('compact' | 'comfortable')
+  const [density, setDensity] = useState<'compact' | 'comfortable'>(() => readStoredBool(DENSITY_KEY, false) ? 'compact' : 'comfortable');
   const shellStyle = { '--sidebar-width': collapsed ? '72px' : '240px' } as CSSProperties;
+
+  // C2: global Cmd/Ctrl+K
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // C3: apply density class
+  useEffect(() => {
+    document.body.classList.toggle('density-compact', density === 'compact');
+  }, [density]);
 
   const toggleCollapsed = () => {
     setCollapsed((current: boolean) => {
@@ -67,20 +92,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     writeRoleCookie(nextRole);
   };
 
+  const toggleDensity = () => {
+    setDensity((current) => {
+      const next = current === 'compact' ? 'comfortable' : 'compact';
+      try { window.localStorage.setItem(DENSITY_KEY, String(next === 'compact')); } catch {}
+      return next;
+    });
+  };
+
   if (pathname === '/login') return <>{children}</>;
 
   return (
     <div className="app-bg min-h-screen overflow-x-hidden text-lang-ink">
-      <Sidebar collapsed={collapsed} mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} onToggle={toggleCollapsed} role={role} />
+      <Sidebar collapsed={collapsed} mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} onToggle={toggleCollapsed} role={role} density={density} onToggleDensity={toggleDensity} />
       <div className="min-h-screen transition-[padding] duration-200 ease-out lg:pl-[var(--sidebar-width)]" style={shellStyle}>
-        <TopBar role={role} onMenuClick={() => setMobileOpen(true)} onRoleChange={setSelectedRole} />
+        <TopBar role={role} onMenuClick={() => setMobileOpen(true)} onRoleChange={setSelectedRole} onOpenPalette={() => setPaletteOpen(true)} />
         <GlobalFilterBar />
         <main className="w-full px-2 py-2 lg:px-3">
           <div className="w-full space-y-2.5 pb-8">
             {children}
           </div>
         </main>
+        <FloatingAiButton />
       </div>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} role={role} />
     </div>
   );
 }

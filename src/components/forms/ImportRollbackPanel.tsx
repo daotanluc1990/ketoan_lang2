@@ -25,7 +25,7 @@ export function ImportRollbackPanel() {
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<RollbackResponse | null>(null);
-  const [message, setMessage] = useState('Nhập Mã lần import để preview hoàn tác trước. Confirm chỉ dành cho CEO/Admin.');
+  const [message, setMessage] = useState('Nhập Mã lần import để xem trước hoàn tác. Chỉ CEO/Admin được hoàn tác thật.');
 
   const rows = result?.sheets?.length
     ? result.sheets.map((sheet) => [sheet.sheetName, String(sheet.matchedRows ?? '—'), String(sheet.activeRows ?? '—'), String(sheet.updatedRows ?? '—')])
@@ -64,8 +64,8 @@ export function ImportRollbackPanel() {
         <label className="text-xs font-bold text-black/55">Lý do hoàn tác
           <input value={reason} onChange={(event) => setReason(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold" placeholder="Nhập sai file / sai kỳ / sai chi nhánh" />
         </label>
-        <Button onClick={() => callRollback(false)} disabled={loading}>{loading ? 'Đang xử lý...' : 'Preview'}</Button>
-        <Button variant="danger" onClick={() => callRollback(true)} disabled={loading}>Confirm</Button>
+        <Button variant="secondary" onClick={() => callRollback(false)} disabled={loading}>{loading ? 'Đang xử lý...' : 'Xem trước'}</Button>
+        <Button variant="danger" onClick={() => callRollback(true)} disabled={loading}>Hoàn tác</Button>
       </div>
       <div className="rounded-lg bg-lang-cream px-3 py-2 text-sm font-semibold text-lang-brown">{message}</div>
       <ReportTable headers={['Sheet', 'Dòng khớp', 'Dòng còn hiệu lực', 'Dòng đã hoàn tác']} rows={rows} maxHeight="max-h-[220px]" />

@@ -43,8 +43,8 @@ export function CeoCockpitPage({ report }: { report: DashboardReport }) {
   return (
     <div className="space-y-3">
       <section className="grid gap-3 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="border-l-8 border-amber-500">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-700">CEO Cockpit · {report.dataMode}</p>
+        <Card className="border-amber-200 bg-amber-50/70">
+          <p className="text-[11px] font-black uppercase text-amber-800">CEO Cockpit · {report.dataMode}</p>
           <h3 className="mt-1 text-xl font-extrabold text-lang-brown">
             {report.hasRealData
               ? report.missingSources.length
@@ -54,9 +54,9 @@ export function CeoCockpitPage({ report }: { report: DashboardReport }) {
           </h3>
           <p className="mt-1.5 line-clamp-3 text-xs leading-5 text-black/60">{report.message}</p>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-bold">
-            <div className="rounded-xl bg-lang-cream px-2 py-2 text-lang-brown">Nguồn thiếu<br />{report.missingSources.length}</div>
-            <div className="rounded-xl bg-lang-cream px-2 py-2 text-lang-brown">Chi lớn<br />{report.cashbookWarningRows.length}</div>
-            <div className="rounded-xl bg-lang-cream px-2 py-2 text-lang-brown">Thất thoát<br />{report.lossTop5Rows.length}</div>
+            <div className="rounded-lg border border-amber-200 bg-white px-2 py-2 text-lang-brown">Nguồn thiếu<br />{report.missingSources.length}</div>
+            <div className="rounded-lg border border-amber-200 bg-white px-2 py-2 text-lang-brown">Chi lớn<br />{report.cashbookWarningRows.length}</div>
+            <div className="rounded-lg border border-amber-200 bg-white px-2 py-2 text-lang-brown">Thất thoát<br />{report.lossTop5Rows.length}</div>
           </div>
         </Card>
 

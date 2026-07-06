@@ -44,16 +44,46 @@ const ALL_VALUES = new Set([
 ]);
 
 const SOURCE_LABELS: Record<string, string> = {
+  '01_CONFIG_MASTER': 'Cấu hình master',
   DL_DOANH_THU_APP: 'Doanh thu app',
   DL_DOANH_THU_CUA_HANG: 'Doanh thu cửa hàng',
   DL_SO_QUY: 'Sổ quỹ',
   DL_TON_KHO: 'Tồn kho',
   DL_THAT_THOAT_NVL: 'Thất thoát NVL',
   DL_CONG_NO: 'Công nợ',
-  DL_THU_MUA: 'Thu mua'
+  DL_THU_MUA: 'Thu mua',
+  '03_IMPORT_LOG_SYSTEM_LOG': 'Nhật ký import',
+  '04_DATA_DOANH_THU': 'Doanh thu',
+  '05_DATA_SO_QUY': 'Sổ quỹ',
+  '06_DATA_CONG_NO': 'Công nợ',
+  '08_DATA_KHO_CUA_HANG': 'Kho cửa hàng',
+  '09_DATA_KHO_BTT': 'Kho BTT',
+  '10_DATA_XUAT_BTT_CUA_HANG': 'Xuất BTT - cửa hàng',
+  '11_DATA_HANG_HUY_KIEM_KE': 'Hàng hủy / kiểm kê',
+  '12_CALC_TON_KHO': 'Tính tồn kho',
+  '13_CALC_HAO_HUT_THAT_THOAT': 'Hao hụt / thất thoát',
+  'DATA_BAO CAO_CA': 'Báo cáo ca KiotViet'
 };
 
 const CHANNEL_FILTER_SHEETS = new Set(['DL_DOANH_THU_APP', 'DL_DOANH_THU_CUA_HANG']);
+const CONFIG_MASTER_SHEET = '01_CONFIG_MASTER';
+const DATA_STATUS_FIELDS = ['Trạng thái dữ liệu', 'trang_thai_dong', 'Trạng thái', 'trang_thai', 'Đánh giá', 'Check', 'Kết luận', 'trang_thai_doi_chieu', 'trang_thai_thanh_toan'];
+const ALERT_STATUS_FIELDS = ['Mức độ', 'muc_canh_bao'];
+const STATUS_EQUIVALENTS: Record<string, string[]> = {
+  dat: ['dat', 'tot', 'ok', 'hop-le', 'khop', 'valid', 'success'],
+  'canh-bao': ['canh-bao', 'can-kiem', 'can-doi-chieu', 'lech', 'warning', 'nguy-hiem', 'do', 'cam', 'vang'],
+  'thieu-du-lieu': ['thieu-du-lieu', 'chua-du-du-lieu', 'missing', 'thieu-nguon', 'thieu-file', 'thieu-cot'],
+  'chua-xu-ly': ['chua-xu-ly', 'preview', 'dang-xu-ly', 'cho-xac-nhan', 'pending', 'chua-xac-nhan'],
+  'da-xu-ly': ['da-xu-ly', 'da-xac-nhan', 'thanh-cong', 'thanh-cong-mot-phan', 'done', 'completed', 'closed']
+};
+
+const DATA_STATUS_OPTIONS = [
+  { label: 'Đạt', aliases: STATUS_EQUIVALENTS.dat },
+  { label: 'Cảnh báo', aliases: STATUS_EQUIVALENTS['canh-bao'] },
+  { label: 'Thiếu dữ liệu', aliases: STATUS_EQUIVALENTS['thieu-du-lieu'] },
+  { label: 'Chưa xử lý', aliases: STATUS_EQUIVALENTS['chua-xu-ly'] },
+  { label: 'Đã xử lý', aliases: STATUS_EQUIVALENTS['da-xu-ly'] }
+] as const;
 
 export function normalizeText(value: unknown) {
   return String(value ?? '')
@@ -68,6 +98,11 @@ export function normalizeText(value: unknown) {
 
 export function isAllFilter(value: unknown) {
   return ALL_VALUES.has(normalizeText(value));
+}
+
+export function isActiveDataRow(row: Record<string, unknown>) {
+  const status = normalizeText(row['Trạng thái dữ liệu'] ?? row['trang_thai_dong']);
+  return status !== 'da-hoan-tac';
 }
 
 function firstParam(params: SearchParamsInput, key: string) {
@@ -147,15 +182,15 @@ function rowMatchesDate(row: Record<string, unknown>, filters: ReportFilters) {
 function rowMatchesWeek(row: Record<string, unknown>, filters: ReportFilters) {
   if (!filters.weekCode) return true;
   const expected = normalizeText(filters.weekCode);
-  const values = [row['Mã tuần'], row['Tuần'], row['Tuần bắt đầu'], row['Tuần kết thúc']].map(normalizeText).filter(Boolean);
+  const values = [row['Mã tuần'], row['ky_bao_cao'], row['Kỳ báo cáo'], rowWeekLabel(row), row['Tuần'], row['Tuần bắt đầu'], row['Tuần kết thúc']].map(normalizeText).filter(Boolean);
   return values.some((value) => value === expected || value.includes(expected) || expected.includes(value));
 }
 
 function rowMatchesBranch(row: Record<string, unknown>, filters: ReportFilters) {
   if (!filters.branch) return true;
   const expected = normalizeText(filters.branch);
-  const actual = normalizeText(row['Chi nhánh'] ?? row['Tên CH'] ?? row['Cửa hàng']);
-  return actual === expected || actual.includes(expected) || expected.includes(actual);
+  const values = branchValues(row).map(normalizeText).filter(Boolean);
+  return values.some((actual) => actual === expected || actual.includes(expected) || expected.includes(actual));
 }
 
 function rowMatchesChannel(row: Record<string, unknown>, sheetName: string, filters: ReportFilters) {
@@ -181,12 +216,14 @@ function rowMatchesSource(sheetName: string, filters: ReportFilters) {
 
 function rowMatchesDataStatus(row: Record<string, unknown>, filters: ReportFilters) {
   if (!filters.dataStatus) return true;
-  const expected = normalizeText(filters.dataStatus);
-  const values = [row['Trạng thái dữ liệu'], row['Trạng thái']].map(normalizeText).filter(Boolean);
+  const expectedOption = normalizeDataStatusOption(filters.dataStatus);
+  const expected = normalizeText(expectedOption?.value ?? filters.dataStatus);
+  const values = DATA_STATUS_FIELDS.map((field) => normalizeText(row[field])).filter(Boolean);
+  const normalizedLabels = DATA_STATUS_FIELDS.map((field) => normalizeDataStatusOption(row[field])?.value).filter(Boolean).map(normalizeText);
+  if (expectedOption) return normalizedLabels.includes(expected);
+  const equivalentValues = STATUS_EQUIVALENTS[expected] ?? [];
 
-  if (expected === 'dat' || expected === 'hop-le' || expected === 'da-xac-nhan') {
-    return values.some((value) => ['dat', 'hop-le', 'tot', 'da-xac-nhan', 'thanh-cong', 'thanh-cong-mot-phan'].includes(value) || value.includes('xac-nhan') || value.includes('thanh-cong'));
-  }
+  if (equivalentValues.length) return values.some((value) => equivalentValues.some((alias) => value === alias || value.includes(alias) || alias.includes(value)));
 
   return values.some((value) => value === expected || value.includes(expected) || expected.includes(value));
 }
@@ -194,7 +231,7 @@ function rowMatchesDataStatus(row: Record<string, unknown>, filters: ReportFilte
 function rowMatchesAlert(row: Record<string, unknown>, filters: ReportFilters) {
   if (!filters.alertStatus) return true;
   const expected = normalizeText(filters.alertStatus);
-  const values = [row['Trạng thái'], row['Đánh giá'], row['Mức độ']].map(normalizeText).filter(Boolean);
+  const values = ALERT_STATUS_FIELDS.map((field) => normalizeText(row[field])).filter(Boolean);
   return values.some((value) => value === expected || value.includes(expected) || expected.includes(value));
 }
 
@@ -237,8 +274,120 @@ function addOption(map: Map<string, FilterOption>, value: unknown, labelOverride
   else map.set(key, { label, value: label, count: 1 });
 }
 
+function normalizeDataStatusOption(value: unknown): FilterOption | null {
+  const key = normalizeText(value);
+  if (!key || isAllFilter(key) || key === 'da-hoan-tac' || key === 'rolled-back') return null;
+  const option = DATA_STATUS_OPTIONS.find((candidate) =>
+    candidate.aliases.some((alias) => key === alias || (alias.length > 3 && (key.includes(alias) || alias.includes(key))))
+  );
+  return option ? { label: option.label, value: option.label } : null;
+}
+
+function addDataStatusOption(map: Map<string, FilterOption>, value: unknown) {
+  const option = normalizeDataStatusOption(value);
+  if (!option) return;
+  const key = normalizeText(option.value);
+  const current = map.get(key);
+  if (current) current.count = (current.count ?? 0) + 1;
+  else map.set(key, { ...option, count: 1 });
+}
+
+function firstText(row: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+    if (value !== undefined && value !== null && String(value).trim() !== '') return String(value).trim();
+  }
+  return '';
+}
+
+function branchValues(row: Record<string, unknown>) {
+  return [
+    firstText(row, ['Chi nhánh', 'Tên chi nhánh', 'Tên CH', 'Mã CH', 'Cửa hàng', 'cua_hang', 'cua_hang_hoac_btt', 'cua_hang_nhan', 'branch', 'store', 'store_code', 'ma_cua_hang', 'ten_cua_hang']),
+    firstText(row, ['Bếp trung tâm', 'Kho BTT', 'ma_kho_btt', 'ten_kho_btt'])
+  ].filter(Boolean);
+}
+
+function isoWeekCodeFromUtc(utc: number) {
+  const date = new Date(utc);
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + 3 - ((date.getUTCDay() + 6) % 7));
+  const weekYear = date.getUTCFullYear();
+  const week1 = new Date(Date.UTC(weekYear, 0, 4));
+  const week = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getUTCDay() + 6) % 7)) / 7);
+  return `${weekYear}-W${String(week).padStart(2, '0')}`;
+}
+
+function rowWeekLabel(row: Record<string, unknown>) {
+  const direct = firstText(row, ['Mã tuần', 'ky_bao_cao', 'Kỳ báo cáo', 'period_code']);
+  if (direct) return direct;
+  const year = firstText(row, ['Năm', 'nam']);
+  const week = firstText(row, ['Tuần', 'tuan']);
+  if (year && week && /^\d{1,2}$/.test(week)) return `${year}-W${week.padStart(2, '0')}`;
+  const date = parseDateToUtc(row['Ngày'] ?? row['ngay'] ?? row['Dấu thời gian'] ?? row['timestamp']);
+  if (date !== null) return isoWeekCodeFromUtc(date);
+  return week;
+}
+
 function sortedOptions(map: Map<string, FilterOption>) {
   return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, 'vi'));
+}
+
+function weekSortValue(option: FilterOption) {
+  const text = normalizeText(option.value || option.label);
+  const week = text.match(/^(\d{4})-w(\d{1,2})$/);
+  if (week) return Number(week[1]) * 100 + Number(week[2]);
+  const month = text.match(/^(\d{4})-(\d{1,2})$/);
+  if (month) return Number(month[1]) * 100 + Number(month[2]);
+  return Number.NEGATIVE_INFINITY;
+}
+
+function sortedPeriodOptions(map: Map<string, FilterOption>) {
+  return Array.from(map.values()).sort((a, b) => {
+    const diff = weekSortValue(b) - weekSortValue(a);
+    return diff || b.label.localeCompare(a.label, 'vi');
+  });
+}
+
+function optionsInInputOrder(map: Map<string, FilterOption>) {
+  return Array.from(map.values());
+}
+
+function parseConfigPayload(row: Record<string, unknown>) {
+  const raw = row['gia_tri'] ?? row['Giá trị'] ?? row['value'];
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw as Record<string, unknown>;
+  const text = String(raw ?? '').trim();
+  if (!text) return {};
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
+  } catch {
+    return {};
+  }
+}
+
+function stringsFrom(value: unknown) {
+  return Array.isArray(value) ? value.map((item) => String(item ?? '').trim()).filter(Boolean) : [];
+}
+
+function addConfigOptions(row: Record<string, unknown>, branches: Map<string, FilterOption>, dataStatuses: Map<string, FilterOption>) {
+  const configType = normalizeText(row['config_type'] ?? row['Config type']);
+  const code = normalizeText(row['ma'] ?? row['Mã']);
+  const payload = parseConfigPayload(row);
+  const status = normalizeText(row['trang_thai'] ?? row['Trạng thái']);
+  if (status && !['active', 'dang-dung', 'dang-hoat-dong'].includes(status)) return;
+
+  if (configType === 'store') {
+    const primary = String(payload.ten_ch ?? row['ten'] ?? row['Tên'] ?? '').trim();
+    const storeCode = String(payload.ma_ch ?? row['ma'] ?? '').trim();
+    addOption(branches, primary || storeCode);
+    if (storeCode && storeCode !== primary) addOption(branches, storeCode);
+    stringsFrom(payload.alias).forEach((alias) => addOption(branches, alias));
+    return;
+  }
+
+  if (configType === 'filter-option' && code === 'trang-thai') {
+    stringsFrom(payload.values).forEach((value) => addDataStatusOption(dataStatuses, value));
+  }
 }
 
 export function buildReportFilterOptions(groups: RowGroup[]): ReportFilterOptions {
@@ -253,24 +402,29 @@ export function buildReportFilterOptions(groups: RowGroup[]): ReportFilterOption
 
   for (const group of groups) {
     if (group.rows.length) addOption(sources, group.sheetName, SOURCE_LABELS[group.sheetName] ?? group.label);
+    if (group.sheetName === CONFIG_MASTER_SHEET) {
+      for (const row of group.rows) addConfigOptions(row, branches, dataStatuses);
+      continue;
+    }
+
     for (const row of group.rows) {
-      addOption(branches, row['Chi nhánh'] ?? row['Tên CH'] ?? row['Cửa hàng']);
-      addOption(weeks, row['Mã tuần'] ?? row['Tuần']);
+      branchValues(row).forEach((branch) => addOption(branches, branch));
+      addOption(weeks, rowWeekLabel(row));
       addOption(channels, row['Kênh bán'] ?? row['Tài khoản app']);
       if (group.sheetName === 'DL_DOANH_THU_CUA_HANG') addOption(channels, 'Offline');
-      addOption(dataStatuses, row['Trạng thái dữ liệu']);
-      addOption(alertStatuses, row['Trạng thái'] ?? row['Đánh giá'] ?? row['Mức độ']);
+      DATA_STATUS_FIELDS.forEach((field) => addDataStatusOption(dataStatuses, row[field]));
+      ALERT_STATUS_FIELDS.forEach((field) => addOption(alertStatuses, row[field]));
       addOption(costGroups, row['Nhóm thu/chi'] ?? row['Loại nguyên vật liệu'] ?? row['Nhóm hàng'] ?? row['Nhóm công nợ']);
       addOption(importedBy, row['Người import'] ?? row['Người tạo'] ?? row['Người dùng']);
     }
   }
 
   return {
-    branches: sortedOptions(branches),
-    weeks: sortedOptions(weeks),
+    branches: optionsInInputOrder(branches),
+    weeks: sortedPeriodOptions(weeks),
     channels: sortedOptions(channels),
     sources: sortedOptions(sources),
-    dataStatuses: sortedOptions(dataStatuses),
+    dataStatuses: optionsInInputOrder(dataStatuses),
     alertStatuses: sortedOptions(alertStatuses),
     costGroups: sortedOptions(costGroups),
     importedBy: sortedOptions(importedBy)

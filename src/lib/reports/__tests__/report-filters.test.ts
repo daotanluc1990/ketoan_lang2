@@ -31,4 +31,43 @@ describe('report filters', () => {
     expect(options.sources[0]?.label).toBe('Sổ quỹ');
     expect(options.costGroups[0]?.label).toBe('NVL');
   });
+
+  it('keeps branch, status and report period options in the right buckets', () => {
+    const row = { ky_bao_cao: '2026-W26', cua_hang: 'NVT', trang_thai_dong: 'Preview', trang_thai: 'Đã thanh toán', muc_canh_bao: 'Đỏ' };
+    const options = buildReportFilterOptions([{ sheetName: '04_DATA_DOANH_THU', label: 'Doanh thu', rows: [row] }]);
+
+    expect(options.branches.map((option) => option.label)).toContain('NVT');
+    expect(options.weeks.map((option) => option.label)).toContain('2026-W26');
+    expect(options.dataStatuses.map((option) => option.label)).toEqual(['Chưa xử lý']);
+    expect(options.alertStatuses.map((option) => option.label)).toEqual(['Đỏ']);
+    expect(filterRowsByReportFilters([row], '04_DATA_DOANH_THU', { branch: 'NVT', weekCode: '2026-W26', dataStatus: 'Chưa xử lý' })).toHaveLength(1);
+    expect(filterRowsByReportFilters([row], '04_DATA_DOANH_THU', { dataStatus: 'Chưa xử lý' })).toHaveLength(1);
+  });
+
+  it('seeds branch and status choices from 01_CONFIG_MASTER', () => {
+    const options = buildReportFilterOptions([
+      {
+        sheetName: '01_CONFIG_MASTER',
+        label: 'Cấu hình master',
+        rows: [
+          {
+            config_type: 'STORE',
+            ma: 'CS1',
+            ten: 'CS1 · Nguyễn Văn Tăng',
+            gia_tri: '{"ma_ch":"CS1","ten_ch":"CS1 · Nguyễn Văn Tăng","alias":["CS1","NVT","Nguyễn Văn Tăng"]}',
+            trang_thai: 'active'
+          },
+          {
+            config_type: 'FILTER_OPTION',
+            ma: 'TRANG_THAI',
+            gia_tri: '{"values":["Tất cả","Đạt","Cảnh báo","Thiếu dữ liệu","Chưa xử lý","Đã xử lý"]}',
+            trang_thai: 'active'
+          }
+        ]
+      }
+    ]);
+
+    expect(options.branches.map((option) => option.label)).toEqual(['CS1 · Nguyễn Văn Tăng', 'CS1', 'NVT', 'Nguyễn Văn Tăng']);
+    expect(options.dataStatuses.map((option) => option.label)).toEqual(['Đạt', 'Cảnh báo', 'Thiếu dữ liệu', 'Chưa xử lý', 'Đã xử lý']);
+  });
 });

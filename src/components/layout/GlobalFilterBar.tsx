@@ -5,10 +5,10 @@ import type { FilterOption, ReportFilterOptions } from '@/lib/reports/report-fil
 import { Filter, RotateCcw } from 'lucide-react';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="min-w-0"><span className="mb-1 block text-[10px] font-extrabold uppercase tracking-wide text-lang-muted">{label}</span>{children}</label>;
+  return <label className="min-w-0 rounded-lg border border-lang-line bg-lang-paper px-2.5 py-1.5 shadow-[0_3px_12px_rgba(80,50,20,0.03)]"><span className="mb-0.5 block text-[10px] font-extrabold uppercase tracking-wide text-lang-muted">{label}</span>{children}</label>;
 }
 
-const inputClass = 'h-9 w-full min-w-0 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-semibold text-lang-ink outline-none transition focus:border-lang-red/60 focus:ring-2 focus:ring-lang-red/10';
+const inputClass = 'h-7 w-full min-w-0 rounded-md border border-transparent bg-transparent px-0 text-[13px] font-extrabold text-lang-ink outline-none transition focus:border-lang-red/40 focus:bg-white focus:px-1.5 focus:ring-2 focus:ring-lang-red/10';
 const emptyOptions: ReportFilterOptions = { branches: [], weeks: [], channels: [], sources: [], dataStatuses: [], alertStatuses: [], costGroups: [], importedBy: [] };
 
 type FilterState = {
@@ -27,16 +27,9 @@ function readFiltersFromUrl(): FilterState {
   };
 }
 
-function optionList(options: FilterOption[], current: string, fallback: string[] = []) {
+function optionList(options: FilterOption[], current: string) {
   const normalized = new Set<string>();
   const list: FilterOption[] = [];
-  const fallbackLabels = options.length ? [] : fallback;
-  for (const label of fallbackLabels) {
-    const key = label.trim().toLowerCase();
-    if (!key || normalized.has(key)) continue;
-    normalized.add(key);
-    list.push({ label, value: label });
-  }
   for (const option of options) {
     const key = option.value.trim().toLowerCase();
     if (!key || normalized.has(key)) continue;
@@ -47,12 +40,12 @@ function optionList(options: FilterOption[], current: string, fallback: string[]
   return list;
 }
 
-function SelectField({ name, label, value, options, onChange, fallback = [] }: { name: keyof FilterState; label: string; value: string; options: FilterOption[]; onChange: (name: keyof FilterState, value: string) => void; fallback?: string[] }) {
+function SelectField({ name, label, value, options, onChange }: { name: keyof FilterState; label: string; value: string; options: FilterOption[]; onChange: (name: keyof FilterState, value: string) => void }) {
   return (
     <Field label={label}>
       <select name={name} value={value} className={inputClass} aria-label={label} onChange={(event) => onChange(name, event.target.value)}>
         <option value="">Tất cả</option>
-        {optionList(options, value, fallback).map((option) => <option key={`${name}-${option.value}`} value={option.value}>{option.label}{option.count ? ` (${option.count})` : ''}</option>)}
+        {optionList(options, value).map((option) => <option key={`${name}-${option.value}`} value={option.value}>{option.label}{option.count ? ` (${option.count})` : ''}</option>)}
       </select>
     </Field>
   );
@@ -81,18 +74,18 @@ export function GlobalFilterBar() {
   const resetFilters = () => { if (typeof window !== 'undefined') window.location.href = window.location.pathname; };
 
   return (
-    <section className="border-b border-lang-line bg-lang-cream2">
+    <section className="border-b border-lang-line bg-[#F6F3EE]/95 backdrop-blur">
       <form method="get" className="mx-auto w-full max-w-[1480px] px-4 py-2 lg:px-6">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-3">
-            <SelectField name="branch" label="Chi nhánh" value={filters.branch} options={options.branches} fallback={['CS1 · Nguyễn Văn Tăng', 'Bếp trung tâm']} onChange={updateFilter} />
-            <SelectField name="weekCode" label="Kỳ báo cáo" value={filters.weekCode} options={options.weeks} fallback={['2026-W26', '2026-W27']} onChange={updateFilter} />
-            <SelectField name="dataStatus" label="Trạng thái" value={filters.dataStatus} options={options.dataStatuses} fallback={['Đạt', 'Cảnh báo', 'Thiếu dữ liệu', 'Chưa xử lý', 'Đã xử lý']} onChange={updateFilter} />
+            <SelectField name="branch" label="Chi nhánh" value={filters.branch} options={options.branches} onChange={updateFilter} />
+            <SelectField name="weekCode" label="Kỳ báo cáo" value={filters.weekCode} options={options.weeks} onChange={updateFilter} />
+            <SelectField name="dataStatus" label="Trạng thái" value={filters.dataStatus} options={options.dataStatuses} onChange={updateFilter} />
           </div>
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <span className="text-[11px] font-semibold text-lang-muted">{status} · {activeFilterCount ? `${activeFilterCount} lọc` : 'Chưa lọc'}</span>
             <button className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-lang-red px-3 text-[12px] font-black text-white hover:bg-lang-redDark" type="submit"><Filter className="h-3.5 w-3.5" />Lọc</button>
-            <button className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-3 text-[12px] font-bold text-lang-ink hover:bg-lang-mist" type="button" onClick={resetFilters}><RotateCcw className="h-3.5 w-3.5" />Xóa</button>
+            <button className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-lang-line bg-lang-paper px-3 text-[12px] font-bold text-lang-ink hover:bg-lang-mist" type="button" onClick={resetFilters}><RotateCcw className="h-3.5 w-3.5" />Xóa</button>
           </div>
         </div>
       </form>

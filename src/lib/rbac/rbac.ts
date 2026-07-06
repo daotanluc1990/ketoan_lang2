@@ -7,6 +7,8 @@ import type { DashboardReport } from '@/lib/reports/report-aggregator';
 export type AppRole = Role;
 export type Permission =
   | 'view_dashboard'
+  | 'view_executive_dashboard'
+  | 'view_revenue'
   | 'view_cashflow'
   | 'view_pnl'
   | 'view_balance'
@@ -33,6 +35,12 @@ export type Permission =
   | 'view_master_data'
   | 'view_debt'
   | 'view_close_history'
+  | 'view_tasks'
+  | 'view_payroll'
+  | 'view_management_reports'
+  | 'view_documents'
+  | 'report_close_preview'
+  | 'report_close_confirm'
   | 'weekly_close_preview'
   | 'weekly_close_confirm';
 
@@ -63,6 +71,8 @@ const OPERATION_ROLES: AppRole[] = ['CEO', 'Kế toán', 'Admin', 'Quản lý c�
 
 export const PERMISSION_MATRIX: Record<Permission, AppRole[]> = {
   view_dashboard: OPERATION_ROLES,
+  view_executive_dashboard: ['CEO', 'Admin'],
+  view_revenue: OPERATION_ROLES,
   view_cashflow: OPERATION_ROLES,
   view_pnl: FULL_FINANCE_ROLES,
   view_balance: FULL_FINANCE_ROLES,
@@ -89,6 +99,12 @@ export const PERMISSION_MATRIX: Record<Permission, AppRole[]> = {
   view_master_data: FULL_FINANCE_ROLES,
   view_debt: FULL_FINANCE_ROLES,
   view_close_history: FULL_FINANCE_ROLES,
+  view_tasks: OPERATION_ROLES,
+  view_payroll: FULL_FINANCE_ROLES,
+  view_management_reports: FULL_FINANCE_ROLES,
+  view_documents: OPERATION_ROLES,
+  report_close_preview: FULL_FINANCE_ROLES,
+  report_close_confirm: ['CEO', 'Admin'],
   weekly_close_preview: FULL_FINANCE_ROLES,
   weekly_close_confirm: ['CEO', 'Admin']
 };
@@ -96,6 +112,10 @@ export const PERMISSION_MATRIX: Record<Permission, AppRole[]> = {
 export type RbacContext = {
   role: AppRole | null;
   actor: string;
+  username?: string;
+  email?: string;
+  branchScope?: string[];
+  provider?: string;
   rbacEnabled: boolean;
   source: 'auth' | 'header' | 'query' | 'cookie' | 'default' | 'disabled' | 'missing';
 };
@@ -123,19 +143,34 @@ export function getRolePermissionLabels(role: AppRole) {
   return Object.entries(PERMISSION_MATRIX).filter(([, roles]) => roles.includes(role)).map(([permission]) => permission);
 }
 
+function decodeHeaderValue(value: string | null) {
+  if (!value) return undefined;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function parseBranchScope(value: string | null) {
+  const decoded = decodeHeaderValue(value);
+  return decoded?.split(',').map((item) => item.trim()).filter(Boolean);
+}
+
 function authContextFromHeaders(getHeader: (name: string) => string | null, rbacEnabled: boolean): RbacContext | null {
   const role = normalizeRole(getHeader('x-ctl-auth-role'));
   if (!role) return null;
-  const actorHeader = getHeader('x-ctl-auth-actor');
-  let actor: string = role;
-  if (actorHeader) {
-    try {
-      actor = decodeURIComponent(actorHeader);
-    } catch {
-      actor = role;
-    }
-  }
-  return { role, actor, rbacEnabled, source: 'auth' };
+  const actor = decodeHeaderValue(getHeader('x-ctl-auth-actor')) ?? role;
+  return {
+    role,
+    actor,
+    username: decodeHeaderValue(getHeader('x-ctl-auth-username')),
+    email: decodeHeaderValue(getHeader('x-ctl-auth-email')),
+    branchScope: parseBranchScope(getHeader('x-ctl-auth-branch-scope')),
+    provider: decodeHeaderValue(getHeader('x-ctl-auth-provider')),
+    rbacEnabled,
+    source: 'auth'
+  };
 }
 
 function requestOverrideContext(request: NextRequest, rbacEnabled: boolean): RbacContext | null {
@@ -193,7 +228,7 @@ export function requireApiPermission(request: NextRequest, permission: Permissio
 }
 
 export function appendRbacMeta<T extends Record<string, unknown>>(payload: T, context: RbacContext) {
-  return { ...payload, rbac: { enabled: context.rbacEnabled, role: context.role, actor: context.actor, source: context.source } };
+  return { ...payload, rbac: { enabled: context.rbacEnabled, role: context.role, actor: context.actor, username: context.username, email: context.email, branchScope: context.branchScope, provider: context.provider, source: context.source } };
 }
 
 export function maskDashboardReportForRole(report: DashboardReport, role: AppRole | null): DashboardReport {
@@ -208,7 +243,43 @@ export function maskDashboardReportForRole(report: DashboardReport, role: AppRol
 }
 
 export const PAGE_PERMISSIONS: Record<string, Permission> = {
+  '/tong-quan-ke-toan': 'view_dashboard',
   '/tong-quan': 'view_dashboard',
+  '/tong-quan/ceo-cfo': 'view_executive_dashboard',
+  '/nhiem-vu-ke-toan': 'view_tasks',
+  '/nhiem-vu-ke-toan/viec-hom-nay': 'view_tasks',
+  '/nhiem-vu-ke-toan/viec-qua-han': 'view_tasks',
+  '/nhiem-vu-ke-toan/viec-cho-xac-nhan': 'view_tasks',
+  '/nhap-lieu/upload': 'view_import',
+  '/nhap-lieu/lich-su-import': 'view_import',
+  '/nhap-lieu/du-lieu-loi-thieu': 'view_data_control',
+  '/doanh-thu/tien-mat': 'view_revenue',
+  '/doanh-thu/chuyen-khoan': 'view_revenue',
+  '/doanh-thu/app-giao-hang': 'view_revenue',
+  '/kho-cua-hang/ton-kho': 'view_inventory',
+  '/kho-cua-hang/hang-huy-hu': 'view_waste',
+  '/kho-cua-hang/cong-thuc-dinh-muc': 'view_master_data',
+  '/kho-bep-trung-tam/nhap-ncc': 'view_btt_inventory',
+  '/kho-bep-trung-tam/san-xuat-cong-thuc': 'view_btt_inventory',
+  '/kho-bep-trung-tam/ton-kho-hao-hut': 'view_btt_inventory',
+  '/tai-chinh/tong-quan': 'view_cashflow',
+  '/tai-chinh/dong-tien': 'view_cashflow',
+  '/tai-chinh/can-doi': 'view_balance',
+  '/tai-chinh/du-toan': 'view_forecast',
+  '/luong-nhan-su/cham-cong': 'view_payroll',
+  '/luong-nhan-su/tam-ung-thuong-phat': 'view_payroll',
+  '/luong-nhan-su/bang-luong': 'view_payroll',
+  '/bao-cao-quan-tri': 'view_management_reports',
+  '/bao-cao-quan-tri/ngay': 'view_management_reports',
+  '/bao-cao-quan-tri/tuan': 'view_management_reports',
+  '/bao-cao-quan-tri/thang': 'view_management_reports',
+  '/tai-lieu/quy-trinh-checklist': 'view_documents',
+  '/tai-lieu/tinh-huong-phat-sinh': 'view_documents',
+  '/tai-lieu/bieu-mau-bao-cao-mau': 'view_documents',
+  '/he-thong/nguoi-dung-phan-quyen': 'view_settings',
+  '/he-thong/cua-hang-kho': 'view_settings',
+  '/he-thong/danh-muc-nen': 'view_settings',
+  '/he-thong/rule-formula-sheet-map': 'view_settings',
   '/pl-tuan': 'view_pnl',
   '/dong-tien': 'view_cashflow',
   '/chi-phi-dong-tien': 'view_cashflow',

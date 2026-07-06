@@ -9,5 +9,6 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const next = typeof params?.next === 'string' && params.next.startsWith('/') ? params.next : '/tong-quan';
-  return <LoginForm nextPath={next} />;
+  const error = typeof params?.error === 'string' ? params.error : undefined;
+  return <LoginForm nextPath={next} initialMessage={error} />;
 }

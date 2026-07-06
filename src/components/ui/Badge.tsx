@@ -4,7 +4,8 @@ const variants = {
   good: 'border-emerald-200 bg-emerald-50 text-emerald-800 before:bg-lang-green',
   warning: 'border-amber-200 bg-amber-50 text-amber-900 before:bg-lang-yellow',
   danger: 'border-red-200 bg-red-50 text-red-800 before:bg-red-600',
-  neutral: 'border-lang-line bg-lang-mist/80 text-lang-muted before:bg-lang-muted'
+  // C-balance: neutral từ mist kem → toolbar trung tính ấm, đỡ đơn tông vàng
+  neutral: 'border-lang-line bg-lang-toolbar text-lang-muted before:bg-lang-muted'
 };
 
 export function Badge({ children, variant = 'neutral' }: { children: React.ReactNode; variant?: keyof typeof variants }) {

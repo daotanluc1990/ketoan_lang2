@@ -14,8 +14,12 @@ function text(value: unknown) {
   return String(value ?? '').trim();
 }
 
+function isRolledBack(row: Record<string, unknown>) {
+  return normalized(row['Trạng thái dữ liệu'] ?? row['trang_thai_dong']) === 'DA_HOAN_TAC';
+}
+
 function normalized(value: unknown) {
-  return text(value).toUpperCase().replace(/\s+/g, '_');
+  return text(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, '_');
 }
 
 function addKey(keys: Set<string>, parts: unknown[]) {
@@ -46,6 +50,7 @@ function addHash(index: ExistingRowIndex, key: string, hash: string) {
 export function buildExistingRowIndex(existingRows: Record<string, unknown>[]): ExistingRowIndex {
   const index: ExistingRowIndex = { byKey: new Map<string, Set<string>>(), byHash: new Set<string>() };
   for (const row of existingRows) {
+    if (isRolledBack(row)) continue;
     const storedHash = text(row['Dấu vết dòng']);
     const computedHash = hasComparableBusinessData(row) ? createRowHash(row) : '';
     const keys = businessKeys(row, text(row['Mã dòng dữ liệu']));

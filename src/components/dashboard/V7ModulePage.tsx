@@ -18,7 +18,34 @@ function cell(row: Record<string, unknown>, keys: string[]) {
   }
   return '—';
 }
-function previewRows(rows: Record<string, unknown>[], headers: string[]) { return rows.slice(0, 8).map((row) => headers.map((header) => cell(row, [header]))); }
+
+function num(value: unknown) {
+  const parsed = Number(String(value ?? '').replace(/\s/g, '').replace(/đ|vnd/gi, '').replace(/,/g, '').replace(/%/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function money(value: number) {
+  return value ? value.toLocaleString('vi-VN') : '0';
+}
+
+function rowNumber(row: Record<string, unknown>, keys: string[]) {
+  const raw = cell(row, keys);
+  return raw === '—' ? null : num(raw);
+}
+
+function derivedCell(row: Record<string, unknown>, header: string) {
+  const direct = cell(row, [header]);
+  if (direct !== '—') return direct;
+  const current = rowNumber(row, ['Còn phải trả', 'Nợ cuối', 'Nợ cuối kỳ', 'Giá trị', 'Số tiền', 'Tồn thực tế', 'Thực nhận']);
+  const previous = rowNumber(row, ['Nợ cuối T24', 'Kỳ trước', 'Tuần trước', 'Tháng trước', 'Giá trị T24', 'Tồn TT kỳ trước']);
+  if (header === 'Chênh lệch' && current !== null && previous !== null) return money(current - previous);
+  if (header === '% thay đổi' && current !== null && previous !== null && previous !== 0) return `${(((current - previous) / Math.abs(previous)) * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 })}%`;
+  return '—';
+}
+
+function previewRows(rows: Record<string, unknown>[], headers: string[]) {
+  return rows.slice(0, 8).map((row) => headers.map((header) => derivedCell(row, header)));
+}
 
 function ActionLinks({ status }: { status: string }) {
   return <div className="flex flex-wrap gap-2"><Link href="/import-nhap-lieu" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-bold text-lang-ink shadow-sm hover:bg-gray-50"><FileInput className="h-3.5 w-3.5" />Import</Link><Link href="/cai-dat-bot" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-bold text-lang-ink shadow-sm hover:bg-gray-50"><Send className="h-3.5 w-3.5" />Bot</Link><Link href="/lich-su-chot-bao-cao" className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-lang-red px-2.5 text-[12px] font-bold text-white shadow-sm hover:bg-lang-redDark"><ShieldCheck className="h-3.5 w-3.5" />Chốt</Link><StatusBadge status={status} /></div>;

@@ -6,6 +6,7 @@ import {
   buildReportFilterOptions,
   filterRowsByReportFilters,
   hasActiveFilters,
+  isActiveDataRow,
   parseDateToUtc,
   type ReportFilterOptions,
   type ReportFilters,
@@ -131,9 +132,10 @@ function statusFromRatio(
 function validImportRows(rows: Record<string, unknown>[]) {
   return rows.filter(
     (row) =>
-      String(row["Mã dòng dữ liệu"] ?? "").trim() ||
-      String(row["Mã lần import"] ?? "").trim() ||
-      String(row["Tên file nguồn"] ?? "").trim(),
+      isActiveDataRow(row) &&
+      (String(row["Mã dòng dữ liệu"] ?? "").trim() ||
+        String(row["Mã lần import"] ?? "").trim() ||
+        String(row["Tên file nguồn"] ?? "").trim()),
   );
 }
 
@@ -344,6 +346,87 @@ async function safeRead(sheetName: string) {
   }
 }
 
+// Phase B: TÍNH tồn kho + thất thoát trực tiếp từ input (08/09) thay vì đọc CALC sheet.
+// CALC sheet trong Google Sheet chỉ có 1 formula dòng 2, không tự fill khi import thêm dòng
+// → luôn trả 0. Logic tính nằm trong code để test được và không phụ thuộc spreadsheet behavior.
+
+// Tổng hợp tồn kho từ 08 (cửa hàng) + 09 (BTT). Mỗi row input có ton_dau + các loại nhập/xuất.
+// Tồn cuối = tồn đầu + tổng nhập - tổng xuất - hủy. Trả object có keys tương thích với code downstream
+// (Giá trị tồn, Tồn kho) để inventoryValue / negativeStockCount hoạt động.
+function computeInventory(
+  storeRows: Record<string, unknown>[],
+  bttRows: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  for (const row of storeRows) {
+    const tonDau = pickNumber(row, ["ton_dau", "Tồn đầu", "Tồn đầu kỳ"]);
+    const nhapBtt = pickNumber(row, ["nhap_tu_btt", "Nhập từ BTT"]);
+    const nhapNcc = pickNumber(row, ["nhap_ncc", "Nhập NCC"]);
+    const xuatBan = pickNumber(row, ["so_luong_ban", "Số lượng bán", "Xuất"]);
+    const huy = pickNumber(row, ["huy_hop_le", "Hủy hợp lệ", "Hủy"]);
+    const donGia = pickNumber(row, ["don_gia_von", "Đơn giá vốn", "Giá vốn"]);
+    const tonCuoi = tonDau + nhapBtt + nhapNcc - xuatBan - huy;
+    out.push({
+      ...row,
+      "Chi nhánh": row["cua_hang"] ?? row["Chi nhánh"] ?? "NVT",
+      "Mã hàng": row["ma_hang"] ?? row["Mã hàng"],
+      "Tên hàng": row["ten_hang"] ?? row["Tên hàng"],
+      "Tồn kho": tonCuoi,
+      "Tồn đầu kỳ": tonDau,
+      "Tồn cuối kỳ": tonCuoi,
+      "Giá trị tồn": tonCuoi * donGia,
+      "Giá trị tồn kho": tonCuoi * donGia,
+      loai_kho: "CUA_HANG",
+    });
+  }
+  for (const row of bttRows) {
+    const tonDau = pickNumber(row, ["ton_dau", "Tồn đầu kỳ", "Tồn đầu"]);
+    const nhapNcc = pickNumber(row, ["nhap_ncc", "Nhập NCC"]);
+    const cheBienVao = pickNumber(row, ["san_xuat_so_che_dau_vao", "Sản xuất sơ chế đầu vào"]);
+    const cheBienRa = pickNumber(row, ["san_xuat_so_che_dau_ra", "Sản xuất sơ chế đầu ra"]);
+    const huy = pickNumber(row, ["huy_hop_le_btt", "Hủy hợp lệ", "Hủy"]);
+    const donGia = pickNumber(row, ["don_gia_von", "Đơn giá vốn", "Giá vốn"]);
+    // BTT: tồn cuối = đầu + nhập NCC + sơ chế đầu vào - sơ chế đầu ra - hủy
+    const tonCuoi = tonDau + nhapNcc + cheBienVao - cheBienRa - huy;
+    out.push({
+      ...row,
+      "Chi nhánh": "BTT",
+      "Mã hàng": row["ma_hang"] ?? row["Mã hàng"],
+      "Tên hàng": row["ten_hang"] ?? row["Tên hàng"],
+      "Tồn kho": tonCuoi,
+      "Tồn đầu kỳ": tonDau,
+      "Tồn cuối kỳ": tonCuoi,
+      "Giá trị tồn": tonCuoi * donGia,
+      "Giá trị tồn kho": tonCuoi * donGia,
+      loai_kho: "BTT",
+    });
+  }
+  return out;
+}
+
+// Tổng hợp thất thoát từ inventory đã tính: chênh lệch giữa tồn kiểm kê thực tế và tồn lý thuyết,
+// nhân đơn giá → Giá trị chênh lệch. Code downstream đọc "Giá trị chênh lệch" và "Tỷ lệ thất thoát".
+function computeLoss(inventoryRows: Record<string, unknown>[]): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  for (const row of inventoryRows) {
+    const tonThuc = pickNumber(row, ["kiem_ke_thuc_te", "Tồn thực tế", "Kiểm kê thực tế", "Tồn cuối kỳ", "Tồn kho"]);
+    const tonLyThuyet = pickNumber(row, ["Tồn kho", "Tồn cuối kỳ"]);
+    const chenhLech = tonThuc - tonLyThuyet;
+    const donGia = pickNumber(row, ["don_gia_von", "Đơn giá vốn", "Giá vốn"]);
+    const giaTriChenhLech = Math.abs(chenhLech) * donGia;
+    if (Math.abs(chenhLech) < 0.001 && giaTriChenhLech < 1) continue; // bỏ qua row không có chênh lệch
+    const tongGiaTri = Math.abs(tonLyThuyet * donGia);
+    out.push({
+      ...row,
+      "Chênh lệch số lượng": chenhLech,
+      "Giá trị chênh lệch": giaTriChenhLech,
+      "Tỷ lệ thất thoát": tongGiaTri > 0 ? giaTriChenhLech / tongGiaTri : 0,
+      "Đơn giá": donGia,
+    });
+  }
+  return out;
+}
+
 function emptyReport(
   filters: ReportFilters = {},
   filterOptions: ReportFilterOptions = {
@@ -423,6 +506,7 @@ function emptyReport(
         "Dữ liệu",
         "P&L Tuần",
         "Chưa đủ dữ liệu",
+        "—",
         "—",
         "—",
         "—",
@@ -533,19 +617,24 @@ export async function buildDashboardReport(
   const env = getServerEnv();
   const activeFilters = hasActiveFilters(filters);
   const [
+    configMasterRows,
+    dataBaoCaoCaRows,
     storeRevenueRaw,
     appRevenueRaw,
     cashbookRaw,
-    inventoryRaw,
-    lossRowsRaw,
+    storeInventoryInputRaw,
+    bttInventoryInputRaw,
     auditRows,
     importHistory,
   ] = await Promise.all([
+    safeRead(SHEET_NAMES.CONFIG_MASTER),
+    safeRead(SHEET_NAMES.DATA_BAO_CAO_CA),
     safeRead(SHEET_NAMES.DL_DOANH_THU_CUA_HANG),
     safeRead(SHEET_NAMES.DL_DOANH_THU_APP),
     safeRead(SHEET_NAMES.DL_SO_QUY),
-    safeRead(SHEET_NAMES.DL_TON_KHO),
-    safeRead(SHEET_NAMES.DL_THAT_THOAT_NVL),
+    // Phase B: đọc input trực tiếp thay vì CALC sheet
+    safeRead(SHEET_NAMES.DL_XNT_CUA_HANG),
+    safeRead(SHEET_NAMES.DL_XNT_BEP_TRUNG_TAM),
     safeRead(SHEET_NAMES.AUDIT_LOG),
     safeRead(SHEET_NAMES.IMPORT_LICH_SU),
   ]);
@@ -553,10 +642,24 @@ export async function buildDashboardReport(
   const storeRevenueAll = validImportRows(storeRevenueRaw);
   const appRevenueAll = validImportRows(appRevenueRaw);
   const cashbookAll = validImportRows(cashbookRaw);
-  const inventoryAll = validImportRows(inventoryRaw);
-  const lossRowsAll = validImportRows(lossRowsRaw);
+  // Phase B: tính inventory/loss từ input thay vì đọc CALC rỗng
+  const storeInventoryRaw = validImportRows(storeInventoryInputRaw);
+  const bttInventoryRaw = validImportRows(bttInventoryInputRaw);
+  const inventoryAll = computeInventory(storeInventoryRaw, bttInventoryRaw);
+  const lossRowsAll = computeLoss(inventoryAll);
+  const dataBaoCaoCaAll = dataBaoCaoCaRows.filter(isActiveDataRow);
 
   const rawGroups = [
+    {
+      sheetName: SHEET_NAMES.CONFIG_MASTER,
+      label: "Cấu hình master",
+      rows: configMasterRows.filter(isActiveDataRow),
+    },
+    {
+      sheetName: SHEET_NAMES.DATA_BAO_CAO_CA,
+      label: "Báo cáo ca KiotViet",
+      rows: dataBaoCaoCaAll,
+    },
     {
       sheetName: SHEET_NAMES.DL_DOANH_THU_CUA_HANG,
       label: "Doanh thu cửa hàng",
@@ -788,12 +891,14 @@ export async function buildDashboardReport(
       "—",
       "—",
       "—",
+      "—",
       storeRevenue.length ? "Tốt" : "Chưa đủ dữ liệu",
     ],
     [
       "Doanh thu",
       "Doanh thu app net",
       formatMoney(appNet),
+      "—",
       "—",
       "—",
       "—",
@@ -806,6 +911,7 @@ export async function buildDashboardReport(
       "—",
       "—",
       formatPercent(revenue ? appCogs / revenue : 0),
+      "—",
       appCogs ? "Cần kiểm" : "Chưa đủ dữ liệu",
     ],
     [
@@ -815,12 +921,14 @@ export async function buildDashboardReport(
       "—",
       "—",
       formatPercent(revenue ? lossValue / revenue : 0),
+      "—",
       lossValue ? "Cảnh báo" : "Chưa đủ dữ liệu",
     ],
     [
       "Tỷ lệ",
       "App fee%",
       formatPercent(appFeePercent),
+      "—",
       "—",
       "—",
       "—",
@@ -836,6 +944,7 @@ export async function buildDashboardReport(
       "Tỷ lệ",
       "COGS tạm tính",
       formatPercent(cogsPercent),
+      "—",
       "—",
       "—",
       "—",
@@ -856,6 +965,8 @@ export async function buildDashboardReport(
       formatMoney(cashIn),
       "—",
       "—",
+      "—",
+      "—",
       cashbook.length ? "Đã đối chiếu" : "Chưa đối chiếu",
       "Đọc từ DL_SO_QUY",
     ],
@@ -863,6 +974,8 @@ export async function buildDashboardReport(
       "Sổ quỹ",
       "Tổng tiền ra",
       formatMoney(cashOut),
+      "—",
+      "—",
       "—",
       "—",
       cashbook.length ? "Đã đối chiếu" : "Chưa đối chiếu",
@@ -874,6 +987,8 @@ export async function buildDashboardReport(
       formatMoney(cashEnding),
       "—",
       "—",
+      "—",
+      "—",
       cashbook.length ? "Đã đối chiếu" : "Chưa đối chiếu",
       "Thu - chi",
     ],
@@ -883,6 +998,8 @@ export async function buildDashboardReport(
       formatMoney(cashbookRevenueIn),
       "—",
       "—",
+      "—",
+      "—",
       cashbookRevenueIn ? "Cần đối chiếu" : "Chưa đủ dữ liệu",
       "Đối chiếu với doanh thu app/cửa hàng",
     ],
@@ -890,6 +1007,8 @@ export async function buildDashboardReport(
       "Sổ quỹ",
       "Khoản chi lớn nhất",
       formatMoney(biggestCashOut),
+      "—",
+      "—",
       "—",
       "—",
       biggestCashOut ? "Cần đối chiếu" : "Chưa đủ dữ liệu",

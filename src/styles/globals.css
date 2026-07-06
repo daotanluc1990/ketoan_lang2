@@ -4,17 +4,17 @@
 
 :root {
   color-scheme: light;
-  --background: #f5f7fa;
-  --foreground: #172033;
-  --brand-red: #a61919;
-  --brand-red-dark: #6f1515;
+  --background: #f6f3ee;
+  --foreground: #231a16;
+  --brand-red: #8f1d1d;
+  --brand-red-dark: #641414;
   --brand-red-deep: #3f0d0d;
-  --brand-line: #d8e0ea;
-  --surface: #ffffff;
-  --surface-muted: #ffffff;
-  --table-header: #eef2f7;
-  --muted: #64748b;
-  --focus-ring: rgba(166, 25, 25, 0.24);
+  --brand-line: #eadfcf;
+  --surface: #fffdf8;
+  --surface-muted: #fff7e8;
+  --table-header: #fff3dd;
+  --muted: #6f6254;
+  --focus-ring: #8f1d1d;
 }
 
 html,
@@ -57,9 +57,11 @@ button:focus-visible,
 a:focus-visible,
 select:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+[role="button"]:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+  border-radius: 6px;
 }
 
 ::selection {
@@ -74,7 +76,7 @@ textarea:focus-visible {
 .glass-surface {
   background: var(--surface);
   border: 1px solid var(--brand-line);
-  box-shadow: 0 6px 18px rgba(45, 50, 35, 0.07);
+  box-shadow: 0 6px 18px rgba(80, 50, 20, 0.06);
 }
 
 .number {
@@ -84,7 +86,7 @@ textarea:focus-visible {
 .sidebar-scroll,
 .table-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.55) transparent;
+  scrollbar-color: rgba(111, 98, 84, 0.55) transparent;
 }
 
 .sidebar-scroll::-webkit-scrollbar,
@@ -100,7 +102,7 @@ textarea:focus-visible {
 
 .sidebar-scroll::-webkit-scrollbar-thumb,
 .table-scroll::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.48);
+  background: rgba(111, 98, 84, 0.48);
   border-radius: 999px;
 }
 
@@ -119,4 +121,14 @@ textarea:focus-visible {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* C3: density mode — compact thu gọn row/padding cho data worker */
+.density-compact .density-row td,
+.density-compact .density-row th {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.density-compact .density-cell-inner {
+  max-width: 220px !important;
 }

@@ -22,6 +22,90 @@ export type SheetsClient = {
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const MAX_HEADER_SCAN_ROWS = 10;
 
+// Google Sheet V7 dùng header snake_case (row_id, import_batch_id, ...) nhưng code expect
+// keys tiếng Việt theo GOOGLE_SHEETS_SCHEMA (Mã dòng dữ liệu, Mã lần import, ...).
+// Map này dịch header thật → key schema Việt khi readRows() build row object,
+// để toàn bộ code downstream (report-aggregator, parsers, validImportRows) hoạt động.
+const COLUMN_ALIASES: Record<string, string> = {
+  row_id: 'Mã dòng dữ liệu',
+  import_batch_id: 'Mã lần import',
+  imported_at: 'Ngày import',
+  imported_by: 'Người import',
+  trang_thai_dong: 'Trạng thái dữ liệu',
+  nguon_file: 'Tên file nguồn',
+  dau_vet_file: 'Dấu vết file',
+  dau_vet_dong: 'Dấu vết dòng',
+  ky_bao_cao: 'Mã tuần',
+  ngay: 'Ngày',
+  ngay_kiem_ke: 'Ngày kiểm kê',
+  cua_hang: 'Chi nhánh',
+  ca_ban: 'Ca bán',
+  kenh_ban: 'Kênh bán',
+  ma_mon: 'Mã món',
+  ten_mon: 'Tên món',
+  ma_phieu: 'Mã phiếu',
+  loai_giao_dich: 'Loại giao dịch',
+  nhom_thu_chi: 'Nhóm thu/chi',
+  noi_dung: 'Diễn giải',
+  so_tien_thu: 'Số tiền',
+  so_tien_chi: 'Giá trị',
+  phuong_thuc: 'Phương thức',
+  so_du_sau_giao_dich: 'Số dư sau giao dịch',
+  doi_tuong: 'Số dư sau giao dịch',
+  chung_tu: 'Chứng từ',
+  nguoi_duyet: 'Người tạo',
+  ma_hang: 'Mã hàng',
+  ten_hang: 'Tên hàng',
+  nhom_hang: 'Nhóm hàng',
+  don_vi_tinh: 'Đơn vị tính',
+  ton_kho: 'Tồn kho',
+  gia_tri_ton: 'Giá trị tồn',
+  trang_thai_ton_am: 'Trạng thái tồn âm',
+  dinh_muc_ton_toi_thieu: 'Định mức tồn tối thiểu',
+  dinh_muc_ton_toi_da: 'Định mức tồn tối đa',
+  // Doanh thu (additional, chưa có ở phần trên)
+  doanh_thu_gross: 'Doanh thu bán hàng thực',
+  doanh_thu_net: 'Doanh thu ròng',
+  giam_gia: 'Giảm giá',
+  phi_app: 'Tổng khấu trừ/phí',
+  hoan_huy: 'Hoàn/hủy',
+  tien_thuc_nhan: 'Tiền thực nhận',
+  so_luong_ban: 'Số lượng bán',
+  // NVL / định mức
+  don_gia_von: 'Đơn giá vốn',
+  gia_tri_vuot_dinh_muc: 'Giá trị vượt định mức',
+  gia_tri_that_thoat_ton_kho: 'Giá trị chênh lệch',
+  // Công nợ KiotViet
+  ma_doi_tuong: 'Mã nhà cung cấp',
+  no_dau_ky: 'Nợ đầu kỳ',
+  phat_sinh_tang: 'Ghi nợ',
+  phat_sinh_giam: 'Ghi có',
+  no_cuoi_ky: 'Nợ cuối kỳ',
+  // Lương/nhân sự
+  ky_luong: 'Kỳ lương',
+  nhan_vien: 'Nhân viên',
+  vai_tro: 'Vai trò',
+  so_cong: 'Số công',
+  gio_lam: 'Giờ làm',
+  di_tre: 'Đi trễ',
+  ca_gay: 'Ca gãy',
+  tam_ung: 'Tạm ứng',
+  thuong: 'Thưởng',
+  phat: 'Phạt',
+  phu_cap: 'Phụ cấp',
+  luong_tam_tinh: 'Lương tạm tính',
+  khau_tru: 'Khấu trừ',
+  thuc_nhan: 'Thực nhận',
+  trang_thai_duyet: 'Trạng thái duyệt',
+  ghi_chu: 'Ghi chú'
+};
+
+// Normalize 1 header cell → schema key Việt nếu có alias, ngược lại giữ nguyên.
+function normalizeColumnKey(rawHeader: string): string {
+  const key = String(rawHeader ?? '').trim();
+  return COLUMN_ALIASES[key] ?? key;
+}
+
 function getSchemaColumns(sheetName: string) {
   return GOOGLE_SHEETS_SCHEMA.find((sheet) => sheet.sheetName === sheetName)?.columns ?? [];
 }
@@ -136,7 +220,9 @@ export function createSheetsClient(): SheetsClient {
     async readRows(sheetName) {
       const { values } = await readSheetValues(sheetName);
       const detected = detectHeader(values, sheetName);
-      const header = detected.header.length ? detected.header : getSchemaColumns(sheetName);
+      const rawHeader = detected.header.length ? detected.header : getSchemaColumns(sheetName);
+      // Normalize snake_case → schema Việt để code downstream tìm thấy keys.
+      const header = rawHeader.map(normalizeColumnKey);
       const dataStartIndex = detected.index >= 0 ? detected.index + 1 : 1;
       return values.slice(dataStartIndex).filter(rowHasContent).map((row: unknown[]) => {
         const obj: Record<string, unknown> = {};

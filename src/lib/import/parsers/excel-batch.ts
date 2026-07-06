@@ -25,6 +25,7 @@ export type BatchImportPreview = {
 };
 
 function buildBlockedPreview(parsed: ParsedExcelImport, dauVetFile: string, warnings: string[]): ImportPreviewResult {
+  const messages = warnings.length ? warnings : ['File không có dòng dữ liệu hợp lệ để preview.'];
   return {
     maLanImport: `IMP-${Date.now()}`,
     loaiDuLieu: parsed.loaiDuLieu || 'Không nhận diện được',
@@ -32,6 +33,23 @@ function buildBlockedPreview(parsed: ParsedExcelImport, dauVetFile: string, warn
     tenFile: parsed.tenFile,
     dauVetFile,
     rows: parsed.rows,
+    errorDetails: parsed.rows.length ? parsed.rows.flatMap((row) => (row.errors?.length ? row.errors : messages).map((message) => ({
+      maDongDuLieu: row.maDongDuLieu,
+      sheetDich: row.sheetDich,
+      rowRef: String(row.data['Dấu vết dòng'] ?? row.data['Tên file nguồn'] ?? parsed.tenFile),
+      column: 'File',
+      value: parsed.tenFile,
+      message,
+      status: 'Dòng lỗi' as const
+    }))) : messages.map((message) => ({
+      maDongDuLieu: `FILE-${parsed.tenFile}`,
+      sheetDich: '',
+      rowRef: parsed.tenFile,
+      column: 'File',
+      value: parsed.tenFile,
+      message,
+      status: 'Dòng lỗi' as const
+    })),
     summary: { dongMoi: 0, duLieuTrung: 0, duLieuLech: 0, dongLoi: Math.max(1, parsed.rows.length) }
   };
 }

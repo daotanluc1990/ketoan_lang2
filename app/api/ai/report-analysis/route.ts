@@ -11,7 +11,9 @@ export async function POST(request: NextRequest) {
   if (!rbac.ok) return rbac.response;
   try {
     const url = new URL(request.url);
-    const data = await analyzeReportWithAi(parseReportFilters(url.searchParams));
+    const body = await request.json().catch(() => ({}));
+    const question = body && typeof body === 'object' && typeof (body as { question?: unknown }).question === 'string' ? (body as { question: string }).question : '';
+    const data = await analyzeReportWithAi(parseReportFilters(url.searchParams), question);
     return NextResponse.json(appendRbacMeta({ ok: true, data }, rbac.context));
   } catch (error) {
     return NextResponse.json({ ok: false, error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? error.message : 'AI Agent không phân tích được.' } }, { status: 500 });

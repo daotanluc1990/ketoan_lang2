@@ -1,7 +1,5 @@
 import { PageHeader } from '@/components/layout/PageHeader';
-import { AccountingOverviewCompactPage } from '@/components/dashboard/AccountingOverviewCompactPage';
-import { buildDashboardReport } from '@/lib/reports/report-aggregator';
-import { parsePageReportFilters } from '@/lib/reports/report-filters';
+import { OptionCOverviewPage } from '@/components/option-c/OptionCOverviewPage';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,18 +8,10 @@ type PageProps = {
 };
 
 export default async function TongQuanPage({ searchParams }: PageProps) {
-  const filters = await parsePageReportFilters(searchParams);
-  const report = await buildDashboardReport(filters);
-  const status = report.hasRealData
-    ? report.missingSources.length
-      ? 'Cần đối chiếu'
-      : 'Tốt'
-    : 'Chưa đủ dữ liệu';
-
   return (
     <div className="space-y-2.5">
-      <PageHeader title="Tổng quan kế toán" status={status} />
-      <AccountingOverviewCompactPage report={report} />
+      <PageHeader title="Tổng quan kế toán" />
+      <OptionCOverviewPage searchParams={searchParams} />
     </div>
   );
 }

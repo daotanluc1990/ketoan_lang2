@@ -225,6 +225,7 @@ export function parseCashbookFile(input: ExcelFileInput): ParsedExcelImport {
     const ngay = toDateString(row['Thời gian']);
     const loaiThuChi = String(row['Loại thu chi'] ?? row['Diễn giải'] ?? row['Nội dung'] ?? '');
     const giaTri = toNumber(row['Giá trị']);
+    const maPhieu = String(row['Mã phiếu'] ?? row['Số phiếu'] ?? '').trim();
     const data = withSource({
       'Ngày': ngay,
       'Năm': getYear(ngay),
@@ -232,15 +233,17 @@ export function parseCashbookFile(input: ExcelFileInput): ParsedExcelImport {
       'Tuần': getWeekCode(ngay).split('-W')[1] ?? '',
       'Mã tuần': getWeekCode(ngay),
       'Chi nhánh': inferCashbookBranch(row, loaiThuChi),
+      'Mã phiếu': maPhieu,
       'Loại giao dịch': giaTri >= 0 ? 'Thu' : 'Chi',
       'Nhóm thu/chi': inferExpenseGroup(loaiThuChi),
       'Diễn giải': loaiThuChi,
       'Số tiền': giaTri,
-      'Phương thức': '',
+      'Giá trị': giaTri,
+      'Phương thức': row['Loại sổ quỹ'] ?? row['Phương thức'] ?? row['Hình thức thanh toán'] ?? '',
       'Số dư sau giao dịch': '',
-      'Người tạo': row['Người tạo'] ?? row['Người nộp/nhận'] ?? ''
+      'Người tạo': row['Người dùng tạo'] ?? row['Người tạo'] ?? row['Người nộp/nhận'] ?? ''
     }, input.filename, idx + 2);
-    return makeImportRow(SHEET_NAMES.DL_SO_QUY, [String(row['Mã phiếu'] ?? ''), ngay, giaTri], data, row['Mã phiếu'] ? [] : ['Thiếu mã phiếu']);
+    return makeImportRow(SHEET_NAMES.DL_SO_QUY, [maPhieu, ngay, giaTri], data, maPhieu ? [] : ['Thiếu mã phiếu']);
   });
   return { tenFile: input.filename, loaiDuLieu: 'Sổ quỹ', chiNhanh: 'NVT', rows: parsedRows, warnings: [] };
 }

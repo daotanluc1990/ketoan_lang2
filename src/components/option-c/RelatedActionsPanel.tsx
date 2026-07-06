@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
-import { Bot, BookOpen, ChevronDown, ExternalLink } from 'lucide-react';
+import { BookOpen, ChevronDown, ExternalLink } from 'lucide-react';
 
 export function RelatedActionsPanel({ docs }: { docs: string[] }) {
   const [open, setOpen] = useState(false);
@@ -26,13 +26,6 @@ export function RelatedActionsPanel({ docs }: { docs: string[] }) {
         Tài liệu liên quan
         <ChevronDown className={clsx('h-4 w-4 shrink-0 text-lang-muted transition-transform', open && 'rotate-180')} />
       </button>
-      <Link
-        href="/tai-lieu/tinh-huong-phat-sinh"
-        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-3 text-[12px] font-extrabold text-lang-ink transition hover:border-lang-red/25 hover:bg-lang-redSoft/65 hover:text-lang-redDark"
-      >
-        <Bot className="h-4 w-4 text-lang-red" />
-        Hỏi AI
-      </Link>
 
       {open ? (
         <div className="absolute right-0 top-[42px] w-[min(320px,calc(100vw-32px))] rounded-lg border border-lang-line bg-white p-2 shadow-card">
@@ -49,7 +42,7 @@ export function RelatedActionsPanel({ docs }: { docs: string[] }) {
               <BookOpen className="h-3.5 w-3.5" /> Mở tài liệu
             </Link>
             <Link href="/tai-lieu/tinh-huong-phat-sinh" className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-lang-line bg-white px-3 text-[12px] font-extrabold text-lang-ink hover:bg-lang-mist">
-              <Bot className="h-3.5 w-3.5 text-lang-red" /> Hỏi AI
+              Tình huống
             </Link>
           </div>
         </div>

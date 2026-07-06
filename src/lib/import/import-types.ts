@@ -9,6 +9,16 @@ export type ImportRow = {
   errors?: string[];
 };
 
+export type ImportErrorDetail = {
+  maDongDuLieu: string;
+  sheetDich: string;
+  rowRef: string;
+  column: string;
+  value: string;
+  message: string;
+  status: ImportRowStatus;
+};
+
 export type ImportPreviewResult = {
   maLanImport: string;
   loaiDuLieu: string;
@@ -16,6 +26,7 @@ export type ImportPreviewResult = {
   tenFile: string;
   dauVetFile: string;
   rows: ImportRow[];
+  errorDetails?: ImportErrorDetail[];
   summary: {
     dongMoi: number;
     duLieuTrung: number;

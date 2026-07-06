@@ -25,10 +25,26 @@ const statusMap: Record<string, { label: string; variant: Status }> = {
   'Nguy hiểm': { label: 'Nguy hiểm', variant: 'danger' },
   'Chưa thể chốt': { label: 'Chưa thể chốt', variant: 'danger' },
   'Không import': { label: 'Không import', variant: 'danger' },
-  Không: { label: 'Không', variant: 'danger' }
+  Không: { label: 'Không', variant: 'danger' },
+  Xanh: { label: 'Xanh', variant: 'good' },
+  Vàng: { label: 'Vàng', variant: 'warning' },
+  Cam: { label: 'Cam', variant: 'warning' },
+  Đỏ: { label: 'Đỏ', variant: 'danger' },
+  'ĐỦ ĐIỀU KIỆN CHỐT': { label: 'Đủ điều kiện chốt', variant: 'good' },
+  'CHƯA ĐỦ ĐIỀU KIỆN CHỐT': { label: 'Chưa đủ điều kiện chốt', variant: 'danger' },
+  'ĐÃ CHỐT ĐỦ DỮ LIỆU': { label: 'Đã chốt đủ dữ liệu', variant: 'good' },
+  'ĐÃ CHỐT CÓ NGOẠI LỆ': { label: 'Đã chốt có ngoại lệ', variant: 'warning' },
+  'Chốt có ngoại lệ': { label: 'Chốt có ngoại lệ', variant: 'warning' },
+  'Quá hạn': { label: 'Quá hạn', variant: 'danger' },
+  'Chờ xác nhận': { label: 'Chờ xác nhận', variant: 'warning' },
+  'Hoàn thành': { label: 'Hoàn thành', variant: 'good' },
+  'Chưa xử lý': { label: 'Chưa xử lý', variant: 'warning' }
 };
 
 export function StatusBadge({ status }: { status: Status | string }) {
   const item = statusMap[status] ?? { label: status, variant: 'neutral' as Status };
   return <Badge variant={item.variant}>{item.label}</Badge>;
 }
+
+// C5.2: export keys để ReportTable dùng chung, không duplicate Set(statusWords)
+export const STATUS_WORDS: ReadonlySet<string> = new Set(Object.keys(statusMap));

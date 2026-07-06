@@ -36,18 +36,47 @@ type RollbackInput = {
   confirm?: boolean;
 };
 
+function normalizeStatus(value: unknown) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 async function findRowsByImportId(maLanImport: string) {
   const store = getDataStore();
   const results = [];
   for (const sheetName of ROLLBACK_SOURCE_SHEETS) {
     const rows = await store.read(sheetName).catch(() => [] as Record<string, unknown>[]);
     const matchingRows = rows.filter((row) => String(row['Mã lần import'] ?? '') === maLanImport);
-    const activeRows = matchingRows.filter((row) => String(row['Trạng thái dữ liệu'] ?? '') !== 'Đã hoàn tác');
+    const activeRows = matchingRows.filter((row) => normalizeStatus(row['Trạng thái dữ liệu'] ?? row['trang_thai_dong']) !== 'da-hoan-tac');
     if (matchingRows.length) {
       results.push({ sheetName, matchedRows: matchingRows.length, activeRows: activeRows.length });
     }
   }
   return results;
+}
+
+async function safeWriteRollbackAudit(input: Parameters<typeof writeAuditLog>[0]) {
+  try {
+    await writeAuditLog(input);
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : 'Không ghi được audit log.';
+  }
+}
+
+async function safeAppendRollbackHistory(row: Record<string, unknown>) {
+  try {
+    await getDataStore().append(SHEET_NAMES.IMPORT_LICH_SU, [row]);
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : 'Không ghi được lịch sử import.';
+  }
 }
 
 export async function rollbackImport(input: RollbackInput) {
@@ -56,7 +85,7 @@ export async function rollbackImport(input: RollbackInput) {
   const affectedRows = preview.reduce((total, item) => total + item.activeRows, 0);
 
   if (!input.confirm) {
-    await writeAuditLog({
+    const auditWarning = await safeWriteRollbackAudit({
       eventType: AUDIT_EVENTS.IMPORT_ROLLBACK,
       actor: input.actor,
       target: input.maLanImport,
@@ -69,6 +98,7 @@ export async function rollbackImport(input: RollbackInput) {
       maLanImport: input.maLanImport,
       affectedRows,
       sheets: preview,
+      warnings: auditWarning ? [auditWarning] : [],
       message: affectedRows ? 'Đây là bản xem trước hoàn tác. Chưa đổi dữ liệu. Gửi confirm=true nếu CEO/Admin duyệt.' : 'Không tìm thấy dòng dữ liệu còn hiệu lực để hoàn tác.'
     };
   }
@@ -78,50 +108,67 @@ export async function rollbackImport(input: RollbackInput) {
   }
 
   const updates = [];
+  const updateErrors: Array<{ sheetName: string; message: string }> = [];
   for (const item of preview) {
     if (!item.activeRows) continue;
-    updates.push(await store.markRowsByImportId({
-      sheetName: item.sheetName,
-      maLanImport: input.maLanImport,
-      actor: input.actor,
-      reason: input.reason
-    }));
+    try {
+      updates.push(await store.markRowsByImportId({
+        sheetName: item.sheetName,
+        maLanImport: input.maLanImport,
+        actor: input.actor,
+        reason: input.reason
+      }));
+    } catch (error) {
+      updateErrors.push({ sheetName: item.sheetName, message: error instanceof Error ? error.message : 'Không cập nhật được sheet.' });
+    }
   }
   const updatedRows = updates.reduce((total, item) => total + item.updatedRows, 0);
+  const afterPreview = await findRowsByImportId(input.maLanImport);
+  const remainingActiveRows = afterPreview.reduce((total, item) => total + item.activeRows, 0);
 
-  await store.append(SHEET_NAMES.IMPORT_LICH_SU, [
-    {
-      'Mã lần import': input.maLanImport,
-      'Ngày import': new Date().toISOString(),
-      'Người import': input.actor,
-      'Chi nhánh': 'Theo lần import gốc',
-      'Tuần': 'Theo lần import gốc',
-      'Số file': 0,
-      'Tổng dòng mới': -updatedRows,
-      'Tổng dòng trùng': 0,
-      'Tổng dòng lệch': 0,
-      'Tổng dòng lỗi': 0,
-      'Trạng thái': 'Đã hoàn tác',
-      'Ghi chú': `Hoàn tác mềm theo mã import. Lý do: ${input.reason}`
-    }
-  ]);
+  const historyWarning = await safeAppendRollbackHistory({
+    'Mã lần import': input.maLanImport,
+    'Ngày import': new Date().toISOString(),
+    'Người import': input.actor,
+    'Chi nhánh': 'Theo lần import gốc',
+    'Tuần': 'Theo lần import gốc',
+    'Số file': 0,
+    'Tổng dòng mới': -updatedRows,
+    'Tổng dòng trùng': 0,
+    'Tổng dòng lệch': 0,
+    'Tổng dòng lỗi': 0,
+    'Trạng thái': remainingActiveRows ? 'Hoàn tác một phần' : 'Đã hoàn tác',
+    'Ghi chú': `Hoàn tác mềm theo mã import. Lý do: ${input.reason}`
+  });
 
-  await writeAuditLog({
+  const auditWarning = await safeWriteRollbackAudit({
     eventType: AUDIT_EVENTS.IMPORT_ROLLBACK,
     actor: input.actor,
     target: input.maLanImport,
     note: `Rollback confirmed: ${input.reason}`,
     before: { affectedRows, sheets: preview },
-    after: { updatedRows, updates }
+    after: { updatedRows, remainingActiveRows, updates, updateErrors, historyWarning }
   });
 
+  const warnings = [
+    ...updateErrors.map((item) => `${item.sheetName}: ${item.message}`),
+    historyWarning,
+    auditWarning
+  ].filter(Boolean);
+
   return {
-    ok: true,
+    ok: remainingActiveRows === 0,
     mode: 'confirmed',
     maLanImport: input.maLanImport,
     affectedRows,
     updatedRows,
+    remainingActiveRows,
     sheets: updates,
-    message: updatedRows ? 'Đã hoàn tác mềm: đổi Trạng thái dữ liệu thành Đã hoàn tác. Không xóa cứng dòng dữ liệu.' : 'Không có dòng nào cần hoàn tác.'
+    warnings,
+    message: remainingActiveRows
+      ? `Đã hoàn tác một phần nhưng còn ${remainingActiveRows} dòng active. Kiểm tra cảnh báo chi tiết.`
+      : updatedRows
+        ? 'Đã hoàn tác mềm: đổi Trạng thái dữ liệu thành Đã hoàn tác. Không xóa cứng dòng dữ liệu.'
+        : 'Không có dòng nào cần hoàn tác hoặc lần import đã được hoàn tác trước đó.'
   };
 }

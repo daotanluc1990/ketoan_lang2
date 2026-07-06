@@ -1,8 +1,8 @@
-/* Executive Ledger Warm polish layer. Keep this file small: no global Tailwind class rewrites. */
+/* Accounting V3 warm operations polish layer. Keep this file small: no global Tailwind class rewrites. */
 
 .shadow-soft,
 .shadow-card {
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 22px rgba(80, 50, 20, 0.06);
 }
 
 .login-panel {

@@ -3,7 +3,7 @@ import { Card, CardTitle } from '@/components/ui/Card';
 import { ReportTable } from '@/components/report/ReportTable';
 import { StatusBadge } from '@/components/report/StatusBadge';
 import { RelatedActionsPanel } from './RelatedActionsPanel';
-import { KPI_DICTIONARY_CORE, type OptionCPage } from '@/lib/option-c/catalog';
+import { KPI_DICTIONARY_ALL, type OptionCPage } from '@/lib/option-c/catalog';
 import { buildModuleDashboardTable } from '@/lib/option-c/module-dashboard-tables';
 import { getSubtabDashboardSpec } from '@/lib/option-c/subtab-dashboard-spec';
 import { SHEET_NAMES } from '@/lib/google-sheets/sheet-names';
@@ -48,11 +48,10 @@ function formatDashboardValue(value: unknown, unit: string) {
 
 async function dashboardMetricMap() {
   const rows = await getDataStore().read(SHEET_NAMES.DASHBOARD_REPORT).catch(() => [] as Record<string, unknown>[]);
-  const map = new Map<string, { displayValue: string; status: string }>();
+  const map = new Map<string, { value: unknown; status: string }>();
   for (const row of rows) {
-    const unit = String(pick(row, ['don_vi', 'Đơn vị', 'unit']));
     const item = {
-      displayValue: formatDashboardValue(pick(row, ['gia_tri', 'Giá trị', 'value', 'so_lieu', 'Số liệu']), unit),
+      value: pick(row, ['gia_tri', 'Giá trị', 'value', 'so_lieu', 'Số liệu']),
       status: String(pick(row, ['muc_canh_bao', 'trang_thai', 'Trạng thái', 'Mức cảnh báo', 'status']) || 'Chưa đủ dữ liệu')
     };
     const code = String(pick(row, ['metric_key', 'metric_code', 'ma_chi_so', 'Mã KPI', 'Mã chỉ số', 'code'])).trim();
@@ -71,9 +70,11 @@ export async function OptionCModulePage({ page }: { page: OptionCPage }) {
     dashboardMetricMap()
   ]);
   const mainTable = buildModuleDashboardTable(page, rowsBySheet);
-  const kpis = KPI_DICTIONARY_CORE
-    .filter((kpi) => spec.kpiCodes.length ? spec.kpiCodes.includes(kpi.code) : page.kpiGroups.includes(kpi.group))
-    .slice(0, 8);
+  const kpiByCode = new Map(KPI_DICTIONARY_ALL.map((kpi) => [kpi.code, kpi]));
+  const kpis = (spec.kpiCodes.length
+    ? spec.kpiCodes.map((code) => kpiByCode.get(code)).filter((kpi): kpi is (typeof KPI_DICTIONARY_ALL)[number] => Boolean(kpi))
+    : KPI_DICTIONARY_ALL.filter((kpi) => page.kpiGroups.includes(kpi.group))
+  ).slice(0, 12);
   const missingSourceRows = readinessRows
     .filter((row) => row[1] !== 'Có dữ liệu')
     .map((row) => ['Đỏ', `Thiếu nguồn ${row[0]}`, 'Kế toán', 'Upload dữ liệu hoặc chốt có ngoại lệ']);
@@ -109,7 +110,7 @@ export async function OptionCModulePage({ page }: { page: OptionCPage }) {
               <div key={kpi.code} className="rounded-lg border border-lang-line bg-white p-3">
                 <p className="text-[12px] font-bold text-lang-muted">{kpi.name}</p>
                 <div className="mt-2 flex items-end justify-between gap-2">
-                  <p className="text-lg font-black text-lang-ink">{live?.displayValue ?? '—'}</p>
+                  <p className="text-lg font-black text-lang-ink">{live ? formatDashboardValue(live.value, kpi.unit) : '—'}</p>
                   <StatusBadge status={live?.status ?? 'Chưa đủ dữ liệu'} />
                 </div>
                 <p className="mt-1 line-clamp-2 text-[11px] font-semibold text-lang-muted">{kpi.unit} · {kpi.source}</p>
@@ -134,10 +135,7 @@ export async function OptionCModulePage({ page }: { page: OptionCPage }) {
         <Card>
           <div className="flex items-center justify-between">
             <CardTitle>Việc cần xử lý trong module</CardTitle>
-            <div className="flex items-center gap-2">
-              <span className="rounded-lg border border-lang-line bg-white px-2 py-1 text-[11px] font-black text-lang-muted">Hỏi AI nội bộ</span>
-              <StatusBadge status={missingSourceRows.length ? 'Đỏ' : actionRows.some((row) => row[0] === 'Cam' || row[0] === 'Cần đối chiếu') ? 'Cần đối chiếu' : 'Tốt'} />
-            </div>
+            <StatusBadge status={missingSourceRows.length ? 'Đỏ' : actionRows.some((row) => row[0] === 'Cam' || row[0] === 'Cần đối chiếu') ? 'Cần đối chiếu' : 'Tốt'} />
           </div>
           <div className="mt-2"><ReportTable headers={['Mức', 'Vấn đề / việc cần làm', 'Phụ trách', 'Hạn xử lý', 'Hành động / nguồn']} rows={actionRows} maxHeight="max-h-[300px]" /></div>
         </Card>

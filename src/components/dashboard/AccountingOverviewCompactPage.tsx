@@ -95,23 +95,23 @@ export function AccountingOverviewCompactPage({ report }: { report: DashboardRep
       <section className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-lang-muted"><span>Google Sheet</span><span>·</span><span>{rawTotal ? `${rawTotal} dòng nguồn` : 'Chưa có dữ liệu nguồn'}</span><span>·</span><StatusBadge status={status} /></div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/import-nhap-lieu" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-bold text-lang-ink shadow-sm hover:bg-gray-50"><FileInput className="h-3.5 w-3.5" />Import</Link>
-          <Link href="/cai-dat-bot" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-2.5 text-[12px] font-bold text-lang-ink shadow-sm hover:bg-gray-50"><Send className="h-3.5 w-3.5" />CEO/Bot</Link>
-          <Link href="/lich-su-chot-bao-cao" className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-lang-red px-2.5 text-[12px] font-bold text-white shadow-sm hover:bg-lang-redDark"><ShieldCheck className="h-3.5 w-3.5" />Chốt</Link>
+          <Link href="/import-nhap-lieu" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-3 text-[12px] font-bold text-lang-ink shadow-sm hover:bg-gray-50"><FileInput className="h-3.5 w-3.5" />Import</Link>
+          <Link href="/cai-dat-bot" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-lang-line bg-white px-3 text-[12px] font-bold text-lang-ink shadow-sm hover:bg-gray-50"><Send className="h-3.5 w-3.5" />CEO/Bot</Link>
+          <Link href="/lich-su-chot-bao-cao" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-lang-red px-3 text-[12px] font-bold text-white shadow-sm hover:bg-lang-redDark"><ShieldCheck className="h-3.5 w-3.5" />Chốt</Link>
+        </div>
+      </section>
+
+      <section className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_310px]">
+        <Card className="p-0"><div className="flex items-center justify-between border-b border-lang-line px-3 py-2"><CardTitle>Việc kế toán cần xử lý</CardTitle><StatusBadge status={status} /></div><div className="p-2"><ReportTable headers={['Ưu tiên', 'Mảng', 'Trạng thái', 'Bằng chứng', 'Hành động']} rows={workRows(report)} maxHeight="max-h-[260px]" /></div></Card>
+        <div className="space-y-2">
+          <Card><CardTitle>Top vấn đề</CardTitle><div className="mt-2 space-y-1.5">{topIssues(report, canClose).map((item) => { const Icon = item.icon; return <Link key={item.title} href={item.href} className="flex items-center justify-between gap-2 rounded-lg border border-lang-line p-2 hover:bg-gray-50"><div className="flex items-center gap-2"><Icon className="h-4 w-4 text-lang-red" /><div><p className="text-[12px] font-bold text-lang-ink">{item.title}</p><p className="text-[11px] text-lang-muted">{item.value}</p></div></div><StatusBadge status={item.status} /></Link>; })}</div></Card>
+          <Card><div className="flex items-center justify-between"><CardTitle>Độ đủ dữ liệu</CardTitle><span className="number text-base font-black text-lang-ink">{readiness}/100</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-lang-red" style={{ width: `${readiness}%` }} /></div><div className="mt-2"><ReportTable headers={['Mảng', 'Trạng thái', 'Bằng chứng']} rows={sourceRows(report)} maxHeight="max-h-[160px]" /></div></Card>
         </div>
       </section>
 
       <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">{kpiList(report).map((kpi) => <MiniKpi key={kpi.label} label={kpi.label} value={kpi.value} status={kpi.status} trend={kpi.trend} />)}</section>
 
       <section className="grid overflow-hidden rounded-lg border border-lang-line bg-white md:grid-cols-6">{issueStats(report).map(([label, value, tone], index) => <div key={label} className={`flex min-h-[46px] items-center justify-between border-lang-line px-3 py-2 ${index ? 'md:border-l' : ''} ${tone}`}><span className="text-[12px] font-semibold">{label}</span><span className="number text-lg font-black">{value}</span></div>)}</section>
-
-      <section className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_310px]">
-        <Card className="p-0"><div className="flex items-center justify-between border-b border-lang-line px-3 py-2"><CardTitle>Việc kế toán cần xử lý</CardTitle><StatusBadge status={status} /></div><div className="p-2"><ReportTable headers={['Ưu tiên', 'Mảng', 'Trạng thái', 'Bằng chứng', 'Hành động']} rows={workRows(report)} maxHeight="max-h-[230px]" /></div></Card>
-        <div className="space-y-2">
-          <Card><CardTitle>Top vấn đề</CardTitle><div className="mt-2 space-y-1.5">{topIssues(report, canClose).map((item) => { const Icon = item.icon; return <Link key={item.title} href={item.href} className="flex items-center justify-between gap-2 rounded-lg border border-lang-line p-2 hover:bg-gray-50"><div className="flex items-center gap-2"><Icon className="h-4 w-4 text-lang-red" /><div><p className="text-[12px] font-bold text-lang-ink">{item.title}</p><p className="text-[11px] text-lang-muted">{item.value}</p></div></div><StatusBadge status={item.status} /></Link>; })}</div></Card>
-          <Card><div className="flex items-center justify-between"><CardTitle>Độ đủ dữ liệu</CardTitle><span className="number text-base font-black text-lang-ink">{readiness}/100</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-lang-red" style={{ width: `${readiness}%` }} /></div><div className="mt-2"><ReportTable headers={['Mảng', 'Trạng thái', 'Bằng chứng']} rows={sourceRows(report)} maxHeight="max-h-[160px]" /></div></Card>
-        </div>
-      </section>
     </div>
   );
 }

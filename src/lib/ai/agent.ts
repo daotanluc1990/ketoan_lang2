@@ -390,6 +390,7 @@ async function callGemini(agentContent: string, userPrompt: string) {
 
 export async function analyzeReportWithAi(
   filters: ReportFilters = {},
+  question = "",
 ): Promise<AiAgentAnalysis> {
   const report = await buildDashboardReport(filters);
   const agent = await loadAiFinanceAgentInstructions();
@@ -402,7 +403,8 @@ export async function analyzeReportWithAi(
     return ruleBasedAnalysis(report, agent.source, provider);
   }
 
-  const userPrompt = `Dữ liệu báo cáo JSON:\n${JSON.stringify(report).slice(0, 24000)}\n\nHãy phân tích theo đúng file AI_FINANCE_AGENT.md. Trả JSON thuần, không markdown.`;
+  const trimmedQuestion = question.trim();
+  const userPrompt = `Dữ liệu báo cáo JSON:\n${JSON.stringify(report).slice(0, 24000)}\n\n${trimmedQuestion ? `Câu hỏi người dùng: ${trimmedQuestion}\n\n` : ""}Hãy phân tích theo đúng file AI_FINANCE_AGENT.md. Trả JSON thuần, không markdown.`;
 
   try {
     const content =

@@ -189,32 +189,204 @@ function normalizedValue(value: unknown) {
     .replace(/^-|-$/g, '');
 }
 
+function defaultRecipeRow(itemName: string, materialName: string, unit: string, standard: number, note = ''): DataRow {
+  const itemKey = normalizedValue(itemName);
+  const materialKey = normalizedValue(materialName);
+  return {
+    ma_cong_thuc: `${itemKey}__${materialKey}`,
+    ma_mon: itemKey,
+    ten_mon: itemName,
+    'Tên món': itemName,
+    ma_nvl: materialKey,
+    ten_nvl: materialName,
+    'Tên NVL': materialName,
+    dvt_nvl: unit,
+    'Đơn vị tính': unit,
+    dinh_muc_1_don_vi: standard,
+    'Định mức': standard,
+    hao_hut_hop_le_pct: 0,
+    'Hao hụt hợp lệ': 0,
+    kho_ap_dung: 'Kho cửa hàng',
+    kenh_ap_dung: 'Tất cả',
+    trang_thai: 'Đang dùng',
+    ghi_chu: note || 'Seed từ sheet CHẾ BIẾN - Báo cáo thất thoát NVL tuần'
+  };
+}
+
+const DEFAULT_RECIPE_ROWS: DataRow[] = [
+  ...['Trà tắc', 'Trà tắc quán', 'Trà tắc APP'].flatMap((item) => [
+    defaultRecipeRow(item, 'Trà lài', 'Kg', 0.0033, 'CÔNG THỨC TRÀ TẮC'),
+    defaultRecipeRow(item, 'Mật ong', 'Can', 0.0099478261, 'CÔNG THỨC TRÀ TẮC'),
+    defaultRecipeRow(item, 'Tắc trái', 'Kg', 0.04136, 'CÔNG THỨC TRÀ TẮC'),
+    defaultRecipeRow(item, 'Nước đường', 'Kg', 0.06336, 'CÔNG THỨC TRÀ TẮC'),
+    defaultRecipeRow(item, 'Ly 700ml', 'Cái', 1, 'CÔNG THỨC TRÀ TẮC')
+  ]),
+  ...['Chả', 'Chả trứng'].flatMap((item) => [
+    defaultRecipeRow(item, 'Mọc', 'Kg', 0.0097777778, 'CÔNG THỨC CHẢ TRỨNG: quy đổi theo 22.5 miếng/ổ'),
+    defaultRecipeRow(item, 'Nấm mèo', 'Kg', 0.0006666667, 'CÔNG THỨC CHẢ TRỨNG: quy đổi theo 22.5 miếng/ổ'),
+    defaultRecipeRow(item, 'Bún tàu', 'Kg', 0.0044444444, 'CÔNG THỨC CHẢ TRỨNG: quy đổi theo 22.5 miếng/ổ'),
+    defaultRecipeRow(item, 'Trứng gà', 'Cái', 0.7111111111, 'CÔNG THỨC CHẢ TRỨNG: quy đổi theo 22.5 miếng/ổ')
+  ]),
+  defaultRecipeRow('Canh rong biển', 'Rong biển', 'Kg', 0.003, 'CÔNG THỨC CANH RONG BIỂN'),
+  defaultRecipeRow('Canh rong biển', 'Thịt xay', 'Kg', 0.02, 'CÔNG THỨC CANH RONG BIỂN'),
+  defaultRecipeRow('Coca', 'Coca', 'Chai 1.5L', 0.1733333333, 'CÔNG THỨC COCA: 260ml/phần'),
+  defaultRecipeRow('Coca', 'Ly 700ml', 'Cái', 1, 'CÔNG THỨC COCA'),
+  defaultRecipeRow('Nấu cơm', 'Gạo', 'Kg', 0.125, 'CÔNG THỨC NẤU CƠM'),
+  defaultRecipeRow('Nướng sườn', 'Sườn', 'Kg', 0.135, 'NƯỚNG SƯỜN'),
+  defaultRecipeRow('Nướng sườn', 'Than', 'Kg', 0.035, 'NƯỚNG SƯỜN'),
+  defaultRecipeRow('Nướng sườn', 'Dầu ăn', 'Kg', 0.001, 'NƯỚNG SƯỜN')
+];
+
 function salesRecipeKey(row: DataRow) {
-  return normalizedValue(get(row, ['ma_mon', 'Mã món', 'Mã hàng', 'ten_mon', 'Tên món', 'Món']));
+  return normalizedValue(get(row, ['ma_mon', 'Mã món', 'Mã hàng', 'ten_mon', 'Tên món', 'Món', 'Món bán', 'Tên hàng']));
 }
 
-function recipeKey(row: DataRow) {
-  return normalizedValue(get(row, ['ma_mon', 'Mã món', 'ten_mon', 'Tên món']));
+function recipeKeys(row: DataRow) {
+  const keys = [
+    normalizedValue(get(row, ['ma_mon', 'Mã món'])),
+    normalizedValue(get(row, ['ten_mon', 'Tên món', 'Món bán']))
+  ].filter(Boolean);
+  const aliases = keys.flatMap((key) => key.startsWith('sp-') ? [key, key.slice(3)] : [key]);
+  return Array.from(new Set(aliases));
 }
 
-function buildTheoreticalIngredientRows(salesRows: DataRow[], recipeRows: DataRow[]) {
+function recipeMaterialKeys(row: DataRow) {
+  const keys = [
+    normalizedValue(get(row, ['ma_nvl', 'Mã NVL'])),
+    normalizedValue(get(row, ['ten_nvl', 'Tên NVL', 'Tên nguyên vật liệu']))
+  ].filter(Boolean);
+  const aliases = keys.flatMap((key) => {
+    const values = [key];
+    if (key.startsWith('nvl-')) values.push(key.slice(4));
+    if (key === 'tac-trai') values.push('tac');
+    if (key === 'tac') values.push('tac-trai');
+    return values;
+  });
+  return Array.from(new Set(aliases));
+}
+
+function mergeDefaultRecipes(recipeRows: DataRow[]) {
+  const seen = new Set(recipeRows.flatMap((row) => recipeKeys(row).flatMap((key) => recipeMaterialKeys(row).map((materialKey) => `${key}__${materialKey}`))));
+  const rows = [...recipeRows];
+  for (const row of DEFAULT_RECIPE_ROWS) {
+    const keys = recipeKeys(row).flatMap((key) => recipeMaterialKeys(row).map((materialKey) => `${key}__${materialKey}`));
+    if (!keys.some((key) => seen.has(key))) rows.push(row);
+  }
+  return rows;
+}
+
+function recipeRawUnit(row: DataRow) {
+  return asText(get(row, ['dvt_nvl', 'ĐVT', 'Đơn vị tính', 'don_vi_tinh']));
+}
+
+function recipeMaterialNameKey(row: DataRow) {
+  return normalizedValue(get(row, ['ten_nvl', 'Tên NVL', 'Tên nguyên vật liệu', 'ma_nvl', 'Mã NVL']));
+}
+
+function normalizedRecipeStandard(row: DataRow) {
+  const raw = numberFrom(row, ['dinh_muc_1_don_vi', 'Định mức', 'Định mức 1 đơn vị']);
+  const material = recipeMaterialNameKey(row);
+  const unit = normalizedValue(recipeRawUnit(row));
+  if (!raw) return 0;
+  if (material.includes('trung-ga')) return raw;
+  if (material.includes('mat-ong') && unit.includes('g')) return raw / 1000 / 2.3;
+  if (material === 'coca' && unit === 'ml') return raw / 1500;
+  if (unit === 'g' || unit === 'g-ml' || unit === 'g-cai' || unit === 'g-kg') return raw / 1000;
+  if (unit === 'ml') return raw / 1000;
+  return raw;
+}
+
+function normalizedRecipeUnit(row: DataRow) {
+  const material = recipeMaterialNameKey(row);
+  const unit = normalizedValue(recipeRawUnit(row));
+  if (material.includes('trung-ga')) return 'Cái';
+  if (material.includes('mat-ong') && unit.includes('g')) return 'Can';
+  if (material === 'coca' && unit === 'ml') return 'Chai 1.5L';
+  if (unit === 'g' || unit === 'g-ml' || unit === 'g-cai' || unit === 'g-kg') return 'Kg';
+  if (unit === 'ml') return 'L';
+  return recipeRawUnit(row) || '—';
+}
+
+function saleNumber(row: DataRow, keys: string[]) {
+  return keys.reduce((total, key) => total + numberFrom(row, [key]), 0);
+}
+
+function makeSaleRow(source: DataRow, itemName: string, sold: number, itemKey = normalizedValue(itemName)): DataRow {
+  return {
+    ...source,
+    ma_mon: itemKey,
+    ten_mon: itemName,
+    'Tên món': itemName,
+    so_luong_ban: sold,
+    'Số lượng bán': sold
+  };
+}
+
+function salesColumnRecipeKeys(column: string) {
+  const key = normalizedValue(column);
+  const keys = [key];
+  if (key.includes('tra-tac') && key.includes('quan')) keys.push('tra-tac-quan');
+  if (key.includes('tra-tac') && key.includes('app')) keys.push('tra-tac-app');
+  if (key.includes('tra-tac')) keys.push('tra-tac');
+  if (key.includes('canh-rong-bien')) keys.push('canh-rong-bien');
+  if (key.startsWith('coca')) keys.push('coca');
+  if (key.startsWith('cha')) keys.push('cha');
+  return Array.from(new Set(keys));
+}
+
+function salesColumnLabel(column: string, key: string) {
+  if (key === 'tra-tac-quan') return 'Trà tắc quán';
+  if (key === 'tra-tac-app') return 'Trà tắc APP';
+  if (key === 'tra-tac') return 'Trà tắc';
+  if (key === 'canh-rong-bien') return 'Canh rong biển';
+  if (key === 'coca') return 'Coca';
+  if (key === 'cha') return 'Chả';
+  return column;
+}
+
+function buildSalesRowsFromWideReport(salesRows: DataRow[], recipesByItem: Map<string, DataRow[]>) {
+  const rows: DataRow[] = [];
+  for (const sale of salesRows) {
+    const explicitSold = numberFrom(sale, ['so_luong_ban', 'Số lượng bán', 'Số lượng', 'Tổng số phần', 'Tổng phần']);
+    const explicitKey = salesRecipeKey(sale);
+    if (explicitSold && explicitKey) rows.push(makeSaleRow(sale, asText(get(sale, ['ten_mon', 'Tên món', 'Món', 'Món bán', 'Mã món'])) || explicitKey, explicitSold));
+
+    for (const [column, value] of Object.entries(sale)) {
+      const key = salesColumnRecipeKeys(column).find((candidate) => recipesByItem.has(candidate));
+      if (!key) continue;
+      const sold = toNumber(value);
+      if (sold) rows.push(makeSaleRow(sale, salesColumnLabel(column, key), sold, key));
+    }
+
+    const mealPortions = saleNumber(sale, ['Số hộp', 'Số dĩa', 'so_hop', 'so_dia']);
+    if (mealPortions) {
+      if (recipesByItem.has(normalizedValue('Nấu cơm'))) rows.push(makeSaleRow(sale, 'Nấu cơm', mealPortions));
+      if (recipesByItem.has(normalizedValue('Nướng sườn'))) rows.push(makeSaleRow(sale, 'Nướng sườn', mealPortions));
+    }
+  }
+  return rows;
+}
+
+export function buildTheoreticalIngredientRows(salesRows: DataRow[], recipeRows: DataRow[]) {
   const recipesByItem = new Map<string, DataRow[]>();
-  for (const recipe of recipeRows) {
+  for (const recipe of mergeDefaultRecipes(recipeRows)) {
     if (normalizedValue(get(recipe, ['trang_thai', 'Trạng thái'])).includes('ngung')) continue;
-    const key = recipeKey(recipe);
-    if (!key) continue;
-    const current = recipesByItem.get(key) ?? [];
-    current.push(recipe);
-    recipesByItem.set(key, current);
+    for (const key of recipeKeys(recipe)) {
+      if (!key) continue;
+      const current = recipesByItem.get(key) ?? [];
+      current.push(recipe);
+      recipesByItem.set(key, current);
+    }
   }
 
   const rows: DataRow[] = [];
-  for (const sale of salesRows) {
+  for (const sale of buildSalesRowsFromWideReport(salesRows, recipesByItem)) {
     const sold = numberFrom(sale, ['so_luong_ban', 'Số lượng bán', 'Số lượng', 'Tổng số phần', 'Tổng phần']);
     if (!sold) continue;
     const recipes = recipesByItem.get(salesRecipeKey(sale)) ?? [];
     for (const recipe of recipes) {
-      const standard = numberFrom(recipe, ['dinh_muc_1_don_vi', 'Định mức', 'Định mức 1 đơn vị']);
+      const standard = normalizedRecipeStandard(recipe);
+      const unit = normalizedRecipeUnit(recipe);
       const allowedLossPct = numberFrom(recipe, ['hao_hut_hop_le_pct', 'Hao hụt hợp lệ', 'Tỷ lệ hao hụt']);
       const allowed = sold * standard * (1 + (allowedLossPct > 1 ? allowedLossPct / 100 : allowedLossPct));
       rows.push({
@@ -223,8 +395,12 @@ function buildTheoreticalIngredientRows(salesRows: DataRow[], recipeRows: DataRo
         'Món': get(recipe, ['ten_mon', 'Tên món']) || get(sale, ['ten_mon', 'Tên món']),
         'NVL': get(recipe, ['ten_nvl', 'Tên NVL', 'Tên nguyên vật liệu']),
         'Tên nguyên vật liệu': get(recipe, ['ten_nvl', 'Tên NVL', 'Tên nguyên vật liệu']),
+        'ĐVT': unit,
+        'Đơn vị tính': unit,
         'Sản lượng': sold,
         'Định mức': standard,
+        'Định mức gốc': numberFrom(recipe, ['dinh_muc_1_don_vi', 'Định mức', 'Định mức 1 đơn vị']),
+        'ĐVT gốc': recipeRawUnit(recipe),
         'Hao hụt hợp lệ': allowedLossPct > 1 ? `${allowedLossPct}%` : `${allowedLossPct * 100}%`,
         'Được phép dùng': allowed,
         'Thực tế dùng': '',
@@ -251,8 +427,14 @@ async function readSources(store: Store, specs: Array<{ sheetName: string; label
 
 export async function buildStoreInventoryReport(): Promise<V7Report> {
   const store = getDataStore();
-  const sources = await readSources(store, [{ sheetName: SHEET_NAMES.DL_XNT_CUA_HANG, label: 'XNT cửa hàng' }]);
+  const sources = await readSources(store, [
+    { sheetName: SHEET_NAMES.DL_XNT_CUA_HANG, label: 'XNT cửa hàng' },
+    { sheetName: SHEET_NAMES.DATA_DOANH_THU, label: 'Số lượng bán Option C' },
+    { sheetName: SHEET_NAMES.OPTION_C_DM_CONG_THUC_DINH_MUC, label: 'Công thức/định mức Option C' },
+    { sheetName: SHEET_NAMES.DM_CONG_THUC_CHE_BIEN, label: 'Công thức chế biến legacy' }
+  ]);
   const rows = sources[0]?.rows ?? [];
+  const theoreticalRows = buildTheoreticalIngredientRows(sources[1]?.rows ?? [], [...(sources[2]?.rows ?? []), ...(sources[3]?.rows ?? [])]);
   const enrichedRows = rows.map((row) => ({
     ...row,
     ...inventoryLossFields(row),
@@ -269,14 +451,20 @@ export async function buildStoreInventoryReport(): Promise<V7Report> {
     status,
     metrics: [
       { label: 'Dòng XNT', value: formatNumber(rows.length), trend: 'DL_XNT_CUA_HANG', status: rows.length ? 'good' : 'neutral' },
+      { label: 'NVL suy ra từ bán', value: formatNumber(theoreticalRows.length), trend: 'Số bán x công thức', status: theoreticalRows.length ? 'good' : 'neutral' },
       { label: 'Giá trị lệch', value: formatMoney(varianceValue), trend: varianceValue ? 'Cần giải trình' : 'Không phát sinh', status: varianceValue ? 'warning' : 'good' },
       { label: 'Tồn âm / thiếu', value: formatNumber(negativeCount), trend: 'Mặt hàng cần kiểm', status: negativeCount ? 'danger' : 'good' },
       { label: 'Tổng giá trị đọc được', value: formatMoney(sumRows(rows, MONEY_KEYS)), trend: 'Theo các cột giá trị hiện có', status: rows.length ? 'good' : 'neutral' }
     ],
     primary: { title: 'Bảng XNT cửa hàng', headers, rows: tableRows(enrichedRows, headers, keys) },
-    secondary: topValueRows(rows, ['Tên hàng', 'Tên nguyên vật liệu', 'Mã hàng'], ['Giá trị lệch', 'Giá trị chênh lệch', 'Giá trị thất thoát'], 'Top NVL lệch lớn'),
+    secondary: theoreticalRows.length
+      ? topValueRows(theoreticalRows, ['NVL', 'Tên nguyên vật liệu', 'Món/Nhóm chế biến'], ['Được phép dùng'], 'NVL dùng từ số bán x định mức')
+      : topValueRows(rows, ['Tên hàng', 'Tên nguyên vật liệu', 'Mã hàng'], ['Giá trị lệch', 'Giá trị chênh lệch', 'Giá trị thất thoát'], 'Top NVL lệch lớn'),
     readiness: sourceReadiness(sources),
-    issues: missingIssues(sources, negativeCount ? [['2', 'Kho cửa hàng', 'Cảnh báo', 'Kiểm kê lại và yêu cầu giải trình tồn âm/thiếu']] : [])
+    issues: missingIssues(sources, [
+      ...(negativeCount ? [['2', 'Kho cửa hàng', 'Cảnh báo', 'Kiểm kê lại và yêu cầu giải trình tồn âm/thiếu']] : []),
+      ...(!theoreticalRows.length ? [['3', 'Công thức/định mức', 'Cần đối chiếu', 'Bổ sung số lượng bán và công thức để suy ra NVL dùng']] : [])
+    ])
   };
 }
 
@@ -291,8 +479,33 @@ export async function buildBttInventoryReport(): Promise<V7Report> {
   }));
   const varianceValue = sumRows(rows, ['Giá trị lệch', 'Giá trị chênh lệch', 'Giá trị thất thoát']);
   const warningCount = rows.filter((row) => Math.abs(numberFrom(row, ['Lệch', 'Chênh lệch'])) > 0 || rowStatus(row).toLowerCase().includes('cảnh báo')).length;
-  const headers = ['Ngày', 'Kho', 'Mã hàng', 'Tên hàng', 'Tồn đầu', 'Nhập NCC', 'Sản xuất/sơ chế', 'Xuất cửa hàng', 'Hủy BTT', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị thất thoát (VND)', 'Tỷ lệ TT (%)', 'Tồn TT kỳ trước', 'Chênh lệch', '% thay đổi', 'Trạng thái'];
-  const keys = Object.fromEntries(headers.map((header) => [header, [header]]));
+  const unconfirmedCount = rows.filter((row) => asText(get(row, ['Xác nhận CH', 'Trạng thái xác nhận', 'store_confirm_status'])).toLowerCase().includes('chưa')).length;
+  const headers = ['Ngày', 'Kho', 'Mã hàng', 'Tên hàng', 'ĐVT', 'Tồn đầu', 'Nhập NCC', 'Sản xuất/sơ chế', 'Xuất cửa hàng', 'Cửa hàng nhận', 'Xác nhận CH', 'Hủy BTT', 'Tồn lý thuyết', 'Tồn thực tế', 'Lệch', 'Giá trị thất thoát (VND)', 'Tỷ lệ TT (%)', 'Tồn TT kỳ trước', 'Chênh lệch', '% thay đổi', 'Trạng thái', 'Người xử lý', 'Hành động đề xuất'];
+  const keys = {
+    'Ngày': ['Ngày', 'ngay'],
+    'Kho': ['Kho', 'ma_kho', 'ma_kho_btt'],
+    'Mã hàng': ['Mã hàng', 'ma_hang', 'sku'],
+    'Tên hàng': ['Tên hàng', 'Tên nguyên vật liệu', 'ten_hang'],
+    'ĐVT': ['ĐVT', 'Đơn vị', 'dvt'],
+    'Tồn đầu': ['Tồn đầu', 'ton_dau'],
+    'Nhập NCC': ['Nhập NCC', 'nhap_ncc'],
+    'Sản xuất/sơ chế': ['Sản xuất/sơ chế', 'Sản xuất', 'Sơ chế', 'san_xuat_so_che'],
+    'Xuất cửa hàng': ['Xuất cửa hàng', 'Số lượng xuất', 'xuat_btt_cho_cua_hang'],
+    'Cửa hàng nhận': ['Cửa hàng nhận', 'Chi nhánh nhận', 'cua_hang_nhan'],
+    'Xác nhận CH': ['Xác nhận CH', 'Trạng thái xác nhận', 'store_confirm_status'],
+    'Hủy BTT': ['Hủy BTT', 'huy_btt', 'huy_hop_le_btt'],
+    'Tồn lý thuyết': ['Tồn lý thuyết', 'ton_ly_thuyet'],
+    'Tồn thực tế': ['Tồn thực tế', 'kiem_ke_thuc_te_btt', 'kiem_ke_thuc_te'],
+    'Lệch': ['Lệch', 'Chênh lệch', 'chenh_lech_ton'],
+    'Giá trị thất thoát (VND)': ['Giá trị thất thoát (VND)'],
+    'Tỷ lệ TT (%)': ['Tỷ lệ TT (%)'],
+    'Tồn TT kỳ trước': ['Tồn TT kỳ trước'],
+    'Chênh lệch': ['Chênh lệch'],
+    '% thay đổi': ['% thay đổi'],
+    'Trạng thái': ['Trạng thái', 'Đánh giá', 'Kết luận'],
+    'Người xử lý': ['Người xử lý', 'Người phụ trách', 'owner'],
+    'Hành động đề xuất': ['Hành động đề xuất', 'Hành động', 'action']
+  };
   return {
     title: 'Kho Bếp Trung Tâm',
     description: 'Engine thật đọc DL_XNT_BEP_TRUNG_TAM để tách BTT thành kho độc lập.',
@@ -301,12 +514,16 @@ export async function buildBttInventoryReport(): Promise<V7Report> {
       { label: 'Dòng XNT BTT', value: formatNumber(rows.length), trend: 'DL_XNT_BEP_TRUNG_TAM', status: rows.length ? 'good' : 'neutral' },
       { label: 'Nhập NCC', value: formatMoney(sumRows(rows, ['Nhập NCC', 'Giá trị nhập NCC'])), status: rows.length ? 'good' : 'neutral' },
       { label: 'Xuất cửa hàng', value: formatMoney(sumRows(rows, ['Xuất cửa hàng', 'Giá trị xuất cửa hàng'])), status: rows.length ? 'good' : 'neutral' },
-      { label: 'Giá trị lệch BTT', value: formatMoney(varianceValue), status: varianceValue ? 'warning' : 'good' }
+      { label: 'Giá trị lệch BTT', value: formatMoney(varianceValue), status: varianceValue ? 'warning' : 'good' },
+      { label: 'CH chưa xác nhận', value: formatNumber(unconfirmedCount), trend: 'Xuất BTT cần đối chiếu', status: unconfirmedCount ? 'warning' : 'good' }
     ],
     primary: { title: 'Bảng XNT BTT', headers, rows: tableRows(enrichedRows, headers, keys) },
     secondary: topValueRows(rows, ['Tên hàng', 'Tên nguyên vật liệu', 'Mã hàng'], ['Giá trị lệch', 'Giá trị chênh lệch', 'Giá trị thất thoát'], 'Top lệch BTT'),
     readiness: sourceReadiness(sources),
-    issues: missingIssues(sources, warningCount ? [['2', 'Kho BTT', 'Cảnh báo', 'Đối chiếu nhập NCC, xuất cửa hàng và hủy BTT']] : [])
+    issues: missingIssues(sources, [
+      ...(warningCount ? [['2', 'Kho BTT', 'Cảnh báo', 'Đối chiếu nhập NCC, xuất cửa hàng và hủy BTT']] : []),
+      ...(unconfirmedCount ? [['3', 'Đối chiếu BTT-CH', 'Cần đối chiếu', 'Nhắc cửa hàng xác nhận hàng đã nhận']] : [])
+    ])
   };
 }
 
@@ -381,14 +598,18 @@ export async function buildStandardLossReport(): Promise<V7Report> {
     { sheetName: SHEET_NAMES.DM_CONG_THUC_CHE_BIEN, label: 'Công thức chế biến' },
     { sheetName: SHEET_NAMES.DM_HAO_HUT_HOP_LE, label: 'Hao hụt hợp lệ' },
     { sheetName: SHEET_NAMES.DATA_DOANH_THU, label: 'Số lượng bán' },
-    { sheetName: SHEET_NAMES.OPTION_C_DM_CONG_THUC_DINH_MUC, label: 'Định mức món bán' }
+    { sheetName: SHEET_NAMES.OPTION_C_DM_CONG_THUC_DINH_MUC, label: 'Định mức món bán' },
+    { sheetName: SHEET_NAMES.DL_DOANH_THU_CUA_HANG, label: 'Doanh thu cửa hàng legacy' },
+    { sheetName: SHEET_NAMES.DL_DOANH_THU_APP, label: 'Doanh thu app legacy' }
   ]);
-  const derivedRows = buildTheoreticalIngredientRows(sources[4]?.rows ?? [], sources[5]?.rows ?? []);
+  const salesRows = [...(sources[4]?.rows ?? []), ...(sources[6]?.rows ?? []), ...(sources[7]?.rows ?? [])];
+  const recipeRows = [...(sources[5]?.rows ?? []), ...(sources[2]?.rows ?? [])];
+  const derivedRows = buildTheoreticalIngredientRows(salesRows, recipeRows);
   const resultRows = sources[0]?.rows.length ? sources[0].rows : sources[1]?.rows.length ? sources[1].rows : derivedRows;
   const value = sumRows(resultRows, ['Giá trị vượt', 'Giá trị hao hụt', 'Giá trị chênh lệch']);
   const warnings = resultRows.filter((row) => rowStatus(row).toLowerCase().includes('cảnh báo') || rowStatus(row).toLowerCase().includes('nguy hiểm') || numberFrom(row, ['Vượt SL', 'Mức vượt định mức']) > 0).length;
   const enrichedRows = resultRows.map((row) => ({ ...row, ...compareFields(row, ['Giá trị vượt', 'Giá trị hao hụt', 'Giá trị chênh lệch'], ['Giá trị vượt T24', 'Giá trị kỳ trước', 'Kỳ trước'], 'Giá trị vượt T24') }));
-  const headers = ['Ngày', 'Món/Nhóm chế biến', 'NVL', 'Sản lượng', 'Định mức', 'Hao hụt hợp lệ', 'Được phép dùng', 'Thực tế dùng', 'Vượt SL', 'Tỷ lệ vượt', 'Giá trị vượt', 'Giá trị vượt T24', 'Chênh lệch', 'Trạng thái'];
+  const headers = ['Ngày', 'Món/Nhóm chế biến', 'NVL', 'ĐVT', 'Sản lượng', 'Định mức', 'Hao hụt hợp lệ', 'Được phép dùng', 'Thực tế dùng', 'Vượt SL', 'Tỷ lệ vượt', 'Giá trị vượt', 'Giá trị vượt T24', 'Chênh lệch', 'Trạng thái'];
   const keys = Object.fromEntries(headers.map((header) => [header, [header, header.replace('Món/Nhóm chế biến', 'Món'), header.replace('NVL', 'Tên nguyên vật liệu')]]));
   return {
     title: 'Hao hụt / Vượt định mức',
@@ -398,7 +619,7 @@ export async function buildStandardLossReport(): Promise<V7Report> {
       { label: 'Giá trị vượt', value: formatMoney(value), status: value ? 'warning' : 'good' },
       { label: 'Dòng kết quả', value: formatNumber(resultRows.length), status: resultRows.length ? 'good' : 'neutral' },
       { label: 'Dòng cảnh báo', value: formatNumber(warnings), status: warnings ? 'danger' : 'good' },
-      { label: 'Công thức chuẩn', value: formatNumber((sources[2]?.rows.length ?? 0) + (sources[5]?.rows.length ?? 0)), trend: 'Định mức x số lượng bán', status: sources[2]?.rows.length || sources[5]?.rows.length ? 'good' : 'neutral' }
+      { label: 'Công thức chuẩn', value: formatNumber(recipeRows.length || DEFAULT_RECIPE_ROWS.length), trend: 'Định mức x số lượng bán', status: recipeRows.length || DEFAULT_RECIPE_ROWS.length ? 'good' : 'neutral' }
     ],
     primary: { title: 'Bảng hao hụt/vượt định mức', headers, rows: tableRows(enrichedRows, headers, keys) },
     secondary: topValueRows(resultRows, ['Món/Nhóm chế biến', 'Món', 'NVL', 'Tên nguyên vật liệu'], ['Giá trị vượt', 'Giá trị hao hụt', 'Giá trị chênh lệch'], 'Top món/NVL vượt định mức'),

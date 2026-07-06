@@ -1,8 +1,40 @@
 import { getDataStore } from '@/lib/data-store';
 import { buildExistingRowIndex, classifyImportRows } from '@/lib/dedupe/dedupe-engine';
-import type { ImportPreviewResult, ImportRow } from './import-types';
+import type { ImportErrorDetail, ImportPreviewResult, ImportRow } from './import-types';
 import { writeAuditLog } from '@/lib/audit/audit-log';
 import { AUDIT_EVENTS } from '@/lib/audit/audit-events';
+
+function inferErrorColumn(message: string) {
+  const missing = message.match(/Thiếu(?: cột bắt buộc)?\s+(.+)$/i);
+  if (missing) return missing[1].trim();
+  const numeric = message.match(/^(.+?)\s+phải là số/i);
+  if (numeric) return numeric[1].trim();
+  return 'Dòng dữ liệu';
+}
+
+function errorDetails(rows: ImportRow[]): ImportErrorDetail[] {
+  return rows.flatMap((row) => {
+    const messages = row.errors?.length
+      ? row.errors
+      : row.status === 'Dữ liệu lệch'
+        ? ['Dữ liệu lệch với dòng đã có cùng khóa nghiệp vụ']
+        : row.status === 'Dữ liệu trùng'
+          ? ['Dữ liệu trùng với dòng đã có']
+          : [];
+    return messages.map((message) => {
+      const column = inferErrorColumn(message);
+      return {
+        maDongDuLieu: row.maDongDuLieu,
+        sheetDich: row.sheetDich,
+        rowRef: String(row.data['Dấu vết dòng'] ?? row.data['Tên file nguồn'] ?? ''),
+        column,
+        value: String(row.data[column] ?? ''),
+        message,
+        status: row.status ?? 'Dòng lỗi'
+      };
+    });
+  });
+}
 
 export async function previewImport(input: {
   loaiDuLieu: string;
@@ -30,6 +62,7 @@ export async function previewImport(input: {
     tenFile: input.tenFile,
     dauVetFile: input.dauVetFile,
     rows: classifiedRows,
+    errorDetails: errorDetails(classifiedRows),
     summary
   };
   await writeAuditLog({ eventType: AUDIT_EVENTS.IMPORT_PREVIEW, actor: input.actor, target: input.tenFile, after: summary });
