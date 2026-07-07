@@ -1,10 +1,11 @@
 import { clsx } from 'clsx';
 import type { Status } from '@/lib/report-types';
 import { StatusBadge } from './StatusBadge';
+import { KpiDelta } from '@/components/charts/KpiDelta';
 
-export function MetricCard({ label, value, hint, trend, status = 'neutral', compact = false }: { label: string; value: string; hint?: string; trend?: string; status?: Status; compact?: boolean }) {
+export function MetricCard({ label, value, hint, trend, status = 'neutral', compact = false, current, previousPeriod, samePeriodLastYear }: { label: string; value: string; hint?: string; trend?: string; status?: Status; compact?: boolean; current?: number; previousPeriod?: number; samePeriodLastYear?: number }) {
   const trendTone = status === 'good' ? 'text-emerald-800' : status === 'danger' ? 'text-red-800' : status === 'warning' ? 'text-amber-900' : 'text-lang-muted';
-  // C-balance: warning giữ viền vàng (#F1D09B V3 warm) nhưng nền trung tính nhẹ, không đậm mist
+  // C-balance: warning giữ viền vàng nhưng nền trung tính nhẹ, không đậm mist
   const cardTone = status === 'danger'
     ? 'border-red-200 bg-red-50/70'
     : status === 'warning'
@@ -21,6 +22,7 @@ export function MetricCard({ label, value, hint, trend, status = 'neutral', comp
       <div className="number mt-2 break-words text-[23px] font-bold leading-tight text-lang-ink">{value}</div>
       {trend ? <p className={clsx('mt-1.5 line-clamp-1 text-[12px] font-semibold leading-5', trendTone)}>{trend}</p> : null}
       {hint ? <p className="mt-0.5 line-clamp-1 text-[12px] leading-5 text-lang-muted">{hint}</p> : null}
+      {current !== undefined ? <KpiDelta current={current} previousPeriod={previousPeriod} samePeriodLastYear={samePeriodLastYear} /> : null}
     </div>
   );
 }

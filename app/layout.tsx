@@ -1,11 +1,11 @@
 import '@/styles/globals.css';
 import '@/styles/final-overrides.css';
 import type { Metadata } from 'next';
-import { Be_Vietnam_Pro } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { AppShell } from '@/components/layout/AppShell';
 
-const appFont = Be_Vietnam_Pro({
-  subsets: ['vietnamese'],
+const appFont = Inter({
+  subsets: ['vietnamese', 'latin'],
   weight: ['400', '500', '600', '700', '800', '900'],
   display: 'swap',
   variable: '--font-app'

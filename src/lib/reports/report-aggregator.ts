@@ -78,6 +78,11 @@ export type DashboardReport = {
   };
   missingSources: string[];
   errors?: string[];
+  periodComparison?: {
+    revenue: { current: number; previousPeriod?: number; samePeriodLastYear?: number };
+    cashIn: { current: number; previousPeriod?: number; samePeriodLastYear?: number };
+    cashOut: { current: number; previousPeriod?: number; samePeriodLastYear?: number };
+  };
 };
 
 function toNumber(value: unknown) {
@@ -425,6 +430,55 @@ function computeLoss(inventoryRows: Record<string, unknown>[]): Record<string, u
     });
   }
   return out;
+}
+
+// Phase 2: Tính so sánh kỳ liên kề (tuần trước) và cùng kỳ năm trước.
+// Group rows theo ISO week, tìm current week (mới nhất), rồi look up tuần trước + cùng tuần năm ngoái.
+function groupByWeekSum(
+  rows: Record<string, unknown>[],
+  valueKeys: string[],
+  weekKey: string[] = ['Mã tuần', 'ky_bao_cao', 'Tuần']
+): Map<string, number> {
+  const byWeek = new Map<string, number>();
+  for (const row of rows) {
+    let week = '';
+    for (const k of weekKey) {
+      const v = row[k];
+      if (typeof v === 'string' && v.trim() && /^\d{4}-W\d{2}$/.test(v.trim())) { week = v.trim(); break; }
+    }
+    if (!week) continue;
+    const value = pickNumber(row, valueKeys);
+    byWeek.set(week, (byWeek.get(week) ?? 0) + value);
+  }
+  return byWeek;
+}
+
+function computeWeekComparison(
+  byWeek: Map<string, number>
+): { current: number; previousPeriod?: number; samePeriodLastYear?: number } {
+  if (!byWeek.size) return { current: 0 };
+  const sortedWeeks = Array.from(byWeek.keys()).sort();
+  const currentWeek = sortedWeeks[sortedWeeks.length - 1];
+  const current = byWeek.get(currentWeek) ?? 0;
+
+  const m = currentWeek.match(/^(\d{4})-W(\d{2})$/);
+  if (!m) return { current };
+
+  const year = parseInt(m[1], 10);
+  const weekNum = parseInt(m[2], 10);
+
+  // Tuần trước
+  let previousPeriod: number | undefined;
+  if (weekNum > 1) {
+    previousPeriod = byWeek.get(`${year}-W${String(weekNum - 1).padStart(2, '0')}`);
+  } else {
+    previousPeriod = byWeek.get(`${year - 1}-W52`);
+  }
+
+  // Cùng tuần năm trước
+  const samePeriodLastYear = byWeek.get(`${year - 1}-W${String(weekNum).padStart(2, '0')}`);
+
+  return { current, previousPeriod, samePeriodLastYear };
 }
 
 function emptyReport(
@@ -1167,5 +1221,10 @@ export async function buildDashboardReport(
       appFeePercent,
     },
     missingSources,
+    periodComparison: {
+      revenue: computeWeekComparison(groupByWeekSum([...storeRevenue, ...appRevenue], ['Doanh thu bán hàng thực', 'Doanh thu ròng', 'Doanh thu gộp'])),
+      cashIn: computeWeekComparison(groupByWeekSum(cashbook, ['Số tiền'])),
+      cashOut: computeWeekComparison(groupByWeekSum(cashbook, ['Giá trị'])),
+    },
   };
 }

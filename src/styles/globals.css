@@ -4,17 +4,18 @@
 
 :root {
   color-scheme: light;
-  --background: #f6f3ee;
-  --foreground: #231a16;
-  --brand-red: #8f1d1d;
-  --brand-red-dark: #641414;
-  --brand-red-deep: #3f0d0d;
-  --brand-line: #eadfcf;
-  --surface: #fffdf8;
-  --surface-muted: #fff7e8;
-  --table-header: #fff3dd;
-  --muted: #6f6254;
-  --focus-ring: #8f1d1d;
+  /* Craft Modern cool palette — synced with tailwind.config.ts */
+  --background: #F0F2F5;
+  --foreground: #0F172A;
+  --brand-red: #3B82F6;
+  --brand-red-dark: #2563EB;
+  --brand-red-deep: #1E3A8A;
+  --brand-line: #E2E8F0;
+  --surface: #FFFFFF;
+  --surface-muted: #F8FAFC;
+  --table-header: #F1F5F9;
+  --muted: #64748B;
+  --focus-ring: #3B82F6;
 }
 
 html,
@@ -65,7 +66,7 @@ textarea:focus-visible,
 }
 
 ::selection {
-  background: rgba(166, 25, 25, 0.16);
+  background: rgba(59, 130, 246, 0.16);
   color: var(--foreground);
 }
 
@@ -76,7 +77,7 @@ textarea:focus-visible,
 .glass-surface {
   background: var(--surface);
   border: 1px solid var(--brand-line);
-  box-shadow: 0 6px 18px rgba(80, 50, 20, 0.06);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
 
 .number {
@@ -86,7 +87,7 @@ textarea:focus-visible,
 .sidebar-scroll,
 .table-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(111, 98, 84, 0.55) transparent;
+  scrollbar-color: rgba(100, 116, 139, 0.55) transparent;
 }
 
 .sidebar-scroll::-webkit-scrollbar,
@@ -102,7 +103,7 @@ textarea:focus-visible,
 
 .sidebar-scroll::-webkit-scrollbar-thumb,
 .table-scroll::-webkit-scrollbar-thumb {
-  background: rgba(111, 98, 84, 0.48);
+  background: rgba(100, 116, 139, 0.48);
   border-radius: 999px;
 }
 

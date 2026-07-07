@@ -44,6 +44,15 @@ function decisionRows(report: DashboardReport) {
 
 export function CeoCockpitPage({ report }: { report: DashboardReport }) {
   const primaryKpis = report.executiveKpis.slice(0, 8);
+  const pc = report.periodComparison;
+  // Map KPI label → comparison data
+  const comparisonFor = (label: string) => {
+    if (!pc) return {};
+    if (label.includes('Tổng doanh thu') || label.includes('Doanh thu cửa hàng') || label.includes('Doanh thu app')) return { current: pc.revenue.current, previousPeriod: pc.revenue.previousPeriod, samePeriodLastYear: pc.revenue.samePeriodLastYear };
+    if (label.includes('Tiền vào')) return { current: pc.cashIn.current, previousPeriod: pc.cashIn.previousPeriod, samePeriodLastYear: pc.cashIn.samePeriodLastYear };
+    if (label.includes('Tiền ra')) return { current: pc.cashOut.current, previousPeriod: pc.cashOut.previousPeriod, samePeriodLastYear: pc.cashOut.samePeriodLastYear };
+    return {};
+  };
   return (
     <div className="space-y-3">
       <section className="grid gap-3 xl:grid-cols-[0.9fr_1.1fr]">
@@ -78,7 +87,7 @@ export function CeoCockpitPage({ report }: { report: DashboardReport }) {
 
       <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
         {primaryKpis.map((kpi) => (
-          <MetricCard key={kpi.label} label={kpi.label} value={kpi.value} hint={kpi.hint} trend={kpi.trend} status={kpi.status} compact />
+          <MetricCard key={kpi.label} label={kpi.label} value={kpi.value} hint={kpi.hint} trend={kpi.trend} status={kpi.status} compact {...comparisonFor(kpi.label)} />
         ))}
       </section>
 

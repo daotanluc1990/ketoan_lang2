@@ -6,6 +6,7 @@ import { Card, CardTitle } from '@/components/ui/Card';
 import { TrendLineChart } from '@/components/charts/TrendLineChart';
 import { TopMoversBarChart } from '@/components/charts/TopMoversBarChart';
 import { AlertPanel } from '@/components/charts/AlertPanel';
+import { KpiDelta } from '@/components/charts/KpiDelta';
 import { generateAlerts, buildTrendData, buildTopMovers } from '@/lib/reports/dashboard-insights';
 import type { DashboardReport } from '@/lib/reports/report-aggregator';
 
@@ -74,12 +75,13 @@ function topIssues(report: DashboardReport, canClose: boolean) {
   ];
 }
 
-function MiniKpi({ label, value, status, trend }: { label: string; value: string; status: string; trend?: string }) {
+function MiniKpi({ label, value, status, trend, current, previousPeriod, samePeriodLastYear }: { label: string; value: string; status: string; trend?: string; current?: number; previousPeriod?: number; samePeriodLastYear?: number }) {
   return (
     <div className="rounded-lg border border-lang-line bg-white p-2.5 shadow-soft">
       <div className="flex items-start justify-between gap-2"><p className="truncate text-[12px] font-semibold text-lang-ink">{label}</p><StatusBadge status={status} /></div>
       <p className="number mt-1 text-xl font-black leading-none text-lang-ink">{value}</p>
       {trend ? <p className="mt-1 truncate text-[11px] font-semibold text-lang-muted">{trend}</p> : null}
+      {current !== undefined ? <KpiDelta current={current} previousPeriod={previousPeriod} samePeriodLastYear={samePeriodLastYear} /> : null}
     </div>
   );
 }
