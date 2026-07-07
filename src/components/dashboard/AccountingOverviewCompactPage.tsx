@@ -3,6 +3,10 @@ import Link from 'next/link';
 import { ReportTable } from '@/components/report/ReportTable';
 import { StatusBadge } from '@/components/report/StatusBadge';
 import { Card, CardTitle } from '@/components/ui/Card';
+import { TrendLineChart } from '@/components/charts/TrendLineChart';
+import { TopMoversBarChart } from '@/components/charts/TopMoversBarChart';
+import { AlertPanel } from '@/components/charts/AlertPanel';
+import { generateAlerts, buildTrendData, buildTopMovers } from '@/lib/reports/dashboard-insights';
 import type { DashboardReport } from '@/lib/reports/report-aggregator';
 
 function clamp(value: number) {
@@ -110,6 +114,40 @@ export function AccountingOverviewCompactPage({ report }: { report: DashboardRep
       </section>
 
       <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">{kpiList(report).map((kpi) => <MiniKpi key={kpi.label} label={kpi.label} value={kpi.value} status={kpi.status} trend={kpi.trend} />)}</section>
+
+      {/* Phase Charts: Line chart xu hướng dòng tiền + Top movers */}
+      <section className="grid gap-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Card>
+          <CardTitle>Xu hướng dòng tiền 30 ngày</CardTitle>
+          <div className="mt-2">
+            <TrendLineChart
+              data={buildTrendData(report)}
+              series={[
+                { key: 'cashIn', label: 'Tiền vào', color: '#059669' },
+                { key: 'cashOut', label: 'Tiền ra', color: '#dc2626' },
+                { key: 'net', label: 'Dòng ròng', color: '#7F1717' },
+              ]}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Doanh thu theo kênh</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildTopMovers(report).channels} positiveIsGood />
+          </div>
+        </Card>
+      </section>
+
+      {/* Phase Charts: Alert panel + Top thất thoát */}
+      <section className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <AlertPanel alerts={generateAlerts(report)} compact />
+        <Card>
+          <CardTitle>Top thất thoát NVL</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildTopMovers(report).losses} positiveIsGood={false} />
+          </div>
+        </Card>
+      </section>
 
       <section className="grid overflow-hidden rounded-lg border border-lang-line bg-white md:grid-cols-6">{issueStats(report).map(([label, value, tone], index) => <div key={label} className={`flex min-h-[46px] items-center justify-between border-lang-line px-3 py-2 ${index ? 'md:border-l' : ''} ${tone}`}><span className="text-[12px] font-semibold">{label}</span><span className="number text-lg font-black">{value}</span></div>)}</section>
     </div>

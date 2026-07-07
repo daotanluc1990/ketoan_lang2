@@ -7,6 +7,11 @@ import { parsePageReportFilters } from '@/lib/reports/report-filters';
 import { buildAccountingTasksFromReport } from '@/lib/option-c/task-engine';
 import { KPI_DICTIONARY_ALL, KPI_DICTIONARY_CORE } from '@/lib/option-c/catalog';
 import { buildOptionCDashboardSummary } from '@/lib/option-c/dashboard-report';
+import { buildDashboardReport } from '@/lib/reports/report-aggregator';
+import { TrendLineChart } from '@/components/charts/TrendLineChart';
+import { TopMoversBarChart } from '@/components/charts/TopMoversBarChart';
+import { AlertPanel } from '@/components/charts/AlertPanel';
+import { generateAlerts, buildTrendData, buildTopMovers } from '@/lib/reports/dashboard-insights';
 
 function overviewKpiStatus(code: string, value: number, score: number) {
   if (code === 'DQ001') return score >= 80 ? 'Tốt' : score >= 60 ? 'Cần đối chiếu' : 'Chưa đủ dữ liệu';
@@ -17,6 +22,7 @@ function overviewKpiStatus(code: string, value: number, score: number) {
 export async function OptionCOverviewPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const filters = await parsePageReportFilters(searchParams);
   const report = await buildOptionCDashboardSummary(filters);
+  const fullReport = await buildDashboardReport(filters);
   const tasks = buildAccountingTasksFromReport(report, filters);
   const redTasks = tasks.filter((task) => task.priority === 'Đỏ');
   const score = report.dataQualityScore;
@@ -112,6 +118,39 @@ export async function OptionCOverviewPage({ searchParams }: { searchParams?: Pro
         <CardTitle>KPI Dictionary chỉ số lõi</CardTitle>
         <div className="mt-2"><ReportTable headers={['Mã', 'Chỉ số', 'Nhóm', 'Đơn vị', 'Nguồn']} rows={KPI_DICTIONARY_CORE.map((kpi) => [kpi.code, kpi.name, kpi.group, kpi.unit, kpi.source])} maxHeight="max-h-[260px]" /></div>
       </Card>
+
+      {/* Phase Charts: Xu hướng dòng tiền + Top kênh + Alert panel + Top thất thoát */}
+      <section className="grid gap-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Card>
+          <CardTitle>Xu hướng dòng tiền 30 ngày</CardTitle>
+          <div className="mt-2">
+            <TrendLineChart
+              data={buildTrendData(fullReport)}
+              series={[
+                { key: 'cashIn', label: 'Tiền vào', color: '#059669' },
+                { key: 'cashOut', label: 'Tiền ra', color: '#dc2626' },
+                { key: 'net', label: 'Dòng ròng', color: '#7F1717' },
+              ]}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Doanh thu theo kênh</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildTopMovers(fullReport).channels} positiveIsGood />
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <AlertPanel alerts={generateAlerts(fullReport)} compact />
+        <Card>
+          <CardTitle>Top thất thoát NVL</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildTopMovers(fullReport).losses} positiveIsGood={false} />
+          </div>
+        </Card>
+      </section>
     </div>
   );
 }

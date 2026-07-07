@@ -5,6 +5,11 @@ import { Card, CardTitle } from '@/components/ui/Card';
 import { parsePageReportFilters } from '@/lib/reports/report-filters';
 import { buildAccountingTasksFromReport, type AccountingTask } from '@/lib/option-c/task-engine';
 import { buildOptionCDashboardSummary, type OptionCDashboardMetric, type OptionCDashboardSummary } from '@/lib/option-c/dashboard-report';
+import { buildDashboardReport } from '@/lib/reports/report-aggregator';
+import { TrendLineChart as TrendChart } from '@/components/charts/TrendLineChart';
+import { TopMoversBarChart } from '@/components/charts/TopMoversBarChart';
+import { AlertPanel as InsightsAlertPanel } from '@/components/charts/AlertPanel';
+import { generateAlerts, buildTrendData, buildTopMovers } from '@/lib/reports/dashboard-insights';
 
 const KPI_GROUP_ORDER = [
   'Doanh thu',
@@ -242,6 +247,7 @@ function RecommendationPanel({ rows }: { rows: string[][] }) {
 export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: SearchParams }) {
   const filters = await parsePageReportFilters(searchParams);
   const report = await buildOptionCDashboardSummary(filters);
+  const fullReport = await buildDashboardReport(filters);
   const tasks = buildAccountingTasksFromReport(report, filters).filter((task) => task.status !== 'Hoàn thành');
   const redTasks = tasks.filter((task) => task.priority === 'Đỏ');
   const alertCount = report.redAlerts.length;
@@ -287,6 +293,40 @@ export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: S
         <AlertPanel alerts={report.redAlerts} />
         <RecommendationPanel rows={recommendations} />
         <ActionPanel tasks={tasks} />
+      </section>
+
+      {/* Phase Charts: Xu hướng dòng tiền + Top kênh + Insights AlertPanel + Top thất thoát */}
+      <section className="grid gap-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Card>
+          <CardTitle>Xu hướng dòng tiền 30 ngày</CardTitle>
+          <div className="mt-2">
+            <TrendChart
+              data={buildTrendData(fullReport)}
+              series={[
+                { key: 'cashIn', label: 'Tiền vào', color: '#059669' },
+                { key: 'cashOut', label: 'Tiền ra', color: '#dc2626' },
+                { key: 'net', label: 'Dòng ròng', color: '#7F1717' },
+              ]}
+              height={260}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Doanh thu theo kênh</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildTopMovers(fullReport).channels} positiveIsGood height={260} />
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-2 xl:grid-cols-2">
+        <InsightsAlertPanel alerts={generateAlerts(fullReport)} compact />
+        <Card>
+          <CardTitle>Top thất thoát NVL</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildTopMovers(fullReport).losses} positiveIsGood={false} height={220} />
+          </div>
+        </Card>
       </section>
     </div>
   );

@@ -3,7 +3,7 @@
   "version": "0.1.7",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
@@ -13,6 +13,7 @@
     "tao-sheet-mau": "tsx scripts/tao-google-sheet-mau.ts",
     "kiem-tra-schema": "tsx scripts/kiem-tra-schema.ts",
     "static-ui-qa": "node scripts/static-ui-qa.mjs",
+    "qa-master": "node scripts/qa-master-plan.mjs",
     "vercel-build": "next build --webpack",
     "agent-check": "node scripts/check-agent-structure.mjs",
     "synthetic-data-qa": "tsx scripts/synthetic-data-qa.ts"
@@ -26,6 +27,7 @@
     "next": "16.2.9",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.9.2",
     "zod": "3.24.1"
   },
   "devDependencies": {

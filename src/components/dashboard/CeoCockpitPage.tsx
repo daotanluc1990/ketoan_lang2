@@ -3,6 +3,10 @@ import { ChartCard } from '@/components/report/ChartCard';
 import { MetricCard } from '@/components/report/MetricCard';
 import { ReportTable } from '@/components/report/ReportTable';
 import { Card, CardTitle } from '@/components/ui/Card';
+import { TrendLineChart } from '@/components/charts/TrendLineChart';
+import { TopMoversBarChart } from '@/components/charts/TopMoversBarChart';
+import { AlertPanel } from '@/components/charts/AlertPanel';
+import { generateAlerts, buildTrendData, buildTopMovers } from '@/lib/reports/dashboard-insights';
 import type { DashboardReport } from '@/lib/reports/report-aggregator';
 
 function decisionRows(report: DashboardReport) {
@@ -98,16 +102,31 @@ export function CeoCockpitPage({ report }: { report: DashboardReport }) {
       </section>
 
       <section className="grid gap-3 xl:grid-cols-2">
-        <ChartCard
-          title="Doanh thu theo nguồn thật"
-          description="Doanh thu chốt lấy từ app/cửa hàng. Sổ quỹ chỉ dùng để đối chiếu tiền đã về."
-          items={[
-            ...report.revenueByChannel.map((item) => ({ label: item.channel, value: item.value, caption: item.revenue })),
-            ...(report.totals.cashbookRevenueIn > 0
-              ? [{ label: 'Sổ quỹ: doanh thu đã thu', value: report.totals.cashbookRevenueIn, caption: report.executiveKpis.find((kpi) => kpi.label === 'Doanh thu thu qua sổ quỹ')?.value }]
-              : [])
-          ]}
-        />
+        <Card>
+          <CardTitle>Xu hướng dòng tiền 30 ngày</CardTitle>
+          <div className="mt-2">
+            <TrendLineChart
+              data={buildTrendData(report)}
+              series={[
+                { key: 'cashIn', label: 'Tiền vào', color: '#059669' },
+                { key: 'cashOut', label: 'Tiền ra', color: '#dc2626' },
+                { key: 'net', label: 'Dòng ròng', color: '#7F1717' },
+              ]}
+              height={260}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Doanh thu theo kênh & nguồn</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildTopMovers(report).channels} positiveIsGood height={260} />
+          </div>
+        </Card>
+      </section>
+
+      <AlertPanel alerts={generateAlerts(report)} />
+
+      <section className="grid gap-3 xl:grid-cols-2">
         <ChartCard
           title="Chất lượng dữ liệu"
           description="Số dòng đã ghi vào các sheet dữ liệu gốc. Dữ liệu trống thì không kết luận."
@@ -119,6 +138,12 @@ export function CeoCockpitPage({ report }: { report: DashboardReport }) {
             { label: 'Thất thoát', value: report.sourceCounts.lossRows, caption: `${report.sourceCounts.lossRows} dòng` }
           ]}
         />
+        <Card>
+          <CardTitle>Top thất thoát NVL (bar chart)</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildTopMovers(report).losses} positiveIsGood={false} height={220} />
+          </div>
+        </Card>
       </section>
 
       <section className="grid gap-3 xl:grid-cols-2">
