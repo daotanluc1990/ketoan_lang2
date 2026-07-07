@@ -3,6 +3,60 @@ import type { Alert } from '@/components/charts/AlertPanel';
 import type { MoverItem } from '@/components/charts/TopMoversBarChart';
 import type { TrendPoint } from '@/components/charts/TrendLineChart';
 
+// === 4 trends mới (Phase 2 charts) ===
+
+/**
+ * Trend chi phí theo nhóm (từ sổ quỹ groupRows).
+ * Hiển thị cơ cấu chi phí: NVL, nhân sự, vận hành, marketing...
+ */
+export function buildExpenseStructure(report: DashboardReport): MoverItem[] {
+  return report.cashbookGroupRows
+    .filter((row) => parseMoney(row[3]) > 0) // cột cashOut > 0
+    .slice(0, 8)
+    .map((row) => ({
+      label: String(row[0] ?? 'Nhóm khác'),
+      value: parseMoney(row[3]),
+      caption: `${row[1]} giao dịch`,
+      trend: 'down' as const,
+    }));
+}
+
+/**
+ * Top NVL thất thoát/hao hụt cao nhất (từ lossTop5Rows).
+ * Giúp CEO thấy nguyên liệu nào đang thất thoát nhiều.
+ */
+export function buildLossTrend(report: DashboardReport): MoverItem[] {
+  return report.lossTop5Rows
+    .map((row) => ({
+      label: String(row[0] ?? 'NVL'),
+      value: parseMoney(row[3]),
+      caption: `${row[2]} ${row[1]} · ${row[4]}`,
+      trend: 'down' as const,
+    }))
+    .filter((item) => item.value > 0);
+}
+
+/**
+ * Cơ cấu doanh thu theo kênh (từ revenueByChannel).
+ * Tiền mặt, chuyển khoản, app giao hàng...
+ */
+export function buildRevenueMix(report: DashboardReport): MoverItem[] {
+  return report.revenueByChannel.map((ch) => ({
+    label: ch.channel,
+    value: ch.value,
+    caption: ch.revenue,
+    trend: 'up' as const,
+  }));
+}
+
+/**
+ * Xu hướng dòng tiền multi-series (cho dashboard CEO).
+ * Trả data cho 3 line: cashIn, cashOut, net theo ngày.
+ */
+export function buildCashflowTrend(report: DashboardReport): TrendPoint[] {
+  return buildTrendData(report);
+}
+
 /**
  * Sinh danh sách cảnh báo + đề xuất từ DashboardReport.
  * Dựa trên các ngưỡng nghiệp vụ kế toán F&B.

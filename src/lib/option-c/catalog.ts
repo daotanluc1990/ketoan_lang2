@@ -157,9 +157,7 @@ export const OPTION_C_PAGES: OptionCPage[] = [
   { path: '/tai-chinh/dong-tien', title: 'Dòng tiền', group: 'TÀI CHÍNH', kind: 'module', icon: DollarSign, module: 'TAI_CHINH', description: 'Sổ quỹ, tổng thu, tổng chi, dòng tiền tạm và chứng từ thiếu.', sourceSheets: [OPTION_C_SHEETS.DATA_SO_QUY], kpiGroups: ['Tiền và đối soát', 'Chi phí'], relatedDocs: financeDocs },
   { path: '/tai-chinh/can-doi', title: 'Cân đối', group: 'TÀI CHÍNH', kind: 'module', icon: Scale, module: 'TAI_CHINH', description: 'Cân đối rút gọn, số dư, công nợ, tồn kho và trạng thái nguồn dữ liệu.', sourceSheets: [OPTION_C_SHEETS.DATA_SO_QUY, OPTION_C_SHEETS.DATA_CONG_NO, OPTION_C_SHEETS.CALC_TON_KHO], kpiGroups: ['Tiền và đối soát', 'Tồn kho'], relatedDocs: financeDocs },
   { path: '/tai-chinh/du-toan', title: 'Dự toán', group: 'TÀI CHÍNH', kind: 'module', icon: ClipboardList, module: 'TAI_CHINH', description: 'Dự toán doanh thu, chi phí, công nợ cần trả và số dư dự kiến.', sourceSheets: [OPTION_C_SHEETS.CALC_TAI_CHINH_DU_TOAN], kpiGroups: ['Dự toán'], relatedDocs: financeDocs },
-  { path: '/luong-nhan-su/cham-cong', title: 'Chấm công', group: 'LƯƠNG & NHÂN SỰ', kind: 'module', icon: Users, module: 'LUONG', description: 'Số công, giờ làm, đi trễ, nghỉ và dữ liệu chấm công theo cửa hàng.', sourceSheets: [OPTION_C_SHEETS.DATA_NHAN_SU_LUONG], kpiGroups: ['Nhân sự và lương'], relatedDocs: ['Quy trình chấm công', 'Mẫu bảng công'] },
-  { path: '/luong-nhan-su/tam-ung-thuong-phat', title: 'Tạm ứng / thưởng phạt', group: 'LƯƠNG & NHÂN SỰ', kind: 'module', icon: Users, module: 'LUONG', description: 'Tạm ứng, thưởng, phạt, phụ cấp, khấu trừ và trạng thái duyệt.', sourceSheets: [OPTION_C_SHEETS.DATA_NHAN_SU_LUONG], kpiGroups: ['Nhân sự và lương'], relatedDocs: ['Quy trình duyệt tạm ứng', 'Biểu mẫu thưởng phạt'] },
-  { path: '/luong-nhan-su/bang-luong', title: 'Bảng lương', group: 'LƯƠNG & NHÂN SỰ', kind: 'module', icon: Users, module: 'LUONG', description: 'Lương tạm tính, thực nhận, chi phí nhân sự và trạng thái duyệt.', sourceSheets: [OPTION_C_SHEETS.DATA_NHAN_SU_LUONG], kpiGroups: ['Nhân sự và lương'], relatedDocs: ['Mẫu bảng lương', 'Checklist chốt lương'] },
+  { path: '/luong-nhan-su/bang-luong', title: 'Bảng lương & giờ công', group: 'LƯƠNG & NHÂN SỰ', kind: 'module', icon: Users, module: 'LUONG', description: 'Theo dõi giờ công, chi phí nhân sự, lương tạm tính, thực nhận, tạm ứng/thưởng/phạt phụ cấp và trạng thái duyệt trong một màn hình.', sourceSheets: [OPTION_C_SHEETS.DATA_NHAN_SU_LUONG], kpiGroups: ['Nhân sự và lương'], relatedDocs: ['Mẫu bảng lương', 'Quy trình chấm công', 'Checklist chốt lương'] },
   { path: '/bao-cao-quan-tri', title: 'Báo cáo quản trị', group: 'BÁO CÁO QUẢN TRỊ', kind: 'report', icon: FileText, module: 'BAO_CAO', description: 'Một màn hình báo cáo quản trị, chuyển nhanh giữa báo cáo ngày, tuần, tháng, chốt có ngoại lệ và lịch sử chốt.', sourceSheets: [OPTION_C_SHEETS.DASHBOARD_REPORT, OPTION_C_SHEETS.CALC_TAI_CHINH_DU_TOAN], kpiGroups: ['Báo cáo ngày / tuần / tháng'], relatedDocs: reportDocs, closeType: 'week' },
   { path: '/bao-cao-quan-tri/ngay', title: 'Báo cáo ngày', group: 'BÁO CÁO QUẢN TRỊ', kind: 'report', icon: FileText, module: 'BAO_CAO', description: 'Báo cáo ngày gồm doanh thu, tiền, kho cửa hàng, data quality và cảnh báo đỏ.', sourceSheets: [OPTION_C_SHEETS.DASHBOARD_REPORT, OPTION_C_SHEETS.IMPORT_LOG_SYSTEM_LOG], kpiGroups: ['Báo cáo ngày / tuần / tháng'], relatedDocs: reportDocs, closeType: 'day' },
   { path: '/bao-cao-quan-tri/tuan', title: 'Báo cáo tuần', group: 'BÁO CÁO QUẢN TRỊ', kind: 'report', icon: FileText, module: 'BAO_CAO', description: 'Báo cáo tuần gồm P&L, dòng tiền, kho, công nợ, dự toán và top vấn đề CEO.', sourceSheets: [OPTION_C_SHEETS.DASHBOARD_REPORT, OPTION_C_SHEETS.CALC_TAI_CHINH_DU_TOAN], kpiGroups: ['Báo cáo ngày / tuần / tháng'], relatedDocs: reportDocs, closeType: 'week' },
@@ -176,7 +174,10 @@ export const OPTION_C_PAGES: OptionCPage[] = [
 const LEGACY_OPTION_C_PATHS: Record<string, string> = {
   '/he-thong/nguoi-dung': '/he-thong/nguoi-dung-phan-quyen',
   '/he-thong/phan-quyen': '/he-thong/nguoi-dung-phan-quyen',
-  '/he-thong/cua-hang': '/he-thong/cua-hang-kho'
+  '/he-thong/cua-hang': '/he-thong/cua-hang-kho',
+  // Gộp tabs lương: cũ → /bang-luong
+  '/luong-nhan-su/cham-cong': '/luong-nhan-su/bang-luong',
+  '/luong-nhan-su/tam-ung-thuong-phat': '/luong-nhan-su/bang-luong'
 };
 
 export function findOptionCPage(slug: string[]) {

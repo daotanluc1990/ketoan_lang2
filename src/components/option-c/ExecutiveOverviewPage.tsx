@@ -9,7 +9,7 @@ import { buildDashboardReport } from '@/lib/reports/report-aggregator';
 import { TrendLineChart as TrendChart } from '@/components/charts/TrendLineChart';
 import { TopMoversBarChart } from '@/components/charts/TopMoversBarChart';
 import { AlertPanel as InsightsAlertPanel } from '@/components/charts/AlertPanel';
-import { generateAlerts, buildTrendData, buildTopMovers } from '@/lib/reports/dashboard-insights';
+import { generateAlerts, buildTrendData, buildTopMovers, buildExpenseStructure, buildLossTrend, buildRevenueMix } from '@/lib/reports/dashboard-insights';
 
 const KPI_GROUP_ORDER = [
   'Doanh thu',
@@ -325,6 +325,45 @@ export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: S
           <CardTitle>Top thất thoát NVL</CardTitle>
           <div className="mt-2">
             <TopMoversBarChart data={buildTopMovers(fullReport).losses} positiveIsGood={false} height={220} />
+          </div>
+        </Card>
+      </section>
+
+      {/* Phase 2 Charts: 4 xu hướng mới — chi phí, doanh thu kênh, NVL thất thoát, dòng tiền */}
+      <section className="grid gap-2 xl:grid-cols-2">
+        <Card>
+          <CardTitle>Cơ cấu chi phí theo nhóm</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildExpenseStructure(fullReport)} positiveIsGood={false} height={220} />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Cơ cấu doanh thu theo kênh</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildRevenueMix(fullReport)} positiveIsGood height={220} />
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Card>
+          <CardTitle>Xu hướng dòng tiền 30 ngày</CardTitle>
+          <div className="mt-2">
+            <TrendChart
+              data={buildTrendData(fullReport)}
+              series={[
+                { key: 'cashIn', label: 'Tiền vào', color: '#059669' },
+                { key: 'cashOut', label: 'Tiền ra', color: '#dc2626' },
+                { key: 'net', label: 'Dòng ròng', color: '#7F1717' },
+              ]}
+              height={240}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Xu hướng NVL thất thoát/hao hụt</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart data={buildLossTrend(fullReport)} positiveIsGood={false} height={240} />
           </div>
         </Card>
       </section>

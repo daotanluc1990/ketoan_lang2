@@ -55,9 +55,7 @@ export const navigationItems: NavigationItem[] = [
   { href: '/tai-chinh/can-doi', label: 'Cân đối', icon: Scale, group: 'TÀI CHÍNH', permission: 'view_balance', allowedRoles: FULL_FINANCE_ROLES },
   { href: '/tai-chinh/du-toan', label: 'Dự toán', icon: ClipboardList, group: 'TÀI CHÍNH', permission: 'view_forecast', allowedRoles: FULL_FINANCE_ROLES },
 
-  { href: '/luong-nhan-su/cham-cong', label: 'Chấm công', icon: Users, group: 'LƯƠNG & NHÂN SỰ', permission: 'view_payroll', allowedRoles: FULL_FINANCE_ROLES },
-  { href: '/luong-nhan-su/tam-ung-thuong-phat', label: 'Tạm ứng / thưởng phạt', icon: Users, group: 'LƯƠNG & NHÂN SỰ', permission: 'view_payroll', allowedRoles: FULL_FINANCE_ROLES },
-  { href: '/luong-nhan-su/bang-luong', label: 'Bảng lương', icon: Users, group: 'LƯƠNG & NHÂN SỰ', permission: 'view_payroll', allowedRoles: FULL_FINANCE_ROLES },
+  { href: '/luong-nhan-su/bang-luong', label: 'Bảng lương & giờ công', icon: Users, group: 'LƯƠNG & NHÂN SỰ', permission: 'view_payroll', allowedRoles: FULL_FINANCE_ROLES },
 
   { href: '/bao-cao-quan-tri', label: 'Báo cáo quản trị', icon: FileText, group: 'BÁO CÁO QUẢN TRỊ', permission: 'view_management_reports', allowedRoles: FULL_FINANCE_ROLES },
 
