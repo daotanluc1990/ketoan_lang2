@@ -369,8 +369,6 @@ export function buildModuleDashboardTable(page: OptionCPage, rowsBySheet: Record
     '/tai-chinh/dong-tien': true,
     '/tai-chinh/can-doi': true,
     '/tai-chinh/du-toan': true,
-    '/luong-nhan-su/cham-cong': true,
-    '/luong-nhan-su/tam-ung-thuong-phat': true,
     '/luong-nhan-su/bang-luong': true,
     '/tai-lieu/quy-trinh-checklist': true,
     '/tai-lieu/tinh-huong-phat-sinh': true,

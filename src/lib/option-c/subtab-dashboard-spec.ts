@@ -240,37 +240,23 @@ const SPECS: Record<string, SubtabDashboardSpec> = {
     emptyState: 'Chưa có dữ liệu dự toán.',
     noPermissionState: 'Vai trò hiện tại không được xem dự toán.'
   },
-  '/luong-nhan-su/cham-cong': {
-    path: '/luong-nhan-su/cham-cong',
-    focus: 'Theo dõi công, ca làm, đi trễ, nghỉ và xác nhận công.',
-    kpiCodes: ['NS001', 'LN002', 'NV001'],
-    displayTypes: ['KPI_CARD', 'DATA_TABLE', 'ALERT_CARD'],
-    table: { title: 'Bảng chấm công', headers: ['Nhân viên', 'Vai trò', 'Ngày', 'Ca', 'Giờ công', 'Đi trễ', ...comparison, 'Trạng thái'] },
-    alertRows: [['Vàng', 'Thiếu công hoặc cần xác nhận ca', 'Quản lý cửa hàng/Kế toán lương', 'Xác nhận công trước chốt lương']],
-    taskRows: [['Chấm công', 'Xác nhận công thiếu', 'Kế toán lương', 'Tuần này', 'Vàng']],
-    emptyState: 'Chưa có dữ liệu chấm công.',
-    noPermissionState: 'Vai trò hiện tại không được xem chấm công.'
-  },
-  '/luong-nhan-su/tam-ung-thuong-phat': {
-    path: '/luong-nhan-su/tam-ung-thuong-phat',
-    focus: 'Theo dõi tạm ứng, thưởng, phạt và trạng thái duyệt.',
-    kpiCodes: ['NS002', 'NS003', 'LN002'],
-    displayTypes: ['KPI_CARD', 'DATA_TABLE', 'ALERT_CARD'],
-    table: { title: 'Bảng tạm ứng / thưởng phạt', headers: ['Nhân viên', 'Loại khoản', 'Số tiền', 'Lý do', 'Người duyệt', ...comparison, 'Trạng thái'] },
-    alertRows: [['Vàng', 'Khoản thưởng/phạt chờ duyệt hoặc tạm ứng chưa trừ', 'Kế toán lương/CEO', 'Duyệt hoặc ghi chú trước chốt lương']],
-    taskRows: [['Lương', 'Rà khoản chờ duyệt', 'Kế toán lương', 'Tuần này', 'Vàng']],
-    emptyState: 'Chưa có dữ liệu tạm ứng/thưởng phạt.',
-    noPermissionState: 'Vai trò hiện tại không được xem thưởng phạt.'
-  },
   '/luong-nhan-su/bang-luong': {
     path: '/luong-nhan-su/bang-luong',
-    focus: 'Theo dõi lương tạm tính, khấu trừ, thực nhận và duyệt lương.',
+    focus: 'Theo dõi giờ công, ca làm, đi trễ, tạm ứng/thưởng/phạt, lương tạm tính, khấu trừ, thực nhận, chi phí nhân sự và duyệt lương.',
     kpiCodes: ['NS001', 'NS002', 'NS003', 'LN002'],
     displayTypes: ['KPI_CARD', 'DATA_TABLE', 'ALERT_CARD'],
-    table: { title: 'Bảng lương', headers: ['Nhân viên', 'Vai trò', 'Số công', 'Lương cơ bản', 'Phụ cấp', 'Thưởng', 'Tạm ứng', 'Khấu trừ', 'Thực nhận', ...comparison, 'Trạng thái duyệt'] },
-    alertRows: [['Cam', 'Bảng lương thiếu công hoặc chưa duyệt', 'Kế toán lương/CEO', 'Bổ sung công và trình duyệt']],
-    taskRows: [['Lương', 'Rà bảng lương trước duyệt', 'Kế toán lương', 'Cuối kỳ', 'Cam']],
-    emptyState: 'Chưa có dữ liệu bảng lương.',
+    table: { title: 'Bảng lương & giờ công', headers: ['Nhân viên', 'Vai trò', 'Số công', 'Giờ làm', 'Đi trễ', 'Ca gãy', 'Lương cơ bản', 'Phụ cấp', 'Thưởng', 'Tạm ứng', 'Khấu trừ', 'Thực nhận', ...comparison, 'Trạng thái duyệt'] },
+    alertRows: [
+      ['Vàng', 'Thiếu công hoặc cần xác nhận ca', 'Quản lý cửa hàng/Kế toán lương', 'Xác nhận công trước chốt lương'],
+      ['Cam', 'Khoản thưởng/phạt chờ duyệt hoặc tạm ứng chưa trừ', 'Kế toán lương/CEO', 'Duyệt hoặc ghi chú trước chốt lương'],
+      ['Cam', 'Bảng lương thiếu công hoặc chưa duyệt', 'Kế toán lương/CEO', 'Bổ sung công và trình duyệt']
+    ],
+    taskRows: [
+      ['Chấm công', 'Xác nhận công thiếu', 'Kế toán lương', 'Tuần này', 'Vàng'],
+      ['Lương', 'Rà khoản chờ duyệt', 'Kế toán lương', 'Tuần này', 'Vàng'],
+      ['Lương', 'Rà bảng lương trước duyệt', 'Kế toán lương', 'Cuối kỳ', 'Cam']
+    ],
+    emptyState: 'Chưa có dữ liệu bảng lương & giờ công.',
     noPermissionState: 'Vai trò hiện tại không được xem bảng lương.'
   },
   '/bao-cao-quan-tri/ngay': {
