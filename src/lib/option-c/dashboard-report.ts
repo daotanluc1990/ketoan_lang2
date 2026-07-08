@@ -37,6 +37,7 @@ export type OptionCDashboardSummary = {
     lossCalc: number;
     financeCalc: number;
   };
+  financeForecast: FinanceForecast;
   missingSources: string[];
   coreKpis: OptionCDashboardMetric[];
   redAlerts: string[][];
@@ -44,6 +45,20 @@ export type OptionCDashboardSummary = {
   reportDueRows: string[][];
   quickRows: string[][];
   dataQualityScore: number;
+};
+
+// Dự báo tài chính tuần tới — đọc từ tab 14_CALC_TAI_CHINH_DU_TOAN.
+// Code cũ chỉ đếm số dòng; Phase 1 parse thêm các field dự toán thực sự.
+export type FinanceForecast = {
+  hasData: boolean;
+  doanhThuThucTe: number;          // doanh_thu_thuc_te
+  doanhThuDuToanTuanToi: number;   // doanh_thu_du_toan_tuan_toi
+  chiBienDoiDuToan: number;        // chi_bien_doi_du_toan
+  chiCoDinhDuToan: number;         // chi_co_dinh_du_toan
+  soDuDuKien: number;              // so_du_du_kien (dòng tiền dự kiến)
+  congNoCanTraTuanToi: number;     // cong_no_can_tra_tuan_toi (mức thiếu tiền dự kiến)
+  mucCanhBao: string;              // muc_canh_bao
+  hanhDongDeXuat: string;          // hanh_dong_de_xuat
 };
 
 const DASHBOARD_REQUIRED_SOURCES = [
@@ -191,6 +206,29 @@ function parseMissingSources(rows: Record<string, unknown>[], fallbackMissing: s
   return explicit.length ? explicit : fallbackMissing;
 }
 
+// Phase 1: parse dòng dự báo tài chính từ tab 14_CALC_TAI_CHINH_DU_TOAN.
+// Header: doanh_thu_thuc_te, doanh_thu_du_toan_tuan_toi, chi_bien_doi_du_toan,
+// chi_co_dinh_du_toan, so_du_du_kien, cong_no_can_tra_tuan_toi, muc_canh_bao, hanh_dong_de_xuat
+function parseFinanceForecast(rows: Record<string, unknown>[]): FinanceForecast {
+  const empty: FinanceForecast = {
+    hasData: false, doanhThuThucTe: 0, doanhThuDuToanTuanToi: 0, chiBienDoiDuToan: 0,
+    chiCoDinhDuToan: 0, soDuDuKien: 0, congNoCanTraTuanToi: 0, mucCanhBao: '', hanhDongDeXuat: ''
+  };
+  if (!rows.length) return empty;
+  const row = rows[0]; // tab 14 chỉ lưu 1 dòng snapshot kỳ hiện tại
+  return {
+    hasData: true,
+    doanhThuThucTe: numberValue(pick(row, ['doanh_thu_thuc_te'])),
+    doanhThuDuToanTuanToi: numberValue(pick(row, ['doanh_thu_du_toan_tuan_toi'])),
+    chiBienDoiDuToan: numberValue(pick(row, ['chi_bien_doi_du_toan'])),
+    chiCoDinhDuToan: numberValue(pick(row, ['chi_co_dinh_du_toan'])),
+    soDuDuKien: numberValue(pick(row, ['so_du_du_kien'])),
+    congNoCanTraTuanToi: numberValue(pick(row, ['cong_no_can_tra_tuan_toi'])),
+    mucCanhBao: String(pick(row, ['muc_canh_bao']) || ''),
+    hanhDongDeXuat: String(pick(row, ['hanh_dong_de_xuat']) || '')
+  };
+}
+
 export async function buildOptionCDashboardSummary(filters: ReportFilters = {}): Promise<OptionCDashboardSummary> {
   const [dashboardRaw, importLogRows, ...countRows] = await Promise.all([
     safeRead(SHEET_NAMES.DASHBOARD_REPORT),
@@ -199,6 +237,8 @@ export async function buildOptionCDashboardSummary(filters: ReportFilters = {}):
   ]);
   const dashboardRows = dashboardRaw.filter((row) => rowMatchesFilters(row, filters));
   const countValues = Object.fromEntries(COUNT_SHEETS.map(([key], index) => [key, countRows[index]?.length ?? 0])) as Record<(typeof COUNT_SHEETS)[number][0], number>;
+  // Phase 1: parse dòng dự báo tài chính từ tab 14 (financeCalc = countRows cuối)
+  const financeForecast = parseFinanceForecast(countRows[countRows.length - 1] ?? []);
   const sourceCounts = {
     dashboardReport: dashboardRows.length,
     importLog: importLogRows.length,
@@ -254,6 +294,7 @@ export async function buildOptionCDashboardSummary(filters: ReportFilters = {}):
     dashboardRows,
     importLogRows,
     sourceCounts,
+    financeForecast,
     missingSources,
     coreKpis,
     redAlerts,

@@ -61,7 +61,10 @@ export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: S
   const grossProfit = t.revenue - t.appCogs - t.lossValue; // Lãi gộp = DT - giá vốn app - thất thoát
   const grossMargin = t.revenue > 0 ? grossProfit / t.revenue : 0;
   const statusOf = (good: boolean, warn: boolean): Status => (good ? 'good' : warn ? 'warning' : 'danger');
+  const ff = report.financeForecast;
 
+  // 8 KPI card theo spec §2 — thứ tự: DT, lãi gộp, LN vận hành, biên LN vận hành,
+  // dòng tiền hiện tại, dòng tiền dự kiến, mức thiếu tiền, công nợ.
   const kpiCards = [
     {
       label: 'Tổng doanh thu',
@@ -78,34 +81,38 @@ export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: S
       status: statusOf(grossProfit > 0, grossProfit === 0),
     },
     {
+      // LN vận hành = lãi gộp - chi phí vận hành. Code chưa tách chi phí vận hành
+      // (nhân sự/mặt bằng lẫn trong sổ quỹ) → dùng tổng chi cố định dự toán làm xấp xỉ.
+      label: 'LN vận hành (xấp xỉ)',
+      value: fmtMoney(grossProfit - ff.chiCoDinhDuToan),
+      hint: ff.hasData ? 'Lãi gộp - chi cố định dự toán' : 'Cần tách chi phí vận hành',
+      status: ff.hasData ? statusOf(grossProfit - ff.chiCoDinhDuToan > 0, false) : ('neutral' as Status),
+    },
+    {
+      label: 'Biên LN vận hành',
+      value: ff.hasData && t.revenue > 0 ? `${(((grossProfit - ff.chiCoDinhDuToan) / t.revenue) * 100).toFixed(0)}%` : '—',
+      hint: 'LN vận hành / doanh thu',
+      status: ff.hasData ? statusOf((grossProfit - ff.chiCoDinhDuToan) / t.revenue > 0.1, true) : ('neutral' as Status),
+    },
+    {
       label: 'Dòng tiền hiện tại',
       value: fmtMoney(t.cashEnding),
       hint: 'Thu - chi từ sổ quỹ',
       status: statusOf(t.cashEnding > 0, t.cashEnding === 0),
-      current: pc?.cashIn.current && pc?.cashOut.current ? pc.cashIn.current - pc.cashOut.current : undefined,
     },
     {
-      label: 'Tồn kho',
-      value: fmtMoney(t.inventoryValue),
-      hint: t.negativeStockCount ? `${t.negativeStockCount} mặt hàng tồn âm` : 'Ổn',
-      status: t.negativeStockCount ? ('warning' as Status) : statusOf(t.inventoryValue > 0, false),
+      // Phase 1: dòng tiền dự kiến từ tab 14 (so_du_du_kien)
+      label: 'Dòng tiền dự kiến',
+      value: ff.hasData ? fmtMoney(ff.soDuDuKien) : '—',
+      hint: ff.hasData ? 'Dự toán tuần tới' : 'Chưa có dữ liệu dự toán',
+      status: ff.hasData ? statusOf(ff.soDuDuKien > 0, ff.soDuDuKien === 0) : ('neutral' as Status),
     },
     {
-      label: 'Thất thoát NVL',
-      value: fmtMoney(t.lossValue),
-      status: statusOf(t.lossValue === 0, t.lossValue > 0 && t.lossValue < 5_000_000),
-    },
-    {
-      label: 'Doanh thu cửa hàng',
-      value: fmtMoney(t.storeSales),
-      hint: 'Tiền mặt + chuyển khoản',
-      status: statusOf(t.storeSales > 0, false),
-    },
-    {
-      label: 'Doanh thu app net',
-      value: fmtMoney(t.appNet),
-      hint: t.appGross > 0 ? `Sau phí app ${(t.appFeePercent * 100).toFixed(0)}%` : 'Sau phí app',
-      status: statusOf(t.appNet > 0, false),
+      // Phase 1: mức thiếu tiền = công nợ phải trả tuần tới (cong_no_can_tra_tuan_toi)
+      label: 'Mức thiếu tiền dự kiến',
+      value: ff.hasData ? fmtMoney(ff.congNoCanTraTuanToi) : '—',
+      hint: ff.hasData ? 'Công nợ đến hạn tuần tới' : 'Chưa có dữ liệu',
+      status: ff.hasData ? statusOf(ff.congNoCanTraTuanToi === 0, ff.congNoCanTraTuanToi > 0 && ff.congNoCanTraTuanToi < 50_000_000) : ('neutral' as Status),
     },
     {
       label: 'Công nợ',
