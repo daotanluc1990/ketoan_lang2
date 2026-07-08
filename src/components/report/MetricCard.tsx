@@ -16,10 +16,10 @@ export function MetricCard({ label, value, hint, trend, status = 'neutral', comp
   return (
     <div className={clsx('min-h-[112px] min-w-0 rounded-lg border shadow-soft transition-colors', cardTone, compact ? 'p-3' : 'p-4')}>
       <div className="flex items-start justify-between gap-2">
-        <p className="line-clamp-2 min-h-8 text-[12px] font-semibold leading-[17px] text-lang-muted">{label}</p>
+        <p className="t-label line-clamp-2 min-h-8">{label}</p>
         <StatusBadge status={status} />
       </div>
-      <div className="number mt-2 break-words text-[23px] font-bold leading-tight text-lang-ink">{value}</div>
+      <div className="t-value mt-2 break-words">{value}</div>
       {trend ? <p className={clsx('mt-1.5 line-clamp-1 text-[12px] font-semibold leading-5', trendTone)}>{trend}</p> : null}
       {hint ? <p className="mt-0.5 line-clamp-1 text-[12px] leading-5 text-lang-muted">{hint}</p> : null}
       {current !== undefined ? <KpiDelta current={current} previousPeriod={previousPeriod} samePeriodLastYear={samePeriodLastYear} /> : null}

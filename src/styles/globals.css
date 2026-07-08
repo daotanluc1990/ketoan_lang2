@@ -84,6 +84,35 @@ textarea:focus-visible,
   font-variant-numeric: tabular-nums;
 }
 
+/* Type scale — 4 cấp cố định, 2 weight, bỏ font-black/extrabold để dứt "chữ đậm nhạt tùm lum".
+   Scale: 11 → 13 → 22 → 24 (ratio ~1.2-1.7). Dùng cho KPI cards, tiêu đề, bảng. */
+.t-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.t-label {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.t-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+.t-hero {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--foreground);
+  text-wrap: balance;
+}
+
 .sidebar-scroll,
 .table-scroll {
   scrollbar-width: thin;
