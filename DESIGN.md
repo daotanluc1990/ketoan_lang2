@@ -2,7 +2,7 @@
 
 ## Direction
 
-Base system: Saigon Ops Fresh, evolved from Executive Ledger Warm.
+Base system: Accounting V3 Warm Operations, evolved from Saigon F&B Operations.
 
 Supporting patterns:
 - Operations Control Room for overview, accounting tasks, report close, alert queues.
@@ -20,16 +20,16 @@ This app is an internal accounting and operations dashboard for Com Tam Lang. It
 
 ## Tokens
 
-- Primary: grounded Com Tam Lang red `#A61919`.
-- Primary dark/sidebar: oxblood `#6F1515`.
+- Primary: wine red `#8F1D1D`.
+- Primary dark/sidebar: oxblood `#641414`.
 - Primary deep: `#3F0D0D`.
-- Background: cool operational neutral `#F5F7FA`.
-- Surface: white `#FFFFFF`.
-- Sidebar: white `#FFFFFF` with red active states.
-- Table header / control surface: cool mist `#EEF2F7`.
-- Line: cool gray `#D8E0EA`.
-- Text: operational ink `#172033`.
-- Muted text: `#64748B`.
+- Background: warm accounting canvas `#F6F3EE`.
+- Surface: paper `#FFFDF8`.
+- Sidebar: wine red gradient with warm cream active states.
+- Table header / control surface: warm cream `#FFF3DD`.
+- Line: warm divider `#EADFCF`.
+- Text: accounting ink `#231A16`.
+- Muted text: `#6F6254`.
 - Success accent: fresh green `#22C55E`.
 - Warning accent: warm amber `#F6C453`.
 - Action warning accent: clay orange `#F97316`.
@@ -39,7 +39,7 @@ This app is an internal accounting and operations dashboard for Com Tam Lang. It
 ### App Shell
 
 - Left sidebar is fixed.
-- Expanded sidebar is white with dark text; active items use a soft red surface and brand red icon/text.
+- Expanded sidebar is wine red with light text; active items use a warm cream surface and red icon/text.
 - Desktop content must reserve the current sidebar width.
 - Header and global filters stay compact.
 - Sidebar may collapse, but expanded state must never cover content.
@@ -51,7 +51,7 @@ This app is an internal accounting and operations dashboard for Com Tam Lang. It
 - Use tabular numbers.
 - Status values render as badges.
 - Tables scroll internally, not by stretching the page.
-- Table headers use the herb-mist surface, not plain gray.
+- Table headers use warm cream/yellow surfaces, not plain gray.
 - Rows can use a very subtle fresh-neutral hover/zebra state.
 
 ### KPI Cards

@@ -8,6 +8,7 @@ function isPublicPath(pathname: string) {
     pathname === '/login' ||
     pathname === '/api/auth/check' ||
     pathname === '/api/auth/logout' ||
+    pathname.startsWith('/api/auth/google/') ||
     pathname === '/api/health' ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
@@ -25,7 +26,7 @@ function roleHeaderValue(role: string) {
   return role.toLowerCase();
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const authEnabled = process.env.APP_BASIC_AUTH_ENABLED === 'true';
   if (!authEnabled) return NextResponse.next();
 
@@ -33,7 +34,7 @@ export async function middleware(request: NextRequest) {
   const session = await verifyAuthSessionCookie(request.cookies.get(getAuthCookieName())?.value);
 
   if (session && pathname === '/login') {
-    return NextResponse.redirect(new URL('/tong-quan', request.url));
+    return NextResponse.redirect(new URL('/tong-quan-ke-toan', request.url));
   }
 
   if (isPublicPath(pathname)) return NextResponse.next();
@@ -50,6 +51,10 @@ export async function middleware(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.set('x-ctl-auth-role', roleHeaderValue(session.role));
   headers.set('x-ctl-auth-actor', encodeURIComponent(session.actor));
+  if (session.username) headers.set('x-ctl-auth-username', encodeURIComponent(session.username));
+  if (session.email) headers.set('x-ctl-auth-email', encodeURIComponent(session.email));
+  if (session.provider) headers.set('x-ctl-auth-provider', session.provider);
+  if (session.branchScope?.length) headers.set('x-ctl-auth-branch-scope', encodeURIComponent(session.branchScope.join(',')));
   return NextResponse.next({ request: { headers } });
 }
 

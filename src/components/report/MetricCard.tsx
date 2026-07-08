@@ -4,12 +4,12 @@ import { StatusBadge } from './StatusBadge';
 import { KpiDelta } from '@/components/charts/KpiDelta';
 
 export function MetricCard({ label, value, hint, trend, status = 'neutral', compact = false, current, previousPeriod, samePeriodLastYear }: { label: string; value: string; hint?: string; trend?: string; status?: Status; compact?: boolean; current?: number; previousPeriod?: number; samePeriodLastYear?: number }) {
-  const trendTone = status === 'good' ? 'text-emerald-800' : status === 'danger' ? 'text-red-800' : status === 'warning' ? 'text-amber-900' : 'text-lang-muted';
-  // C-balance: warning giữ viền vàng nhưng nền trung tính nhẹ, không đậm mist
+  const trendTone = status === 'good' ? 'text-emerald-800' : status === 'danger' ? 'text-red-800' : status === 'warning' ? 'text-lang-redDark' : 'text-lang-muted';
+  // Craft Modern: warning dùng viền xanh lạnh + nền toolbar trung tính
   const cardTone = status === 'danger'
     ? 'border-red-200 bg-red-50/70'
     : status === 'warning'
-      ? 'border-[#F1D09B] bg-lang-toolbar'
+      ? 'border-blue-200 bg-lang-toolbar'
       : status === 'good'
         ? 'border-emerald-200 bg-emerald-50/35'
         : 'border-lang-line bg-lang-paper';

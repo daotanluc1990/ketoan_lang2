@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 
 const variants = {
   good: 'border-emerald-200 bg-emerald-50 text-emerald-800 before:bg-lang-green',
-  warning: 'border-amber-200 bg-amber-50 text-amber-900 before:bg-lang-yellow',
+  warning: 'border-blue-200 bg-blue-50 text-blue-900 before:bg-lang-red',
   danger: 'border-red-200 bg-red-50 text-red-800 before:bg-red-600',
   // C-balance: neutral từ mist kem → toolbar trung tính ấm, đỡ đơn tông vàng
   neutral: 'border-lang-line bg-lang-toolbar text-lang-muted before:bg-lang-muted'

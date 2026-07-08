@@ -39,9 +39,9 @@ function issueStats(report: DashboardReport) {
   return [
     ['Tất cả', danger + warning + needCheck + noData, 'text-lang-red bg-white'],
     ['Nguy hiểm', danger, 'text-red-700 bg-red-50'],
-    ['Cảnh báo', warning, 'text-orange-700 bg-orange-50'],
-    ['Đối chiếu', needCheck, 'text-amber-700 bg-amber-50'],
-    ['Thiếu dữ liệu', noData, 'text-gray-600 bg-gray-50'],
+    ['Cảnh báo', warning, 'text-amber-700 bg-amber-50'],
+    ['Đối chiếu', needCheck, 'text-blue-700 bg-blue-50'],
+    ['Thiếu dữ liệu', noData, 'text-slate-600 bg-slate-50'],
     ['Đã xử lý', done, 'text-emerald-700 bg-emerald-50']
   ] as const;
 }
@@ -96,7 +96,7 @@ export function AccountingOverviewCompactPage({ report }: { report: DashboardRep
 
   return (
     <div className="space-y-2.5">
-      {filteredOut ? <Card className="border-amber-200 bg-amber-50 p-2.5"><p className="text-[12px] font-bold text-amber-800">Có {rawTotal} dòng dữ liệu trong Google Sheet, nhưng bộ lọc hiện tại đang loại hết dữ liệu. Bấm “Xóa” trên thanh lọc hoặc đổi Kỳ/Trạng thái/Nguồn dữ liệu.</p></Card> : null}
+      {filteredOut ? <Card className="border-blue-200 bg-blue-50 p-2.5"><p className="text-[12px] font-bold text-blue-900">Có {rawTotal} dòng dữ liệu trong Google Sheet, nhưng bộ lọc hiện tại đang loại hết dữ liệu. Bấm “Xóa” trên thanh lọc hoặc đổi Kỳ/Trạng thái/Nguồn dữ liệu.</p></Card> : null}
 
       <section className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-lang-muted"><span>Google Sheet</span><span>·</span><span>{rawTotal ? `${rawTotal} dòng nguồn` : 'Chưa có dữ liệu nguồn'}</span><span>·</span><StatusBadge status={status} /></div>

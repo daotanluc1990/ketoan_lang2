@@ -40,7 +40,7 @@ function statusRank(status: string) {
 function cardTone(status: string) {
   const rank = statusRank(status);
   if (rank === 0) return 'border-red-200 bg-red-50/70';
-  if (rank === 1) return 'border-orange-200 bg-orange-50/70';
+  if (rank === 1) return 'border-amber-200 bg-amber-50/70';
   if (rank === 2) return 'border-blue-200 bg-blue-50/40';
   if (rank === 4) return 'border-emerald-200 bg-emerald-50/35';
   return 'border-lang-line bg-white';
@@ -49,7 +49,7 @@ function cardTone(status: string) {
 function kpiCardTone(status: string) {
   const rank = statusRank(status);
   if (rank === 0) return 'border-red-200 bg-lang-paper';
-  if (rank === 1) return 'border-orange-200 bg-lang-paper';
+  if (rank === 1) return 'border-amber-200 bg-lang-paper';
   if (rank === 2) return 'border-blue-200 bg-lang-paper';
   if (rank === 4) return 'border-emerald-200 bg-lang-paper';
   return 'border-lang-line bg-lang-paper';
@@ -58,7 +58,7 @@ function kpiCardTone(status: string) {
 function miniStatus(status: string) {
   const rank = statusRank(status);
   if (rank === 0) return { label: 'Đỏ', className: 'border-red-200 bg-red-50 text-red-800 before:bg-red-600' };
-  if (rank === 1) return { label: 'Cam', className: 'border-orange-200 bg-orange-50 text-orange-800 before:bg-lang-orange' };
+  if (rank === 1) return { label: 'Cam', className: 'border-amber-200 bg-amber-50 text-amber-800 before:bg-lang-yellow' };
   if (rank === 2) return { label: 'Cần kiểm', className: 'border-blue-200 bg-blue-50 text-blue-900 before:bg-lang-red' };
   if (rank === 4) return { label: 'Tốt', className: 'border-emerald-200 bg-emerald-50 text-emerald-800 before:bg-lang-green' };
   return { label: status, className: 'border-lang-line bg-lang-mist/80 text-lang-muted before:bg-lang-muted' };
@@ -153,7 +153,7 @@ function KpiGroupFrame({ group, kpis }: { group: string; kpis: OptionCDashboardM
   const dangerCount = kpis.filter((kpi) => statusRank(kpi.status) === 0).length;
   const warningCount = kpis.filter((kpi) => statusRank(kpi.status) > 0 && statusRank(kpi.status) <= 2).length;
   return (
-    <div className="rounded-xl border border-lang-line bg-[#FFF7E8]/70 p-2.5 shadow-soft">
+    <div className="rounded-xl border border-lang-line bg-lang-mist/50 p-2.5 shadow-soft">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <h4 className="truncate text-[13px] font-black text-lang-ink">{group}</h4>

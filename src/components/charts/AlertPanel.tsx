@@ -38,8 +38,8 @@ export function AlertPanel({ alerts, compact = false }: { alerts: Alert[]; compa
 
   const styleMap = {
     critical: { bg: 'bg-red-50/70', border: 'border-red-200', text: 'text-red-800', icon: AlertTriangle, badge: 'bg-red-600' },
-    warning: { bg: 'bg-amber-50/70', border: 'border-amber-200', text: 'text-amber-900', icon: TrendingDown, badge: 'bg-amber-500' },
-    info: { bg: 'bg-blue-50/50', border: 'border-blue-200', text: 'text-blue-800', icon: TrendingUp, badge: 'bg-blue-500' },
+    warning: { bg: 'bg-blue-50/50', border: 'border-blue-200', text: 'text-blue-800', icon: TrendingDown, badge: 'bg-blue-500' },
+    info: { bg: 'bg-slate-50/60', border: 'border-slate-200', text: 'text-slate-700', icon: TrendingUp, badge: 'bg-slate-500' },
   };
 
   return (
@@ -74,7 +74,7 @@ export function AlertPanel({ alerts, compact = false }: { alerts: Alert[]; compa
                     </div>
                     <p className="mt-0.5 text-[11px] font-semibold text-lang-muted">{alert.detail}</p>
                     <div className="mt-1.5 flex items-start gap-1 rounded bg-white/60 px-2 py-1">
-                      <Lightbulb className="mt-0.5 h-3 w-3 shrink-0 text-amber-600" aria-hidden="true" />
+                      <Lightbulb className="mt-0.5 h-3 w-3 shrink-0 text-lang-red" aria-hidden="true" />
                       <p className="text-[11px] font-semibold text-lang-ink"><span className="font-black">Đề xuất:</span> {alert.suggestion}</p>
                     </div>
                   </div>

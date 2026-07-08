@@ -11,3 +11,13 @@ out
 coverage
 *.tsbuildinfo
 .vercel
+
+# Dev tooling artifacts & session meta
+.gstack/
+.codebase-memory/
+LOOP.md
+STATE.md
+loop-*.md
+skills/
+opencode.json
+middleware.ts.bak

@@ -36,9 +36,9 @@ function issueStats(report: DashboardReport) {
   return [
     ['Tất cả vấn đề', danger + warning + needCheck + noData, 'border-lang-red bg-white text-lang-red'],
     ['Nguy hiểm', danger, 'border-red-200 bg-red-50 text-red-700'],
-    ['Cảnh báo', warning, 'border-orange-200 bg-orange-50 text-orange-700'],
-    ['Cần đối chiếu', needCheck, 'border-amber-200 bg-amber-50 text-amber-700'],
-    ['Chưa đủ dữ liệu', noData, 'border-gray-200 bg-gray-50 text-gray-600'],
+    ['Cảnh báo', warning, 'border-amber-200 bg-amber-50 text-amber-700'],
+    ['Cần đối chiếu', needCheck, 'border-blue-200 bg-blue-50 text-blue-700'],
+    ['Chưa đủ dữ liệu', noData, 'border-slate-200 bg-slate-50 text-slate-600'],
     ['Đã xử lý', done, 'border-emerald-200 bg-emerald-50 text-emerald-700']
   ] as const;
 }
@@ -91,9 +91,9 @@ export function AccountingOverviewPage({ report }: { report: DashboardReport }) 
         {kpis.map((kpi) => <MetricCard key={kpi.label} label={kpi.label} value={kpi.value} hint={kpi.hint} trend={kpi.trend} status={kpi.status} compact />)}
       </section>
 
-      <section className="grid overflow-hidden rounded-xl border border-orange-200 bg-white shadow-soft md:grid-cols-6">
+      <section className="grid overflow-hidden rounded-xl border border-lang-line bg-white shadow-soft md:grid-cols-6">
         {issueStats(report).map(([label, value, className], index) => (
-          <div key={label} className={`flex min-h-[72px] items-center gap-3 border-orange-100 px-4 py-3 ${index ? 'md:border-l' : ''} ${className}`}>
+          <div key={label} className={`flex min-h-[72px] items-center gap-3 border-lang-line px-4 py-3 ${index ? 'md:border-l' : ''} ${className}`}>
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/70"><BriefcaseBusiness className="h-4 w-4" /></span>
             <div>
               <p className="text-[12px] font-semibold text-lang-ink/80">{label}</p>

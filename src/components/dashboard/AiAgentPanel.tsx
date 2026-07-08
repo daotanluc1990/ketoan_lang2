@@ -10,7 +10,7 @@ export async function AiAgentPanel({ report: providedReport }: { report?: Dashbo
     : [['Cảnh báo', 'Chưa có dữ liệu thật', report.filterActive ? 'Bộ lọc hiện tại không có dòng dữ liệu hợp lệ' : 'Google Sheet chưa có dòng import hợp lệ', 'Chưa import, chưa xác nhận ghi hoặc bộ lọc quá hẹp', 'Import đủ file hoặc nới bộ lọc rồi chạy AI Agent']];
 
   return (
-    <Card className="border border-lang-yellow/50">
+    <Card className="border border-lang-red/30">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
         <div>
           <CardTitle>AI Agent — Phân tích nguyên nhân & đề xuất hành động</CardTitle>
