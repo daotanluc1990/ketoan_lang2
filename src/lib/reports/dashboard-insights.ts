@@ -2,6 +2,8 @@ import type { DashboardReport } from '@/lib/reports/report-aggregator';
 import type { Alert } from '@/components/charts/AlertPanel';
 import type { MoverItem } from '@/components/charts/TopMoversBarChart';
 import type { TrendPoint } from '@/components/charts/TrendLineChart';
+import { getDataStore } from '@/lib/data-store';
+import { SHEET_NAMES } from '@/lib/google-sheets/sheet-names';
 
 // === 4 trends mới (Phase 2 charts) ===
 
@@ -230,4 +232,96 @@ function parseMoney(value: unknown): number {
   str = str.replace(/\./g, '').replace(',', '.');
   const num = parseFloat(str.replace(/[^\d.-]/g, ''));
   return Number.isFinite(num) ? num * multiplier : 0;
+}
+
+// === Async helpers: đọc lịch sử nhiều tuần từ CALC tabs + NCC tăng giá ===
+// Các hàm này đọc trực tiếp Google Sheet (DashboardReport chỉ chứa snapshot 1 kỳ).
+
+async function safeReadSheet(sheetName: string) {
+  try { return await getDataStore().read(sheetName); } catch { return [] as Record<string, unknown>[]; }
+}
+
+/**
+ * P&L theo tuần: doanh thu thực, chi biến đổi, chi cố định, dòng tiền.
+ * Đọc từ 14_CALC_TAI_CHINH_DU_TOAN (nhiều dòng = nhiều tuần).
+ */
+export async function buildPnLWeeklyTrend(): Promise<TrendPoint[]> {
+  const rows = await safeReadSheet(SHEET_NAMES.CALC_TAI_CHINH_DU_TOAN);
+  return rows
+    .map((row) => ({
+      label: String(row['ky_bao_cao'] ?? ''),
+      doanhThu: parseMoney(row['doanh_thu_thuc_te']),
+      chiBienDoi: parseMoney(row['chi_bien_doi_du_toan']),
+      chiCoDinh: parseMoney(row['chi_co_dinh_du_toan']),
+      dongTien: parseMoney(row['so_du_cuoi_ky']),
+    }))
+    .filter((p) => p.label);
+}
+
+/**
+ * Giá trị tồn kho theo tuần (tổng). Đọc từ 12_CALC_TON_KHO, gom theo ky_bao_cao.
+ */
+export async function buildInventoryWeeklyTrend(): Promise<TrendPoint[]> {
+  const rows = await safeReadSheet(SHEET_NAMES.CALC_TON_KHO);
+  const byWeek = new Map<string, number>();
+  for (const row of rows) {
+    const ky = String(row['ky_bao_cao'] ?? '');
+    if (!ky) continue;
+    const giaTri = parseMoney(row['gia_tri_lech']) + parseMoney(row['ton_cuoi_chot']);
+    byWeek.set(ky, (byWeek.get(ky) ?? 0) + giaTri);
+  }
+  return [...byWeek.entries()].map(([label, tonKho]) => ({ label, tonKho }));
+}
+
+/**
+ * Thất thoát theo tuần (giá trị). Đọc từ 13_CALC_HAO_HUT_THAT_THOAT, gom theo ky_bao_cao.
+ */
+export async function buildLossWeeklyTrend(): Promise<TrendPoint[]> {
+  const rows = await safeReadSheet(SHEET_NAMES.CALC_HAO_HUT_THAT_THOAT);
+  const byWeek = new Map<string, { tien: number; tyLe: number; count: number }>();
+  for (const row of rows) {
+    const ky = String(row['ky_bao_cao'] ?? '');
+    if (!ky) continue;
+    const giaTri = parseMoney(row['gia_tri_vuot_dinh_muc']);
+    const tyLe = parseMoney(row['ty_le_vuot_dinh_muc']);
+    const prev = byWeek.get(ky) ?? { tien: 0, tyLe: 0, count: 0 };
+    byWeek.set(ky, { tien: prev.tien + giaTri, tyLe: prev.tyLe + tyLe, count: prev.count + 1 });
+  }
+  return [...byWeek.entries()].map(([label, v]) => ({
+    label,
+    giaTri: v.tien,
+    tyLe: v.count ? v.tyLe / v.count : 0,
+  }));
+}
+
+/**
+ * Chi phí nhân sự theo tuần. Đọc từ 07_DATA_NHAN_SU_LUONG, gom theo ky_luong.
+ */
+export async function buildPayrollWeeklyTrend(): Promise<TrendPoint[]> {
+  const rows = await safeReadSheet(SHEET_NAMES.DATA_NHAN_SU_LUONG);
+  const byWeek = new Map<string, number>();
+  for (const row of rows) {
+    const ky = String(row['ky_luong'] ?? '');
+    if (!ky) continue;
+    byWeek.set(ky, (byWeek.get(ky) ?? 0) + parseMoney(row['thuc_nhan']));
+  }
+  return [...byWeek.entries()].map(([label, luong]) => ({ label, luong }));
+}
+
+/**
+ * NCC tăng giá — đọc từ DATA_NCC_TANG_GIA.
+ * Trả rows cho ReportTable: [NCC, mặt hàng, đơn giá cũ→mới, tỷ lệ tăng, ảnh hưởng, mức].
+ */
+export async function buildSupplierPriceAlerts(): Promise<string[][]> {
+  const rows = await safeReadSheet('DATA_NCC_TANG_GIA');
+  if (!rows.length) return [];
+  return rows.map((row) => [
+    String(row['ten_ncc'] ?? ''),
+    String(row['ten_hang'] ?? ''),
+    `${parseMoney(row['don_gia_cu']).toLocaleString('vi-VN')}đ → ${parseMoney(row['don_gia_moi']).toLocaleString('vi-VN')}đ`,
+    String(row['ty_le_tang'] ?? ''),
+    String(row['anh_huong_chi'] ?? ''),
+    String(row['muc_canh_bao'] ?? ''),
+    String(row['ghi_chu'] ?? ''),
+  ]);
 }

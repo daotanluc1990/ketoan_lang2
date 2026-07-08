@@ -9,7 +9,7 @@ import { buildOptionCDashboardSummary } from '@/lib/option-c/dashboard-report';
 import { buildDashboardReport, type DashboardReport } from '@/lib/reports/report-aggregator';
 import { TrendLineChart } from '@/components/charts/TrendLineChart';
 import { TopMoversBarChart } from '@/components/charts/TopMoversBarChart';
-import { generateAlerts, buildTrendData, buildTopMovers, buildExpenseStructure, buildLossTrend } from '@/lib/reports/dashboard-insights';
+import { generateAlerts, buildTrendData, buildTopMovers, buildExpenseStructure, buildLossTrend, buildPnLWeeklyTrend, buildInventoryWeeklyTrend, buildLossWeeklyTrend, buildPayrollWeeklyTrend, buildSupplierPriceAlerts } from '@/lib/reports/dashboard-insights';
 import type { Status } from '@/lib/report-types';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
@@ -46,19 +46,6 @@ function taskRows(tasks: AccountingTask[]) {
     .map((task) => [task.priority, task.title, task.owner, task.deadline, task.action]);
 }
 
-// Placeholder card cho biểu đồ cần lịch sử nhiều tuần (chưa có data)
-function ChartPlaceholder({ title, reason }: { title: string; reason: string }) {
-  return (
-    <Card>
-      <CardTitle>{title}</CardTitle>
-      <div className="mt-2 flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-lang-line bg-lang-mist/40 px-4 py-6 text-center">
-        <span className="t-eyebrow">Sắp có</span>
-        <p className="t-label max-w-[280px]">{reason}</p>
-      </div>
-    </Card>
-  );
-}
-
 export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: SearchParams }) {
   const filters = await parsePageReportFilters(searchParams);
   const report = await buildOptionCDashboardSummary(filters);
@@ -72,6 +59,13 @@ export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: S
   const grossMargin = t.revenue > 0 ? grossProfit / t.revenue : 0;
   const statusOf = (good: boolean, warn: boolean): Status => (good ? 'good' : warn ? 'warning' : 'danger');
   const ff = report.financeForecast;
+
+  // Phase 3+: đọc lịch sử nhiều tuần cho chart xu hướng
+  const pnlTrend = await buildPnLWeeklyTrend();
+  const inventoryTrend = await buildInventoryWeeklyTrend();
+  const lossTrend = await buildLossWeeklyTrend();
+  const payrollTrend = await buildPayrollWeeklyTrend();
+  const supplierAlerts = await buildSupplierPriceAlerts();
 
   // 8 KPI card theo spec §2 — thứ tự: DT, lãi gộp, LN vận hành, biên LN vận hành,
   // dòng tiền hiện tại, dòng tiền dự kiến, mức thiếu tiền, công nợ.
@@ -249,11 +243,85 @@ export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: S
         </Card>
       </section>
 
-      {/* PLACEHOLDERS — chỉ số cần lịch sử nhiều tuần (spec §3, chưa có data) */}
+      {/* ZONE 5 — Xu hướng theo tuần (spec §3 biểu đồ 2,3,6,7) */}
       <section className="grid gap-2 xl:grid-cols-2">
-        <ChartPlaceholder title="Lợi nhuận quản trị (theo tuần)" reason="Cần dữ liệu P&L nhiều kỳ: lãi gộp, LN vận hành, biên LN qua các tuần để vẽ waterfall/xu hướng." />
-        <ChartPlaceholder title="Tỷ lệ chi phí chính (theo tuần)" reason="Cần dữ liệu tỷ lệ CP nguyên liệu, nhân sự, bao bì theo nhiều tuần để vẽ đường xu hướng." />
+        <Card>
+          <CardTitle>Lợi nhuận quản trị (theo tuần)</CardTitle>
+          <div className="mt-2">
+            <TrendLineChart
+              data={pnlTrend}
+              series={[
+                { key: 'doanhThu', label: 'Doanh thu', color: '#3B82F6' },
+                { key: 'chiBienDoi', label: 'Chi biến đổi', color: '#dc2626' },
+                { key: 'chiCoDinh', label: 'Chi cố định', color: '#f59e0b' },
+                { key: 'dongTien', label: 'Dòng tiền', color: '#059669' },
+              ]}
+              height={240}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Tỷ lệ chi phí chính (theo tuần)</CardTitle>
+          <div className="mt-2">
+            <TrendLineChart
+              data={pnlTrend.map((p) => {
+                const dt = Number(p.doanhThu);
+                return {
+                  label: p.label,
+                  chiBienDoiPct: dt > 0 ? (Number(p.chiBienDoi) / dt) * 100 : 0,
+                  chiCoDinhPct: dt > 0 ? (Number(p.chiCoDinh) / dt) * 100 : 0,
+                };
+              })}
+              series={[
+                { key: 'chiBienDoiPct', label: 'Chi biến đổi %', color: '#dc2626' },
+                { key: 'chiCoDinhPct', label: 'Chi cố định %', color: '#f59e0b' },
+              ]}
+              height={240}
+              moneyFormat={false}
+            />
+          </div>
+        </Card>
       </section>
+
+      <section className="grid gap-2 xl:grid-cols-2">
+        <Card>
+          <CardTitle>Xu hướng tồn kho (theo tuần)</CardTitle>
+          <div className="mt-2">
+            <TrendLineChart
+              data={inventoryTrend}
+              series={[{ key: 'tonKho', label: 'Giá trị tồn kho', color: '#3B82F6' }]}
+              height={220}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Thất thoát định mức (theo tuần)</CardTitle>
+          <div className="mt-2">
+            <TrendLineChart
+              data={lossTrend}
+              series={[
+                { key: 'giaTri', label: 'Giá trị thất thoát', color: '#dc2626' },
+              ]}
+              height={220}
+            />
+          </div>
+        </Card>
+      </section>
+
+      {/* ZONE 6 — NCC tăng giá (spec §3 biểu đồ 10) */}
+      {supplierAlerts.length > 0 ? (
+        <Card>
+          <CardTitle>Nhà cung cấp tăng giá</CardTitle>
+          <div className="mt-2">
+            <ReportTable
+              headers={['Nhà cung cấp', 'Mặt hàng', 'Đơn giá', 'Tỷ lệ tăng', 'Ảnh hưởng', 'Mức', 'Ghi chú']}
+              rows={supplierAlerts}
+              maxHeight="max-h-[220px]"
+              embedded
+            />
+          </div>
+        </Card>
+      ) : null}
     </div>
   );
 }
