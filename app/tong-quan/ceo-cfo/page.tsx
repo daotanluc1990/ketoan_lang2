@@ -1,5 +1,5 @@
 import { PageHeader } from '@/components/layout/PageHeader';
-import { OptionCOverviewPage } from '@/components/option-c/OptionCOverviewPage';
+import { ExecutiveOverviewPage } from '@/components/option-c/ExecutiveOverviewPage';
 import { NoPermission } from '@/components/rbac/NoPermission';
 import { canRole, getRoleFromServerCookies } from '@/lib/rbac/rbac';
 
@@ -18,7 +18,7 @@ export default async function CeoCfoOverviewRoute({ searchParams }: PageProps) {
   return (
     <div className="space-y-2.5">
       <PageHeader title="Tổng quan CEO" />
-      <OptionCOverviewPage searchParams={searchParams} />
+      <ExecutiveOverviewPage searchParams={searchParams} />
     </div>
   );
 }
