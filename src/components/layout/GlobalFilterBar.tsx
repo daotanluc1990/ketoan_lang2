@@ -74,7 +74,7 @@ export function GlobalFilterBar() {
   const resetFilters = () => { if (typeof window !== 'undefined') window.location.href = window.location.pathname; };
 
   return (
-    <section className="border-b border-lang-line bg-[#F6F3EE]/95 backdrop-blur">
+    <section className="border-b border-lang-line bg-lang-cream/95 backdrop-blur">
       <form method="get" className="mx-auto w-full max-w-[1480px] px-4 py-2 lg:px-6">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-3">

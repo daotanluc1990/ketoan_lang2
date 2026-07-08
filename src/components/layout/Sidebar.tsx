@@ -77,7 +77,7 @@ function SidebarNav({ collapsed, onNavigate, role }: { collapsed: boolean; onNav
                 onClick={() => toggleGroup(group)}
                 className={clsx(
                   'mb-1.5 flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/8 px-2 py-1.5 text-left text-[11px] font-extrabold uppercase text-white/72',
-                  groupActive && 'border-[#E7C484] bg-[#FFF3DD] text-[#5E160F] ring-1 ring-[#E7C484]/70'
+                  groupActive && 'border-lang-line bg-lang-mist text-lang-ink ring-1 ring-lang-line'
                 )}
                 aria-expanded={groupOpen}
               >
@@ -85,7 +85,7 @@ function SidebarNav({ collapsed, onNavigate, role }: { collapsed: boolean; onNav
                 <ChevronDown className={clsx('h-3.5 w-3.5 shrink-0 transition-transform', groupOpen && 'rotate-180')} />
               </button>
             ) : (
-              <div className={clsx('mb-2 h-px', groupActive ? 'bg-[#E7C484]' : 'bg-white/18')} />
+              <div className={clsx('mb-2 h-px', groupActive ? 'bg-lang-red' : 'bg-slate-200')} />
             )}
             <div className={clsx('space-y-0.5', !groupOpen && 'hidden')}>
               {items.map((item) => {
@@ -106,13 +106,13 @@ function SidebarNav({ collapsed, onNavigate, role }: { collapsed: boolean; onNav
                       'group flex min-h-10 items-center rounded-lg border text-[13px] font-semibold transition',
                       collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5',
                       active
-                        ? 'border-[#E7C484] bg-[#FFF3DD] text-[#6A1714] shadow-sm'
+                        ? 'border-transparent bg-lang-ink text-white shadow-sm'
                         : pending
-                          ? 'border-lang-yellow/45 bg-lang-yellowSoft text-amber-900'
-                          : 'border-transparent text-white/82 hover:border-white/15 hover:bg-white/12 hover:text-white'
+                          ? 'border-lang-line bg-lang-mist text-lang-muted'
+                          : 'border-transparent text-lang-muted hover:border-lang-line hover:bg-lang-hover hover:text-lang-ink'
                     )}
                   >
-                    {pending ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-700" /> : <Icon className={clsx('h-4 w-4 shrink-0', active ? 'text-[#8F1D1D]' : 'text-white/64 group-hover:text-white')} />}
+                    {pending ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-lang-muted" /> : <Icon className={clsx('h-4 w-4 shrink-0', active ? 'text-white' : 'text-lang-muted group-hover:text-lang-ink')} />}
                     {!collapsed ? <span className="truncate">{item.label}</span> : null}
                   </Link>
                 );
@@ -128,7 +128,7 @@ function SidebarNav({ collapsed, onNavigate, role }: { collapsed: boolean; onNav
 export function Sidebar({ collapsed, mobileOpen, onCloseMobile, onToggle, role, density, onToggleDensity }: SidebarProps) {
   return (
     <>
-      <aside className={clsx('fixed inset-y-0 left-0 z-30 hidden h-screen flex-col overflow-hidden border-r border-[#4B1010] bg-[linear-gradient(180deg,#7F1717,#531010)] text-white shadow-soft transition-[width] duration-200 lg:flex', collapsed ? 'w-[72px]' : 'w-60')}>
+      <aside className={clsx('fixed inset-y-0 left-0 z-30 hidden h-screen flex-col overflow-hidden border-r border-lang-line bg-white text-lang-ink shadow-soft transition-[width] duration-200 lg:flex', collapsed ? 'w-[72px]' : 'w-60')}>
         <SidebarHeader collapsed={collapsed} onToggle={onToggle} />
         {collapsed ? (
           <button type="button" onClick={onToggle} className="mx-auto mt-3 inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/72 hover:bg-white/12 hover:text-white" aria-label="Mở rộng sidebar">
@@ -152,7 +152,7 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile, onToggle, role, 
       </aside>
 
       <div className={clsx('fixed inset-0 z-40 bg-black/45 transition-opacity lg:hidden', mobileOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0')} onClick={onCloseMobile} aria-hidden="true" />
-      <aside className={clsx('fixed inset-y-0 left-0 z-50 flex w-[min(86vw,320px)] flex-col overflow-hidden border-r border-[#4B1010] bg-[linear-gradient(180deg,#7F1717,#531010)] text-white shadow-card transition-transform duration-200 ease-out lg:hidden', mobileOpen ? 'translate-x-0' : '-translate-x-full')} aria-label="Menu di động" aria-hidden={!mobileOpen}>
+      <aside className={clsx('fixed inset-y-0 left-0 z-50 flex w-[min(86vw,320px)] flex-col overflow-hidden border-r border-lang-line bg-white text-lang-ink shadow-card transition-transform duration-200 ease-out lg:hidden', mobileOpen ? 'translate-x-0' : '-translate-x-full')} aria-label="Menu di động" aria-hidden={!mobileOpen}>
         <SidebarHeader collapsed={false} mobile onClose={onCloseMobile} />
         <SidebarNav collapsed={false} onNavigate={onCloseMobile} role={role} />
         <div className="shrink-0 border-t border-white/15 px-4 py-3 text-[11px] font-semibold text-white/62">V9 Accounting V3 · Mobile</div>

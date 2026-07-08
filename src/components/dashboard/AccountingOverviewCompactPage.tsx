@@ -127,7 +127,7 @@ export function AccountingOverviewCompactPage({ report }: { report: DashboardRep
               series={[
                 { key: 'cashIn', label: 'Tiền vào', color: '#059669' },
                 { key: 'cashOut', label: 'Tiền ra', color: '#dc2626' },
-                { key: 'net', label: 'Dòng ròng', color: '#7F1717' },
+                { key: 'net', label: 'Dòng ròng', color: '#3B82F6' },
               ]}
             />
           </div>

@@ -80,7 +80,7 @@ export async function OptionCOverviewPage({ searchParams }: { searchParams?: Pro
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {kpis.map(([label, value, unit, itemStatus]) => (
-            <div key={label} className="rounded-xl border border-lang-line bg-[#FFFFFB] p-3 shadow-soft">
+            <div key={label} className="rounded-xl border border-lang-line bg-lang-paper p-3 shadow-soft">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-[12px] font-bold text-lang-muted">{label}</p>
                 <StatusBadge status={itemStatus} />

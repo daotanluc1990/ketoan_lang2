@@ -14,7 +14,7 @@ export function TopBar({ role, onMenuClick, onOpenPalette }: { role: Role; onMen
   };
 
   return (
-    <header className="sticky top-0 z-20 h-[52px] border-b border-lang-line bg-[#F6F3EE]/95 text-lang-ink shadow-sm backdrop-blur">
+    <header className="sticky top-0 z-20 h-[52px] border-b border-lang-line bg-lang-cream/95 text-lang-ink shadow-sm backdrop-blur">
       <div className="flex h-full w-full items-center justify-between gap-2 px-3 lg:px-4">
         <div className="flex items-center gap-2">
           <button type="button" onClick={onMenuClick} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lang-muted hover:bg-lang-mist hover:text-lang-ink lg:hidden" aria-label="Mở menu"><Menu className="h-4 w-4" /></button>

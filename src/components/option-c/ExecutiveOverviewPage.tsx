@@ -48,11 +48,11 @@ function cardTone(status: string) {
 
 function kpiCardTone(status: string) {
   const rank = statusRank(status);
-  if (rank === 0) return 'border-red-200 bg-[#FFFFFB]';
-  if (rank === 1) return 'border-orange-200 bg-[#FFFFFB]';
-  if (rank === 2) return 'border-amber-200 bg-[#FFFFFB]';
-  if (rank === 4) return 'border-emerald-200 bg-[#FFFFFB]';
-  return 'border-lang-line bg-[#FFFFFB]';
+  if (rank === 0) return 'border-red-200 bg-lang-paper';
+  if (rank === 1) return 'border-orange-200 bg-lang-paper';
+  if (rank === 2) return 'border-amber-200 bg-lang-paper';
+  if (rank === 4) return 'border-emerald-200 bg-lang-paper';
+  return 'border-lang-line bg-lang-paper';
 }
 
 function miniStatus(status: string) {

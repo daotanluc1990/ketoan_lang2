@@ -148,7 +148,7 @@ export function ReportTable({
       'sticky',
       visiblePos === 0 ? 'z-30' : 'z-20',
       head ? 'bg-lang-mist' : 'bg-lang-paper group-hover:bg-lang-hover',
-      'shadow-[1px_0_0_#EADFCF]'
+      'shadow-[1px_0_0_var(--color-lang-line,#E2E8F0)]'
     ].join(' ');
   };
 
@@ -200,7 +200,7 @@ export function ReportTable({
               ))}
             </colgroup>
           ) : null}
-          <thead className="density-row sticky top-0 z-10 bg-lang-mist text-left text-[#5E160F]">
+          <thead className="density-row sticky top-0 z-10 bg-lang-mist text-left text-lang-muted">
             <tr>
               {visibleIndices.map((colIndex, visiblePos) => (
                 <th
