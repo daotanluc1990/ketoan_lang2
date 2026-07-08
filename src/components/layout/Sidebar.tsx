@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
-import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Menu, SquareStack, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Menu, SquareStack, UtensilsCrossed, X } from 'lucide-react';
 import { navigationGroups, navigationItems } from './navigation';
 import type { NavigationGroup } from './navigation';
 import type { Role } from '@/lib/report-types';
@@ -23,14 +23,14 @@ function SidebarHeader({ collapsed, onClose, onToggle, mobile = false }: { colla
   return (
     <div className={clsx('flex h-[58px] shrink-0 items-center border-b border-white/15 bg-transparent', collapsed ? 'justify-center px-2' : 'justify-between px-4')}>
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/12 text-white shadow-sm">
-          <SquareStack className="h-4 w-4" />
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-lang-red to-violet-500 text-white shadow-sm" style={{ boxShadow: '0 2px 8px rgba(59,130,246,.25)' }}>
+          <UtensilsCrossed className="h-4 w-4" />
         </span>
         {!collapsed ? (
           <div className="min-w-0">
             {/* C1.1: không dùng h1 cho brand — để h1 duy nhất là page title */}
-            <p className="truncate text-sm font-semibold leading-tight text-white">ERP Mini</p>
-            <p className="truncate text-[11px] font-medium text-white/72">Kế Toán Cơm Tấm Làng</p>
+            <p className="truncate text-sm font-bold leading-tight text-lang-ink">ERP Mini</p>
+            <p className="truncate text-[11px] font-medium text-lang-muted">Kế Toán Cơm Tấm Làng</p>
           </div>
         ) : null}
       </div>

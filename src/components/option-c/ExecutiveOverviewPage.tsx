@@ -41,7 +41,7 @@ function cardTone(status: string) {
   const rank = statusRank(status);
   if (rank === 0) return 'border-red-200 bg-red-50/70';
   if (rank === 1) return 'border-orange-200 bg-orange-50/70';
-  if (rank === 2) return 'border-amber-200 bg-amber-50/55';
+  if (rank === 2) return 'border-blue-200 bg-blue-50/40';
   if (rank === 4) return 'border-emerald-200 bg-emerald-50/35';
   return 'border-lang-line bg-white';
 }
@@ -50,7 +50,7 @@ function kpiCardTone(status: string) {
   const rank = statusRank(status);
   if (rank === 0) return 'border-red-200 bg-lang-paper';
   if (rank === 1) return 'border-orange-200 bg-lang-paper';
-  if (rank === 2) return 'border-amber-200 bg-lang-paper';
+  if (rank === 2) return 'border-blue-200 bg-lang-paper';
   if (rank === 4) return 'border-emerald-200 bg-lang-paper';
   return 'border-lang-line bg-lang-paper';
 }
@@ -59,7 +59,7 @@ function miniStatus(status: string) {
   const rank = statusRank(status);
   if (rank === 0) return { label: 'Đỏ', className: 'border-red-200 bg-red-50 text-red-800 before:bg-red-600' };
   if (rank === 1) return { label: 'Cam', className: 'border-orange-200 bg-orange-50 text-orange-800 before:bg-lang-orange' };
-  if (rank === 2) return { label: 'Cần kiểm', className: 'border-amber-200 bg-amber-50 text-amber-900 before:bg-lang-yellow' };
+  if (rank === 2) return { label: 'Cần kiểm', className: 'border-blue-200 bg-blue-50 text-blue-900 before:bg-lang-red' };
   if (rank === 4) return { label: 'Tốt', className: 'border-emerald-200 bg-emerald-50 text-emerald-800 before:bg-lang-green' };
   return { label: status, className: 'border-lang-line bg-lang-mist/80 text-lang-muted before:bg-lang-muted' };
 }
@@ -161,7 +161,7 @@ function KpiGroupFrame({ group, kpis }: { group: string; kpis: OptionCDashboardM
         </div>
         <div className="flex items-center gap-1.5">
           {dangerCount ? <span className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-black text-red-800">Đỏ {dangerCount}</span> : null}
-          {warningCount ? <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-black text-amber-900">Cần kiểm {warningCount}</span> : null}
+          {warningCount ? <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-900">Cần kiểm {warningCount}</span> : null}
           {!dangerCount && !warningCount ? <StatusBadge status="Tốt" /> : null}
         </div>
       </div>

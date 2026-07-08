@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import type { Role } from '@/lib/report-types';
-import { Bell, FileInput, FileText, HelpCircle, LogOut, Menu, UserRound } from 'lucide-react';
+import { Bell, FileInput, FileText, HelpCircle, LogOut, Menu, UtensilsCrossed, UserRound } from 'lucide-react';
 
 export function TopBar({ role, onMenuClick, onOpenPalette }: { role: Role; onMenuClick: () => void; onRoleChange: (role: Role) => void; onOpenPalette: () => void }) {
   const logout = async () => {
@@ -18,8 +18,11 @@ export function TopBar({ role, onMenuClick, onOpenPalette }: { role: Role; onMen
       <div className="flex h-full w-full items-center justify-between gap-2 px-3 lg:px-4">
         <div className="flex items-center gap-2">
           <button type="button" onClick={onMenuClick} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lang-muted hover:bg-lang-mist hover:text-lang-ink lg:hidden" aria-label="Mở menu"><Menu className="h-4 w-4" /></button>
+          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-lang-red to-violet-500 text-white shadow-sm" style={{ boxShadow: '0 2px 8px rgba(59,130,246,.2)' }}>
+            <UtensilsCrossed className="h-3.5 w-3.5" />
+          </span>
           <div className="hidden min-w-0 sm:block">
-            <p className="text-[13px] font-semibold leading-tight text-lang-ink">ERP Mini</p>
+            <p className="text-[13px] font-bold leading-tight text-lang-ink">ERP Mini</p>
             <p className="text-[10px] font-medium leading-tight text-lang-muted">Kế Toán Cơm Tấm Làng</p>
           </div>
         </div>

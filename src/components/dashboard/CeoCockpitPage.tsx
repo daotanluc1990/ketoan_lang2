@@ -56,20 +56,20 @@ export function CeoCockpitPage({ report }: { report: DashboardReport }) {
   return (
     <div className="space-y-3">
       <section className="grid gap-3 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="border-amber-200 bg-amber-50/70">
-          <p className="text-[11px] font-black uppercase text-amber-800">CEO Cockpit · {report.dataMode}</p>
-          <h3 className="mt-1 text-xl font-extrabold text-lang-brown">
+        <Card className="border-blue-200 bg-blue-50/50">
+          <p className="text-[11px] font-black uppercase text-lang-red">CEO Cockpit · {report.dataMode}</p>
+          <h3 className="mt-1 text-xl font-extrabold text-lang-ink">
             {report.hasRealData
               ? report.missingSources.length
                 ? 'Có dữ liệu nhưng chưa nên chốt ngay'
                 : 'Dữ liệu chính đã sẵn sàng để xem xét'
               : 'Chưa đủ dữ liệu để kết luận.'}
           </h3>
-          <p className="mt-1.5 line-clamp-3 text-xs leading-5 text-black/60">{report.message}</p>
+          <p className="mt-1.5 line-clamp-3 text-xs leading-5 text-lang-muted">{report.message}</p>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-bold">
-            <div className="rounded-lg border border-amber-200 bg-white px-2 py-2 text-lang-brown">Nguồn thiếu<br />{report.missingSources.length}</div>
-            <div className="rounded-lg border border-amber-200 bg-white px-2 py-2 text-lang-brown">Chi lớn<br />{report.cashbookWarningRows.length}</div>
-            <div className="rounded-lg border border-amber-200 bg-white px-2 py-2 text-lang-brown">Thất thoát<br />{report.lossTop5Rows.length}</div>
+            <div className="rounded-lg border border-lang-line bg-lang-paper px-2 py-2 text-lang-ink">Nguồn thiếu<br />{report.missingSources.length}</div>
+            <div className="rounded-lg border border-lang-line bg-lang-paper px-2 py-2 text-lang-ink">Chi lớn<br />{report.cashbookWarningRows.length}</div>
+            <div className="rounded-lg border border-lang-line bg-lang-paper px-2 py-2 text-lang-ink">Thất thoát<br />{report.lossTop5Rows.length}</div>
           </div>
         </Card>
 
