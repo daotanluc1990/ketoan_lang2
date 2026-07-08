@@ -120,22 +120,22 @@ export function ReportClosePanel({ reportType, title }: { reportType: ReportClos
       </div>
 
       {needsException ? (
-        <div className="mt-3 grid gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 md:grid-cols-2">
-          <label className="text-xs font-bold text-amber-900">Lý do chốt thiếu
-            <input value={exceptionReason} onChange={(event) => setExceptionReason(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-amber-200 bg-white px-2 text-[12px] font-semibold" placeholder="Ví dụ: chưa nhận kịp file kho cửa hàng" />
+        <div className="mt-3 grid gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 md:grid-cols-2">
+          <label className="text-xs font-bold text-blue-900">Lý do chốt thiếu
+            <input value={exceptionReason} onChange={(event) => setExceptionReason(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-blue-200 bg-white px-2 text-[12px] font-semibold" placeholder="Ví dụ: chưa nhận kịp file kho cửa hàng" />
           </label>
-          <label className="text-xs font-bold text-amber-900">Nguyên nhân thiếu dữ liệu
-            <input value={missingDataReason} onChange={(event) => setMissingDataReason(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-amber-200 bg-white px-2 text-[12px] font-semibold" placeholder="Nguồn nào thiếu, vì sao thiếu" />
+          <label className="text-xs font-bold text-blue-900">Nguyên nhân thiếu dữ liệu
+            <input value={missingDataReason} onChange={(event) => setMissingDataReason(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-blue-200 bg-white px-2 text-[12px] font-semibold" placeholder="Nguồn nào thiếu, vì sao thiếu" />
           </label>
-          <label className="text-xs font-bold text-amber-900">Ảnh hưởng dự kiến
-            <input value={expectedImpact} onChange={(event) => setExpectedImpact(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-amber-200 bg-white px-2 text-[12px] font-semibold" placeholder="Ảnh hưởng đến báo cáo/kho/dòng tiền" />
+          <label className="text-xs font-bold text-blue-900">Ảnh hưởng dự kiến
+            <input value={expectedImpact} onChange={(event) => setExpectedImpact(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-blue-200 bg-white px-2 text-[12px] font-semibold" placeholder="Ảnh hưởng đến báo cáo/kho/dòng tiền" />
           </label>
           <div className="grid gap-2 sm:grid-cols-2">
-            <label className="text-xs font-bold text-amber-900">Người chịu trách nhiệm
-              <input value={responsibleOwner} onChange={(event) => setResponsibleOwner(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-amber-200 bg-white px-2 text-[12px] font-semibold" />
+            <label className="text-xs font-bold text-blue-900">Người chịu trách nhiệm
+              <input value={responsibleOwner} onChange={(event) => setResponsibleOwner(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-blue-200 bg-white px-2 text-[12px] font-semibold" />
             </label>
-            <label className="text-xs font-bold text-amber-900">Hạn bổ sung
-              <input type="date" value={supplementDueDate} onChange={(event) => setSupplementDueDate(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-amber-200 bg-white px-2 text-[12px] font-semibold" />
+            <label className="text-xs font-bold text-blue-900">Hạn bổ sung
+              <input type="date" value={supplementDueDate} onChange={(event) => setSupplementDueDate(event.target.value)} className="mt-1 h-9 w-full rounded-lg border border-blue-200 bg-white px-2 text-[12px] font-semibold" />
             </label>
           </div>
         </div>
