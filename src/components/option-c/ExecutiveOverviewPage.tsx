@@ -23,9 +23,19 @@ function fmtMoney(value: number): string {
 }
 
 function alertRows(report: DashboardReport) {
+  // Spec §4: mỗi cảnh báo cần Mức / Nhóm / Vấn đề / Hành động / Người phụ trách / Trạng thái
+  const ownerByCategory: Record<string, string> = {
+    'Tồn kho': 'Quản lý kho',
+    'Thất thoát': 'Bếp trưởng',
+    'App giao hàng': 'Kế toán',
+    'Dòng tiền': 'Kế toán',
+    'Biên lợi nhuận': 'Kế toán',
+    'Data Quality': 'Kế toán',
+    'Thanh khoản': 'CEO/CFO',
+  };
   return generateAlerts(report).slice(0, 8).map((a) => {
     const muc = a.severity === 'critical' ? 'Đỏ' : a.severity === 'warning' ? 'Cam' : 'Thông tin';
-    return [muc, a.category, a.title, a.suggestion];
+    return [muc, a.category, a.title, a.suggestion, ownerByCategory[a.category] ?? 'Kế toán', 'Chưa xử lý'];
   });
 }
 
@@ -181,8 +191,8 @@ export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: S
             <CardTitle>Bảng cảnh báo đỏ</CardTitle>
           </div>
           <ReportTable
-            headers={['Mức', 'Nhóm', 'Vấn đề', 'Đề xuất xử lý']}
-            rows={alertRows(fullReport).length ? alertRows(fullReport) : [['Tốt', '—', 'Không có cảnh báo', 'Tiếp tục theo dõi']]}
+            headers={['Mức', 'Nhóm', 'Vấn đề', 'Hành động', 'Phụ trách', 'Trạng thái']}
+            rows={alertRows(fullReport).length ? alertRows(fullReport) : [['Tốt', '—', 'Không có cảnh báo', 'Tiếp tục theo dõi', '—', 'Hoàn thành']]}
             maxHeight="max-h-[280px]"
             embedded
           />
@@ -201,14 +211,48 @@ export async function ExecutiveOverviewPage({ searchParams }: { searchParams?: S
         </Card>
       </section>
 
-      {/* PLACEHOLDERS — chỉ số cần lịch sử nhiều tuần (spec §15, chưa có data) */}
+      {/* ZONE 4 — Thực vs dự toán + Dòng tiền thực/dự kiến (spec §3 biểu đồ 8+9, có data) */}
       <section className="grid gap-2 xl:grid-cols-2">
-        <ChartPlaceholder title="Lợi nhuận quản trị" reason="Cần dữ liệu P&L theo tuần: lãi gộp, LN vận hành, biên LN qua nhiều kỳ." />
-        <ChartPlaceholder title="Tỷ lệ chi phí chính" reason="Cần dữ liệu tỷ lệ CP nguyên liệu, nhân sự, bao bì theo tuần để vẽ đường xu hướng." />
+        <Card>
+          <CardTitle>Thực tế so với dự toán</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart
+              data={ff.hasData ? [
+                { label: 'Doanh thu thực', value: ff.doanhThuThucTe, trend: 'up' },
+                { label: 'Doanh thu dự toán', value: ff.doanhThuDuToanTuanToi, trend: 'flat' },
+                { label: 'Chi biến đổi', value: ff.chiBienDoiDuToan, trend: 'down' },
+                { label: 'Chi cố định', value: ff.chiCoDinhDuToan, trend: 'down' },
+              ] : []}
+              positiveIsGood
+              height={240}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardTitle>Dòng tiền hiện tại &amp; dự kiến</CardTitle>
+          <div className="mt-2">
+            <TopMoversBarChart
+              data={ff.hasData ? [
+                { label: 'Dòng tiền hiện tại', value: t.cashEnding, trend: t.cashEnding >= 0 ? 'up' : 'down' },
+                { label: 'Dòng tiền dự kiến', value: ff.soDuDuKien, trend: ff.soDuDuKien >= 0 ? 'up' : 'down' },
+                { label: 'Công nợ đến hạn', value: ff.congNoCanTraTuanToi, trend: 'down' },
+              ] : []}
+              positiveIsGood
+              height={240}
+            />
+          </div>
+          {ff.hasData && ff.congNoCanTraTuanToi > t.cashEnding ? (
+            <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold text-amber-800">
+              ⚠ Công nợ đến hạn ({fmtMoney(ff.congNoCanTraTuanToi)}) vượt dòng tiền hiện tại ({fmtMoney(t.cashEnding)}) — rủi ro thiếu tiền.
+            </p>
+          ) : null}
+        </Card>
       </section>
+
+      {/* PLACEHOLDERS — chỉ số cần lịch sử nhiều tuần (spec §3, chưa có data) */}
       <section className="grid gap-2 xl:grid-cols-2">
-        <ChartPlaceholder title="Dòng tiền dự kiến" reason="Cần dữ liệu dòng tiền dự báo + mức thiếu tiền theo tuần để vẽ vùng cảnh báo." />
-        <ChartPlaceholder title="Xu hướng tồn kho" reason="Cần dữ liệu giá trị tồn kho theo nhiều kỳ để phát hiện chôn vốn hoặc thiếu hàng." />
+        <ChartPlaceholder title="Lợi nhuận quản trị (theo tuần)" reason="Cần dữ liệu P&L nhiều kỳ: lãi gộp, LN vận hành, biên LN qua các tuần để vẽ waterfall/xu hướng." />
+        <ChartPlaceholder title="Tỷ lệ chi phí chính (theo tuần)" reason="Cần dữ liệu tỷ lệ CP nguyên liệu, nhân sự, bao bì theo nhiều tuần để vẽ đường xu hướng." />
       </section>
     </div>
   );
